@@ -1,0 +1,16 @@
+{
+  "schema_version":"1.0",
+  "fields":{
+    "provider":"string",
+    "service":"string",
+    "plan":"string|null",
+    "fixed_cost":{"amount":"number|null","currency":"string|null","period":"monthly|annual|other|null"},
+    "renewal_date":"date|null",
+    "payment_method_label":"string|null",
+    "status":"active|trial|paused|cancelled|unknown",
+    "usage":{"value":"number|null","unit":"string|null","limit":"number|null","source":"api|manual|unknown"},
+    "last_checked_at":"datetime|null",
+    "notes":"string|null"
+  },
+  "security":"No almacenar numeros completos de tarjeta, contraseñas, API keys ni secretos."
+}
