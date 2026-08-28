@@ -1,0 +1,19 @@
+{
+  "schema_version":"1.0",
+  "updated":"2026-08-28",
+  "core_repository":"ricmusselli-alt/musselli-app",
+  "health_contract":"architecture/HEALTH_CONTRACT_V1.md",
+  "families":[
+    {"id":"app","repository":"ricmusselli-alt/musselli-app","health":"unknown"},
+    {"id":"lab","repository":"ricmusselli-alt/musselli-lab","health":"unknown"},
+    {"id":"academia","repository":"ricmusselli-alt/musselli-academia","health":"unknown"},
+    {"id":"clima","repository":"ricmusselli-alt/musselli-clima","health":"unknown"},
+    {"id":"vigia","repository":"ricmusselli-alt/musselli-vigia","health":"unknown"},
+    {"id":"show","repository":"ricmusselli-alt/musselli-show","health":"unknown"},
+    {"id":"ficha","repository":"ricmusselli-alt/musselli-ficha","health":"unknown"},
+    {"id":"bot","repository":"ricmusselli-alt/musselli-bot","health":"unknown"},
+    {"id":"viaje","repository":"ricmusselli-alt/musselli-viaje","health":"unknown"},
+    {"id":"tools","repository":"ricmusselli-alt/musselli-tools","health":"unknown"},
+    {"id":"memoria","repository":"ricmusselli-alt/musselli-memoria","health":"unknown"}
+  ]
+}
