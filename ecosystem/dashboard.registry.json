@@ -1,19 +1,18 @@
 {
-  "schema_version":"1.0",
+  "schema_version":"1.1",
   "updated":"2026-08-28",
   "core_repository":"ricmusselli-alt/musselli-app",
-  "health_contract":"architecture/HEALTH_CONTRACT_V1.md",
   "families":[
-    {"id":"app","repository":"ricmusselli-alt/musselli-app","health":"unknown"},
-    {"id":"lab","repository":"ricmusselli-alt/musselli-lab","health":"unknown"},
-    {"id":"academia","repository":"ricmusselli-alt/musselli-academia","health":"unknown"},
-    {"id":"clima","repository":"ricmusselli-alt/musselli-clima","health":"unknown"},
-    {"id":"vigia","repository":"ricmusselli-alt/musselli-vigia","health":"unknown"},
-    {"id":"show","repository":"ricmusselli-alt/musselli-show","health":"unknown"},
-    {"id":"ficha","repository":"ricmusselli-alt/musselli-ficha","health":"unknown"},
-    {"id":"bot","repository":"ricmusselli-alt/musselli-bot","health":"unknown"},
-    {"id":"viaje","repository":"ricmusselli-alt/musselli-viaje","health":"unknown"},
-    {"id":"tools","repository":"ricmusselli-alt/musselli-tools","health":"unknown"},
-    {"id":"memoria","repository":"ricmusselli-alt/musselli-memoria","health":"unknown"}
+    {"id":"app","repository":"ricmusselli-alt/musselli-app","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"lab","repository":"ricmusselli-alt/musselli-lab","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"academia","repository":"ricmusselli-alt/musselli-academia","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"clima","repository":"ricmusselli-alt/musselli-clima","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"vigia","repository":"ricmusselli-alt/musselli-vigia","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"show","repository":"ricmusselli-alt/musselli-show","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"ficha","repository":"ricmusselli-alt/musselli-ficha","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"bot","repository":"ricmusselli-alt/musselli-bot","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"viaje","repository":"ricmusselli-alt/musselli-viaje","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"tools","repository":"ricmusselli-alt/musselli-tools","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false},
+    {"id":"memoria","repository":"ricmusselli-alt/musselli-memoria","version":"unknown","last_approved_release":null,"last_backup":null,"runtime_verified":false}
   ]
 }
