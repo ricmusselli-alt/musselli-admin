@@ -265,7 +265,7 @@ function render(){
     return `<div class="prop" data-key="${esc(p.key)}">
       <div class="prop__top">
         <div class="prop__logo-wrap">
-          <img class="prop__logo" src="assets-site/logos/${esc(p.key)}.png" alt=""
+          <img class="prop__logo" src="logos/${esc(p.key)}.png" alt=""
                onerror="var s=document.createElement('span');s.className='prop__logo prop__logo--fallback';s.textContent='${esc((p.name||'?').charAt(0).toUpperCase())}';this.replaceWith(s);">
           <span class="dot ${st==='up'?'up':st==='down'?'down':''}" title="${st}"></span>
         </div>
