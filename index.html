@@ -302,11 +302,16 @@
     <select id="p_property_key"><option value="">— Compartido —</option></select>
     <label>Link a su consola</label>
     <input id="p_console_url" placeholder="https://...">
-    <label>Costo mensual</label>
+    <label>Plan contratado</label>
+    <input id="p_plan_name" placeholder='ej: "Pro", "Free", "Team 5 asientos"'>
+    <label>Precio del plan</label>
     <div style="display:flex;gap:8px">
-      <input id="p_monthly_cost" type="number" step="0.01" placeholder="0.00" style="flex:2">
+      <input id="p_plan_price" type="number" step="0.01" placeholder="0.00" style="flex:2">
       <select id="p_currency" style="flex:1"><option>USD</option><option>ARS</option><option>MXN</option><option>EUR</option></select>
+      <select id="p_billing_cycle" style="flex:1"><option value="mensual">por mes</option><option value="anual">por año</option></select>
     </div>
+    <label>Próxima fecha de renovación/cobro</label>
+    <input id="p_renewal_date" type="date">
     <label>Notas</label>
     <input id="p_notes">
     <div class="foot">
@@ -522,8 +527,16 @@ function render(){
   });
 })();
 function chip(v){
-  const cost = (typeof v.monthly_cost === "number") ? ` · ${esc(v.currency||"USD")} $${v.monthly_cost}/mes` : '';
-  return `<span class="chip" data-edit-provider="${esc(v.key)}" style="cursor:pointer" title="Editar proveedor">${esc(v.name)}${cost}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">consola ↗</a>` : ''}</span>`;
+  const cost = (typeof v.monthly_cost === "number") ? ` · ${esc(v.currency||"USD")} $${v.monthly_cost.toFixed(2)}/mes` : '';
+  const plan = v.plan_name ? ` (${esc(v.plan_name)})` : '';
+  let renews = '';
+  if (v.renewal_date){
+    const d = new Date(v.renewal_date + "T00:00:00");
+    const soon = (d - new Date()) < 1000*60*60*24*7;
+    renews = ` · <span style="${soon ? 'color:var(--down)' : ''}">renueva ${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</span>`;
+  }
+  const src = v.usage_source === 'api' ? ' <span title="Dato en vivo desde la API del proveedor" style="color:var(--ok)">●</span>' : '';
+  return `<span class="chip" data-edit-provider="${esc(v.key)}" style="cursor:pointer" title="Editar proveedor">${esc(v.name)}${plan}${cost}${src}${renews}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">consola ↗</a>` : ''}</span>`;
 }
 
 async function load(){
@@ -706,8 +719,11 @@ function openProvDialog(v){
   $("#p_name").value = v?.name || "";
   sel.value = v?.property_key || "";
   $("#p_console_url").value = v?.console_url || "";
-  $("#p_monthly_cost").value = (typeof v?.monthly_cost === "number") ? v.monthly_cost : "";
+  $("#p_plan_name").value = v?.plan_name || "";
+  $("#p_plan_price").value = (typeof v?.plan_price === "number") ? v.plan_price : "";
   $("#p_currency").value = v?.currency || "USD";
+  $("#p_billing_cycle").value = v?.billing_cycle || "mensual";
+  $("#p_renewal_date").value = v?.renewal_date || "";
   $("#p_notes").value = v?.notes || "";
   $("#pDlgDelete").hidden = isNew;
   $("#pDlgDelete").onclick = async () => {
@@ -721,13 +737,18 @@ $("#addProv").addEventListener("click", () => openProvDialog(null));
 $("#pDlgCancel").addEventListener("click", () => provDlg.close());
 $("#provForm").addEventListener("submit", async (ev) => {
   ev.preventDefault();
-  const costRaw = $("#p_monthly_cost").value;
+  const priceRaw = $("#p_plan_price").value;
+  const existing = DATA.providers.find(x => x.key === $("#p_key").value.trim());
   const provider = {
     key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
     property_key: $("#p_property_key").value || null,
     console_url: $("#p_console_url").value.trim(),
-    monthly_cost: costRaw === "" ? null : Number(costRaw),
+    plan_name: $("#p_plan_name").value.trim(),
+    plan_price: priceRaw === "" ? null : Number(priceRaw),
     currency: $("#p_currency").value,
+    billing_cycle: $("#p_billing_cycle").value,
+    renewal_date: $("#p_renewal_date").value || null,
+    usage_source: existing?.usage_source || "manual",
     notes: $("#p_notes").value.trim(),
   };
   try{ await api("POST", { action:"upsert_provider", provider }); provDlg.close(); load(); }
