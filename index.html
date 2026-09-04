@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel · Musselli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --negro:#141212; --panel:#1c1917; --panel-2:#232019;
+    --borgona:#5D0002; --hueso:#F5F0E6; --cobre:#C89B6C; --dorado:#CCA353;
+    --texto:#F5F0E6; --texto-2:#c9c2b6; --texto-mute:#8a8275;
+    --ok:#3fae6b; --down:#c65b5b; --idle:#6b6358;
+    --serif:'Cormorant Garamond',Georgia,serif; --sans:'Jost',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--negro);color:var(--texto);font-family:var(--sans);font-weight:300;line-height:1.55}
+  a{color:var(--cobre);text-decoration:none}
+  .wrap{max-width:900px;margin:0 auto;padding:clamp(20px,5vw,48px)}
+  button{font-family:inherit;font-size:13px;cursor:pointer;border:0;border-radius:3px;padding:9px 15px;letter-spacing:.02em}
+  button:disabled{opacity:.5;cursor:default}
+  .btn-primary{background:var(--borgona);color:var(--hueso)} .btn-primary:hover:not(:disabled){background:#7a0a0c}
+  .btn-ghost{background:transparent;color:var(--cobre);border:1px solid rgba(200,155,108,.45)}
+  .btn-ghost:hover:not(:disabled){border-color:var(--cobre)}
+  .btn-mini{padding:6px 11px;font-size:12px}
+
+  /* login */
+  #login{max-width:360px;margin:14vh auto 0;text-align:center}
+  #login h1{font-family:var(--serif);font-weight:600;font-size:22px;margin:0 0 6px}
+  #login h1 span{color:var(--cobre)}
+  #login p{color:var(--texto-mute);font-size:13px;margin:0 0 24px}
+  #login input{width:100%;margin-bottom:12px;padding:12px 14px;background:var(--panel);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:14px}
+  #login input:focus{outline:1px solid var(--cobre)}
+  #login button{width:100%;padding:12px}
+  .msg{font-size:12.5px;margin-top:10px;min-height:1.2em}
+  .msg.err{color:#e79a9c} .msg.ok{color:var(--ok)}
+
+  header.bar{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid rgba(200,155,108,.18);padding-bottom:16px;margin-bottom:24px}
+  header.bar h1{font-family:var(--serif);font-weight:600;font-size:22px;margin:0;letter-spacing:.02em}
+  header.bar h1 span{color:var(--cobre)}
+  .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:18px;align-items:start}
+  .prop{background:var(--panel);border:1px solid rgba(200,155,108,.16);border-radius:6px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
+  .prop__top{display:flex;align-items:center;gap:10px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--idle)}
+  .dot.up{background:var(--ok)} .dot.down{background:var(--down)}
+  .prop__name{font-family:var(--serif);font-weight:600;font-size:18px;flex:1}
+  .tag{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:3px 7px;border-radius:2px;border:1px solid rgba(204,163,83,.4);color:var(--dorado)}
+  .prop__desc{font-size:12.5px;color:var(--texto-mute);margin:-4px 0 2px}
+  .prop__acts{display:flex;flex-wrap:wrap;gap:8px}
+  .prop__acts a.lnk{font-size:12px;border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:6px 11px;border-radius:3px}
+  .prop__acts a.lnk:hover{border-color:var(--cobre)}
+  .gen{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(200,155,108,.12);padding-top:12px}
+  .gen .lbl{font-size:12.5px;color:var(--texto-2)}
+  .gen .lbl small{display:block;font-size:11px;color:var(--texto-mute)}
+  .state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-right:2px}
+  .state.on{color:var(--ok)} .state.off{color:var(--idle)}
+  .toggle{position:relative;width:44px;height:25px;flex:0 0 auto;border-radius:13px;background:#3a352c;border:1px solid rgba(200,155,108,.3);transition:background .2s ease}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--texto-2);transition:transform .2s ease,background .2s ease}
+  .toggle.on{background:rgba(63,174,107,.35);border-color:var(--ok)}
+  .toggle.on::after{transform:translateX(19px);background:var(--ok)}
+  .toggle:disabled{opacity:.5;cursor:default}
+  .prop__edit{border-top:1px solid rgba(200,155,108,.12);padding-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+
+  section.block{margin-top:28px}
+  section.block > h2{font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cobre);margin:0 0 12px}
+  .prov-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel-2);border:1px solid rgba(200,155,108,.16);border-radius:3px;padding:7px 12px;font-size:12.5px;color:var(--texto-2)}
+  .chip a{color:var(--cobre)}
+
+  dialog{background:var(--panel);color:var(--texto);border:1px solid rgba(200,155,108,.3);border-radius:6px;padding:22px;max-width:420px;width:92vw}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 14px;font-size:18px}
+  dialog label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-mute);margin:10px 0 4px}
+  dialog input,dialog select{width:100%;padding:9px 11px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:13px}
+  dialog .row{display:flex;align-items:center;gap:8px;margin-top:12px}
+  dialog .row input[type=checkbox]{width:auto}
+  dialog .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+  .fine{font-size:12px;color:var(--texto-mute);margin-top:26px;line-height:1.7}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1>Panel <span>·</span> Musselli</h1>
+  <p>Acceso restringido.</p>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="correo" autocomplete="username" required>
+    <input type="password" id="pass" placeholder="contraseña" autocomplete="current-password" required>
+    <button type="submit" class="btn-primary" id="loginBtn">Entrar</button>
+  </form>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<div class="wrap" id="dash" hidden>
+  <header class="bar">
+    <h1>Panel <span>·</span> Musselli</h1>
+    <span class="tools"><span id="who"></span>
+      <button class="btn-ghost btn-mini" id="refresh">Actualizar</button>
+      <button class="btn-ghost btn-mini" id="logout">Salir</button>
+    </span>
+  </header>
+
+  <div class="msg" id="topMsg"></div>
+  <div class="grid" id="props"></div>
+
+  <div style="margin-top:16px"><button class="btn-ghost" id="addProp">＋ Agregar propiedad</button></div>
+
+  <section class="block">
+    <h2>Proveedores compartidos</h2>
+    <div class="prov-chips" id="sharedProv"></div>
+  </section>
+
+  <p class="fine">
+    Próximo en este panel: crear post / tendencia ahora · historial de publicados con ocultar/mostrar · cambiar foto ·
+    consumo de cada proveedor · chat con Claude por propiedad.
+  </p>
+</div>
+
+<dialog id="propDlg">
+  <form method="dialog" id="propForm">
+    <h3 id="dlgTitle">Nueva propiedad</h3>
+    <label>Clave (sin espacios, ej. "academia")</label>
+    <input id="f_key" required pattern="[a-z0-9\-]+">
+    <label>Nombre</label>
+    <input id="f_name" required>
+    <label>Descripción</label>
+    <input id="f_description">
+    <label>URL en vivo</label>
+    <input id="f_live_url" placeholder="https://...">
+    <label>Repo GitHub (opcional)</label>
+    <input id="f_repo_url" placeholder="https://github.com/...">
+    <label>Estado</label>
+    <select id="f_status"><option value="activo">activo</option><option value="en_desarrollo">en desarrollo</option></select>
+    <div class="row"><input type="checkbox" id="f_has_generator"><label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--texto-2)">Tiene generación automática de contenido</label></div>
+    <div class="foot">
+      <button type="button" class="btn-ghost btn-mini" id="dlgDelete" hidden>Eliminar</button>
+      <button type="button" class="btn-ghost btn-mini" id="dlgCancel">Cancelar</button>
+      <button type="submit" class="btn-primary btn-mini">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = "https://zquxompfcahmjquobnvk.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxdXhvbXBmY2FobWpxdW9ibnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMDk2NjAsImV4cCI6MjEwMzY4NTY2MH0.ZMa0_ZFsEKVK0lRydq1zjxQDcteGXxOKdmr00D-62wk";
+const sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
+const $ = (s) => document.querySelector(s);
+let token = null, DATA = { properties: [], providers: [], status: {} };
+
+async function api(method, body){
+  const res = await fetch(SUPABASE_URL + "/functions/v1/admin-registry", {
+    method,
+    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+  return data;
+}
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function render(){
+  const { properties, providers, status } = DATA;
+  $("#props").innerHTML = properties.map(p => {
+    const st = status[p.key] || "unknown";
+    const provs = providers.filter(v => v.property_key === p.key);
+    return `<div class="prop" data-key="${esc(p.key)}">
+      <div class="prop__top">
+        <span class="dot ${st==='up'?'up':st==='down'?'down':''}" title="${st}"></span>
+        <span class="prop__name">${esc(p.name)}</span>
+        ${p.status === 'en_desarrollo' ? '<span class="tag">en desarrollo</span>' : ''}
+      </div>
+      ${p.description ? `<div class="prop__desc">${esc(p.description)}</div>` : ''}
+      <div class="prop__acts">
+        ${p.live_url ? `<a class="lnk" href="${esc(p.live_url)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}
+        ${p.repo_url ? `<a class="lnk" href="${esc(p.repo_url)}" target="_blank" rel="noopener">Editar ↗</a>` : ''}
+      </div>
+      ${p.has_generator ? `
+      <div class="gen">
+        <span class="lbl">Generación automática<small>El cron respeta este interruptor</small></span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
+          <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
+        </span>
+      </div>` : ''}
+      ${provs.length ? `<div class="prov-chips">${provs.map(chip).join('')}</div>` : ''}
+      <div class="prop__edit"><button class="btn-ghost btn-mini" data-edit="${esc(p.key)}">Editar propiedad</button></div>
+    </div>`;
+  }).join("");
+
+  $("#sharedProv").innerHTML = providers.filter(v => !v.property_key).map(chip).join("") || '<span class="prop__desc">—</span>';
+}
+function chip(v){
+  return `<span class="chip">${esc(v.name)}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ''}</span>`;
+}
+
+async function load(){
+  $("#topMsg").textContent = "Cargando…"; $("#topMsg").className = "msg";
+  try{
+    DATA = await api("GET");
+    render();
+    $("#topMsg").textContent = "";
+  }catch(e){
+    $("#topMsg").className = "msg err";
+    $("#topMsg").textContent = "No se pudo cargar: " + e.message;
+  }
+}
+
+$("#props").addEventListener("click", async (ev) => {
+  const tg = ev.target.closest("[data-toggle]");
+  const ed = ev.target.closest("[data-edit]");
+  if (tg){
+    const key = tg.dataset.toggle;
+    const p = DATA.properties.find(x => x.key === key);
+    const next = !p.enabled;
+    tg.disabled = true;
+    try{ const { property } = await api("POST", { action:"toggle", key, enabled: next }); Object.assign(p, property); render(); }
+    catch(e){ $("#topMsg").className="msg err"; $("#topMsg").textContent = "Error: " + e.message; }
+  }
+  if (ed) openDialog(DATA.properties.find(x => x.key === ed.dataset.edit));
+});
+
+/* ---- diálogo de propiedad ---- */
+const dlg = $("#propDlg");
+function openDialog(p){
+  const isNew = !p;
+  $("#dlgTitle").textContent = isNew ? "Nueva propiedad" : "Editar " + p.name;
+  $("#f_key").value = p?.key || ""; $("#f_key").disabled = !isNew;
+  $("#f_name").value = p?.name || "";
+  $("#f_description").value = p?.description || "";
+  $("#f_live_url").value = p?.live_url || "";
+  $("#f_repo_url").value = p?.repo_url || "";
+  $("#f_status").value = p?.status || "activo";
+  $("#f_has_generator").checked = !!p?.has_generator;
+  $("#dlgDelete").hidden = isNew;
+  $("#dlgDelete").onclick = async () => {
+    if (!confirm("¿Eliminar la propiedad \"" + p.name + "\"? (no borra el sitio, solo la saca del panel)")) return;
+    try{ await api("POST", { action:"delete_property", key: p.key }); dlg.close(); load(); }
+    catch(e){ alert("Error: " + e.message); }
+  };
+  dlg.showModal();
+}
+$("#addProp").addEventListener("click", () => openDialog(null));
+$("#dlgCancel").addEventListener("click", () => dlg.close());
+$("#propForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const property = {
+    key: $("#f_key").value.trim(), name: $("#f_name").value.trim(),
+    description: $("#f_description").value.trim(), live_url: $("#f_live_url").value.trim(),
+    repo_url: $("#f_repo_url").value.trim(), status: $("#f_status").value,
+    has_generator: $("#f_has_generator").checked,
+  };
+  try{ await api("POST", { action:"upsert_property", property }); dlg.close(); load(); }
+  catch(e){ alert("Error: " + e.message); }
+});
+
+/* ---- login ---- */
+async function showDash(session){
+  token = session.access_token; $("#who").textContent = session.user.email;
+  $("#login").hidden = true; $("#dash").hidden = false; await load();
+}
+function showLogin(){ token = null; $("#dash").hidden = true; $("#login").hidden = false; }
+
+$("#loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("#loginBtn"), msg = $("#loginMsg");
+  btn.disabled = true; msg.className = "msg"; msg.textContent = "Entrando…";
+  const { data, error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#pass").value });
+  btn.disabled = false;
+  if (error){ msg.className = "msg err"; msg.textContent = "No se pudo entrar: " + error.message; return; }
+  showDash(data.session);
+});
+$("#logout").addEventListener("click", async () => { await sb.auth.signOut(); showLogin(); });
+$("#refresh").addEventListener("click", load);
+
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) showDash(data.session); else showLogin();
+})();
+</script>
+</body>
+</html>
