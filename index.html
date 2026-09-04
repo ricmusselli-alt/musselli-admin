@@ -363,7 +363,7 @@ async function edgeFn(name, body){
 // Dispara la generación. hint = tema propuesto (si lo hay). Devuelve {status:'generado'|'sin_hallazgos', title}
 async function doGenerate(key, hint){
   if (key === "tendencias"){
-    const data = await edgeFn("generate-trend", hint ? { hint } : {});
+    const data = await edgeFn("generate-trend", { manual: true, ...(hint ? { hint } : {}) });
     return { status: data.status || "generado", title: data.title };
   }
   if (key === "blog"){
