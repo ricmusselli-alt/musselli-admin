@@ -42,17 +42,29 @@
   .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:18px;align-items:start}
-  .prop{background:var(--panel);border:1px solid rgba(200,155,108,.16);border-radius:6px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
-  .prop__top{display:flex;align-items:center;gap:10px}
-  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--idle)}
+  .prop{position:relative;overflow:hidden;background:var(--panel);border:1px solid rgba(200,155,108,.16);border-radius:6px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:2px}
+  .prop::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:repeating-linear-gradient(135deg, rgba(204,163,83,.025) 0 2px, transparent 2px 14px)}
+  .prop > *{position:relative;z-index:1}
+  .prop__top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .prop__logo-wrap{position:relative;flex:0 0 auto;width:44px;height:44px}
+  .prop__logo{width:44px;height:44px;object-fit:contain;display:block}
+  .prop__logo--fallback{display:flex;align-items:center;justify-content:center;background:var(--panel-2);
+    border:1px solid rgba(200,155,108,.25);border-radius:8px;font-family:var(--serif);font-weight:600;
+    font-size:19px;color:var(--dorado)}
+  .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:var(--idle);
+    position:absolute;bottom:-2px;right:-2px;border:2px solid var(--panel)}
   .dot.up{background:var(--ok)} .dot.down{background:var(--down)}
-  .prop__name{font-family:var(--serif);font-weight:600;font-size:18px;flex:1}
+  .prop__titles{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .prop__name{font-family:var(--serif);font-weight:600;font-size:18px}
   .tag{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:3px 7px;border-radius:2px;border:1px solid rgba(204,163,83,.4);color:var(--dorado)}
-  .prop__desc{font-size:12.5px;color:var(--texto-mute);margin:-4px 0 2px}
+  .prop__desc{font-size:12.5px;color:var(--texto-mute);margin:0 0 12px}
+  .prop__group{border-top:1px solid rgba(200,155,108,.12);padding-top:11px;margin-top:9px;display:flex;flex-direction:column;gap:10px}
+  .prop__grouplabel{display:block;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--cobre)}
   .prop__acts{display:flex;flex-wrap:wrap;gap:8px}
   .prop__acts a.lnk{font-size:12px;border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:6px 11px;border-radius:3px}
   .prop__acts a.lnk:hover{border-color:var(--cobre)}
-  .gen{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid rgba(200,155,108,.12);padding-top:12px}
+  .gen{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .gen .lbl{font-size:12.5px;color:var(--texto-2)}
   .gen .lbl small{display:block;font-size:11px;color:var(--texto-mute)}
   .state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-right:2px}
@@ -62,7 +74,7 @@
   .toggle.on{background:rgba(63,174,107,.35);border-color:var(--ok)}
   .toggle.on::after{transform:translateX(19px);background:var(--ok)}
   .toggle:disabled{opacity:.5;cursor:default}
-  .prop__edit{border-top:1px solid rgba(200,155,108,.12);padding-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .prop__edit{border-top:1px solid rgba(200,155,108,.12);padding-top:10px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
 
   section.block{margin-top:28px}
   section.block > h2{font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cobre);margin:0 0 12px}
@@ -252,34 +264,50 @@ function render(){
     const provs = providers.filter(v => v.property_key === p.key);
     return `<div class="prop" data-key="${esc(p.key)}">
       <div class="prop__top">
-        <span class="dot ${st==='up'?'up':st==='down'?'down':''}" title="${st}"></span>
-        <span class="prop__name">${esc(p.name)}</span>
-        ${p.status !== 'activo' ? `<span class="tag">${p.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>` : ''}
+        <div class="prop__logo-wrap">
+          <img class="prop__logo" src="assets-site/logos/${esc(p.key)}.png" alt=""
+               onerror="var s=document.createElement('span');s.className='prop__logo prop__logo--fallback';s.textContent='${esc((p.name||'?').charAt(0).toUpperCase())}';this.replaceWith(s);">
+          <span class="dot ${st==='up'?'up':st==='down'?'down':''}" title="${st}"></span>
+        </div>
+        <div class="prop__titles">
+          <span class="prop__name">${esc(p.name)}</span>
+          ${p.status !== 'activo' ? `<span class="tag">${p.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>` : ''}
+        </div>
       </div>
       ${p.description ? `<div class="prop__desc">${esc(p.description)}</div>` : ''}
-      <div class="prop__acts">
-        ${p.live_url ? `<a class="lnk" href="${esc(p.live_url)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}
-        ${p.repo_url ? `<a class="lnk" href="${esc(p.repo_url)}" target="_blank" rel="noopener">Repo ↗</a>` : ''}
-        ${p.dev_url ? `<a class="lnk" href="${esc(p.dev_url)}" target="_blank" rel="noopener">Desarrollo ↗</a>` : ''}
+
+      <div class="prop__group">
+        <span class="prop__grouplabel">Sitio</span>
+        <div class="prop__acts">
+          ${p.live_url ? `<a class="lnk" href="${esc(p.live_url)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}
+          ${p.repo_url ? `<a class="lnk" href="${esc(p.repo_url)}" target="_blank" rel="noopener">Repo ↗</a>` : ''}
+          ${p.dev_url ? `<a class="lnk" href="${esc(p.dev_url)}" target="_blank" rel="noopener">Desarrollo ↗</a>` : ''}
+          ${!p.live_url && !p.repo_url && !p.dev_url ? '<span class="prop__desc" style="margin:0">— nada cargado todavía —</span>' : ''}
+        </div>
       </div>
+
       ${p.has_generator ? `
-      <div class="gen">
-        <span class="lbl">Generación automática<small>El cron respeta este interruptor</small></span>
-        <span style="display:flex;align-items:center;gap:6px">
-          <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
-          <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
-        </span>
-      </div>
-      ${GEN[p.key] ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn-ghost btn-mini" data-genkey="${esc(p.key)}">Crear ahora</button>
-        <button class="btn-ghost btn-mini" data-histkey="${esc(p.key)}">Historial</button>
-      </div>
-      ${GEN[p.key].supportsHint ? `<div style="display:flex;gap:6px;margin-top:2px">
-        <input type="text" data-hintinput="${esc(p.key)}" placeholder="Proponer un tema (ej. humedad y la madera)"
-          style="flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px">
-        <button class="btn-ghost btn-mini" data-hintbtn="${esc(p.key)}">Proponer y crear</button>
-      </div>` : ''}` : ''}` : ''}
-      ${provs.length ? `<div class="prov-chips">${provs.map(chip).join('')}</div>` : ''}
+      <div class="prop__group">
+        <span class="prop__grouplabel">Generación automática</span>
+        <div class="gen">
+          <span class="lbl">El cron respeta este interruptor</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
+            <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
+          </span>
+        </div>
+        ${GEN[p.key] ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-ghost btn-mini" data-genkey="${esc(p.key)}">Crear ahora</button>
+          <button class="btn-ghost btn-mini" data-histkey="${esc(p.key)}">Historial</button>
+        </div>
+        ${GEN[p.key].supportsHint ? `<div style="display:flex;gap:6px">
+          <input type="text" data-hintinput="${esc(p.key)}" placeholder="Proponer un tema (ej. humedad y la madera)"
+            style="flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px">
+          <button class="btn-ghost btn-mini" data-hintbtn="${esc(p.key)}">Proponer y crear</button>
+        </div>` : ''}` : ''}
+      </div>` : ''}
+
+      ${provs.length ? `<div class="prop__group"><span class="prop__grouplabel">Proveedores</span><div class="prov-chips">${provs.map(chip).join('')}</div></div>` : ''}
       <div class="prop__edit"><button class="btn-ghost btn-mini" data-edit="${esc(p.key)}">Editar propiedad</button></div>
     </div>`;
   }).join("");
