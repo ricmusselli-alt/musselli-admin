@@ -188,9 +188,44 @@ const sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 const $ = (s) => document.querySelector(s);
 let token = null, DATA = { properties: [], providers: [], status: {} };
 const GEN = {
-  blog:       { fn: "generate-post",  product: "blog",  site: "https://blog.ricardomusselli.com/",       needsTopic: true },
-  tendencias: { fn: "generate-trend", product: "trend", site: "https://tendencias.ricardomusselli.com/", needsTopic: false },
+  blog:       { product: "blog",  site: "https://blog.ricardomusselli.com/",       supportsHint: true },
+  tendencias: { product: "trend", site: "https://tendencias.ricardomusselli.com/", supportsHint: true },
 };
+
+async function edgeFn(name, body){
+  const res = await fetch(SUPABASE_URL + "/functions/v1/" + name, {
+    method: "POST", headers: { "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error){
+    const m = typeof data.error === "string" ? data.error : (data.error ? JSON.stringify(data.error) : "HTTP " + res.status);
+    throw new Error(m);
+  }
+  return data;
+}
+
+// Dispara la generación. hint = tema propuesto (si lo hay). Devuelve {status:'generado'|'sin_hallazgos', title}
+async function doGenerate(key, hint){
+  if (key === "tendencias"){
+    const data = await edgeFn("generate-trend", hint ? { hint } : {});
+    return { status: data.status || "generado", title: data.title };
+  }
+  if (key === "blog"){
+    let topicId, title;
+    if (hint){
+      const { topic } = await api("POST", { action: "propose_topic", topic: hint });
+      topicId = topic.id; title = topic.topic;
+    } else {
+      const { candidates } = await edgeFn("get-candidates", {});
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      topicId = pick.id; title = pick.topic;
+    }
+    const data = await edgeFn("generate-post", { topic_id: topicId });
+    return { status: "generado", title: data.title || title };
+  }
+  throw new Error("No sé cómo generar para " + key);
+}
 
 async function api(method, body){
   const res = await fetch(SUPABASE_URL + "/functions/v1/admin-registry", {
@@ -235,10 +270,15 @@ function render(){
           <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
         </span>
       </div>
-      ${GEN[p.key] ? `<div style="display:flex;gap:8px">
-        <button class="btn-ghost btn-mini" data-genkey="${esc(p.key)}" ${GEN[p.key].needsTopic ? 'disabled title="Necesita elegir tema primero — pendiente"' : ''}>Crear ahora</button>
+      ${GEN[p.key] ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-ghost btn-mini" data-genkey="${esc(p.key)}">Crear ahora</button>
         <button class="btn-ghost btn-mini" data-histkey="${esc(p.key)}">Historial</button>
-      </div>` : ''}` : ''}
+      </div>
+      ${GEN[p.key].supportsHint ? `<div style="display:flex;gap:6px;margin-top:2px">
+        <input type="text" data-hintinput="${esc(p.key)}" placeholder="Proponer un tema (ej. humedad y la madera)"
+          style="flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px">
+        <button class="btn-ghost btn-mini" data-hintbtn="${esc(p.key)}">Proponer y crear</button>
+      </div>` : ''}` : ''}` : ''}
       ${provs.length ? `<div class="prov-chips">${provs.map(chip).join('')}</div>` : ''}
       <div class="prop__edit"><button class="btn-ghost btn-mini" data-edit="${esc(p.key)}">Editar propiedad</button></div>
     </div>`;
@@ -268,6 +308,7 @@ $("#props").addEventListener("click", async (ev) => {
   const ed = ev.target.closest("[data-edit]");
   const gen = ev.target.closest("[data-genkey]");
   const hist = ev.target.closest("[data-histkey]");
+  const hintBtn = ev.target.closest("[data-hintbtn]");
   if (tg){
     const key = tg.dataset.toggle;
     const p = DATA.properties.find(x => x.key === key);
@@ -279,28 +320,34 @@ $("#props").addEventListener("click", async (ev) => {
   if (ed) openDialog(DATA.properties.find(x => x.key === ed.dataset.edit));
   if (gen && !gen.disabled) await runGenerateNow(gen);
   if (hist) openHist(hist.dataset.histkey);
+  if (hintBtn) await runGenerateNow(hintBtn, true);
 });
 
-/* ---- crear ahora ---- */
-async function runGenerateNow(btn){
-  const key = btn.dataset.genkey;
+/* ---- crear ahora (con o sin tema propuesto) ---- */
+async function runGenerateNow(btn, isHint){
+  const key = isHint ? btn.dataset.hintbtn : btn.dataset.genkey;
   const g = GEN[key];
   if (!g) return;
-  if (!confirm("¿Generar una publicación nueva de \"" + (DATA.properties.find(p=>p.key===key)?.name||key) + "\" ahora?")) return;
+  let hint = "";
+  if (isHint){
+    const input = document.querySelector('[data-hintinput="' + key + '"]');
+    hint = (input?.value || "").trim();
+    if (!hint){ alert("Escribí un tema antes de proponerlo."); return; }
+  }
+  const label = DATA.properties.find(p=>p.key===key)?.name || key;
+  if (!confirm(isHint
+    ? "¿Buscar y generar sobre \"" + hint + "\" para " + label + "?"
+    : "¿Generar una publicación nueva de \"" + label + "\" ahora?")) return;
   const original = btn.textContent;
-  btn.disabled = true; btn.textContent = "Generando…";
+  btn.disabled = true; btn.textContent = isHint ? "Buscando…" : "Generando…";
   try{
-    const res = await fetch(SUPABASE_URL + "/functions/v1/" + g.fn, {
-      method: "POST", headers: { "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.error){
-      const m = typeof data.error === "string" ? data.error : (data.error ? JSON.stringify(data.error) : "HTTP " + res.status);
-      throw new Error(m);
+    const data = await doGenerate(key, hint);
+    if (data.status === "sin_hallazgos"){
+      alert("No encontró nada verificable" + (hint ? (" sobre \"" + hint + "\"") : "") + " esta vez. Podés volver a intentar.");
+    } else {
+      alert("Generado: \"" + (data.title || "listo") + "\". Revisalo en el panel de revisión antes de aprobar.");
+      if (isHint){ const input = document.querySelector('[data-hintinput="' + key + '"]'); if (input) input.value = ""; }
     }
-    alert(data.status === "sin_hallazgos"
-      ? "No encontró nada nuevo esta vez (sin_hallazgos). Podés volver a intentar."
-      : "Generado: \"" + (data.title || data.item?.title || "listo") + "\". Revisalo en el panel de revisión antes de aprobar.");
   }catch(e){
     alert("Error al generar: " + e.message);
   }finally{
