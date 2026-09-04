@@ -105,6 +105,7 @@
   </header>
 
   <div class="msg" id="topMsg"></div>
+  <div class="prop__desc" id="costBanner" style="margin:0 0 18px;font-size:13px"></div>
   <div class="grid" id="props"></div>
 
   <div style="margin-top:16px"><button class="btn-ghost" id="addProp">＋ Agregar propiedad</button></div>
@@ -112,6 +113,7 @@
   <section class="block">
     <h2>Proveedores compartidos</h2>
     <div class="prov-chips" id="sharedProv"></div>
+    <div style="margin-top:12px"><button class="btn-ghost btn-mini" id="addProv">＋ Agregar proveedor</button></div>
   </section>
 
   <p class="fine">
@@ -144,6 +146,32 @@
   </form>
 </dialog>
 
+<dialog id="provDlg">
+  <form method="dialog" id="provForm">
+    <h3 id="pDlgTitle">Nuevo proveedor</h3>
+    <label>Clave (sin espacios, ej. "r2-academia")</label>
+    <input id="p_key" required pattern="[a-z0-9\-]+">
+    <label>Nombre</label>
+    <input id="p_name" required>
+    <label>Propiedad a la que pertenece</label>
+    <select id="p_property_key"><option value="">— Compartido —</option></select>
+    <label>Link a su consola</label>
+    <input id="p_console_url" placeholder="https://...">
+    <label>Costo mensual</label>
+    <div style="display:flex;gap:8px">
+      <input id="p_monthly_cost" type="number" step="0.01" placeholder="0.00" style="flex:2">
+      <select id="p_currency" style="flex:1"><option>USD</option><option>ARS</option><option>MXN</option><option>EUR</option></select>
+    </div>
+    <label>Notas</label>
+    <input id="p_notes">
+    <div class="foot">
+      <button type="button" class="btn-ghost btn-mini" id="pDlgDelete" hidden>Eliminar</button>
+      <button type="button" class="btn-ghost btn-mini" id="pDlgCancel">Cancelar</button>
+      <button type="submit" class="btn-primary btn-mini">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL = "https://zquxompfcahmjquobnvk.supabase.co";
@@ -158,14 +186,20 @@ async function api(method, body){
     headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok){
+    const m = typeof data.error === "string" ? data.error : (data.error ? JSON.stringify(data.error) : "HTTP " + res.status);
+    throw new Error(m);
+  }
   return data;
 }
 function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 function render(){
   const { properties, providers, status } = DATA;
+  const totalStr = Object.entries(DATA.cost_by_currency || {}).map(([c,v]) => c + " $" + v.toFixed(2)).join(" + ");
+  $("#costBanner").textContent = "Gasto mensual cargado: " + (totalStr || "— (agregá el costo en cada proveedor)");
+
   $("#props").innerHTML = properties.map(p => {
     const st = status[p.key] || "unknown";
     const provs = providers.filter(v => v.property_key === p.key);
@@ -173,7 +207,7 @@ function render(){
       <div class="prop__top">
         <span class="dot ${st==='up'?'up':st==='down'?'down':''}" title="${st}"></span>
         <span class="prop__name">${esc(p.name)}</span>
-        ${p.status === 'en_desarrollo' ? '<span class="tag">en desarrollo</span>' : ''}
+        ${p.status !== 'activo' ? `<span class="tag">${p.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>` : ''}
       </div>
       ${p.description ? `<div class="prop__desc">${esc(p.description)}</div>` : ''}
       <div class="prop__acts">
@@ -196,7 +230,8 @@ function render(){
   $("#sharedProv").innerHTML = providers.filter(v => !v.property_key).map(chip).join("") || '<span class="prop__desc">—</span>';
 }
 function chip(v){
-  return `<span class="chip">${esc(v.name)}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ''}</span>`;
+  const cost = (typeof v.monthly_cost === "number") ? ` · ${esc(v.currency||"USD")} $${v.monthly_cost}/mes` : '';
+  return `<span class="chip" data-edit-provider="${esc(v.key)}" style="cursor:pointer" title="Editar proveedor">${esc(v.name)}${cost}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">consola ↗</a>` : ''}</span>`;
 }
 
 async function load(){
@@ -257,6 +292,52 @@ $("#propForm").addEventListener("submit", async (ev) => {
   };
   try{ await api("POST", { action:"upsert_property", property }); dlg.close(); load(); }
   catch(e){ alert("Error: " + e.message); }
+});
+
+/* ---- diálogo de proveedor ---- */
+const provDlg = $("#provDlg");
+function openProvDialog(v){
+  const isNew = !v;
+  $("#pDlgTitle").textContent = isNew ? "Nuevo proveedor" : "Editar " + v.name;
+  const sel = $("#p_property_key");
+  sel.innerHTML = '<option value="">— Compartido —</option>' +
+    DATA.properties.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join("");
+  $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
+  $("#p_name").value = v?.name || "";
+  sel.value = v?.property_key || "";
+  $("#p_console_url").value = v?.console_url || "";
+  $("#p_monthly_cost").value = (typeof v?.monthly_cost === "number") ? v.monthly_cost : "";
+  $("#p_currency").value = v?.currency || "USD";
+  $("#p_notes").value = v?.notes || "";
+  $("#pDlgDelete").hidden = isNew;
+  $("#pDlgDelete").onclick = async () => {
+    if (!confirm('¿Eliminar el proveedor "' + v.name + '"?')) return;
+    try{ await api("POST", { action:"delete_provider", key: v.key }); provDlg.close(); load(); }
+    catch(e){ alert("Error: " + e.message); }
+  };
+  provDlg.showModal();
+}
+$("#addProv").addEventListener("click", () => openProvDialog(null));
+$("#pDlgCancel").addEventListener("click", () => provDlg.close());
+$("#provForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const costRaw = $("#p_monthly_cost").value;
+  const provider = {
+    key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
+    property_key: $("#p_property_key").value || null,
+    console_url: $("#p_console_url").value.trim(),
+    monthly_cost: costRaw === "" ? null : Number(costRaw),
+    currency: $("#p_currency").value,
+    notes: $("#p_notes").value.trim(),
+  };
+  try{ await api("POST", { action:"upsert_provider", provider }); provDlg.close(); load(); }
+  catch(e){ alert("Error: " + e.message); }
+});
+document.addEventListener("click", (ev) => {
+  const c = ev.target.closest("[data-edit-provider]");
+  if (!c) return;
+  const key = c.dataset.editProvider;
+  openProvDialog(DATA.providers.find(x => x.key === key));
 });
 
 /* ---- login ---- */
