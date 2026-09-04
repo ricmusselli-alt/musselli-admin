@@ -15,74 +15,95 @@
     --serif:'Cormorant Garamond',Georgia,serif; --sans:'Jost',system-ui,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--negro);color:var(--texto);font-family:var(--sans);font-weight:300;line-height:1.55}
+  body{margin:0;background:var(--negro);color:var(--texto);font-family:var(--sans);font-weight:300;line-height:1.6;font-size:14.5px}
   a{color:var(--cobre);text-decoration:none}
-  .wrap{max-width:900px;margin:0 auto;padding:clamp(20px,5vw,48px)}
-  button{font-family:inherit;font-size:13px;cursor:pointer;border:0;border-radius:3px;padding:9px 15px;letter-spacing:.02em}
+  .wrap{max-width:920px;margin:0 auto;padding:clamp(22px,4vw,36px) clamp(20px,5vw,48px) clamp(40px,6vw,64px)}
+  button{font-family:inherit;font-size:12px;cursor:pointer;border:0;border-radius:3px;padding:11px 18px;
+    letter-spacing:.1em;text-transform:uppercase;font-weight:600;transition:background .2s ease,border-color .2s ease,color .2s ease}
   button:disabled{opacity:.5;cursor:default}
   .btn-primary{background:var(--borgona);color:var(--hueso)} .btn-primary:hover:not(:disabled){background:#7a0a0c}
   .btn-ghost{background:transparent;color:var(--cobre);border:1px solid rgba(200,155,108,.45)}
-  .btn-ghost:hover:not(:disabled){border-color:var(--cobre)}
-  .btn-solid{background:var(--dorado);color:var(--negro);font-weight:500;border:1px solid var(--dorado)}
+  .btn-ghost:hover:not(:disabled){border-color:var(--cobre);color:var(--hueso)}
+  .btn-solid{background:var(--dorado);color:var(--negro);font-weight:700;border:1px solid var(--dorado)}
   .btn-solid:hover:not(:disabled){background:#e7c46b;border-color:#e7c46b}
-  .btn-mini{padding:6px 11px;font-size:12px}
+  .btn-mini{padding:8px 14px;font-size:10.5px}
 
-  /* login */
-  #login{position:relative;max-width:360px;margin:14vh auto 0;text-align:center;padding:clamp(28px,4vw,40px) 28px;
-    border:1px solid rgba(200,155,108,.18);border-radius:8px;background:var(--panel);overflow:hidden}
+  /* ---- pantalla de login: foto de fondo, como el hero del blog ---- */
+  #loginScreen{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;padding:24px}
+  #loginScreen__bg{position:absolute;inset:0;background:#0e0d0c url('hero/hero.jpg') center 40%/cover no-repeat;
+    filter:brightness(.6) saturate(.9)}
+  #loginScreen__grad{position:absolute;inset:0;
+    background:radial-gradient(120% 100% at 50% 30%, rgba(20,18,18,.35) 0%, rgba(14,13,12,.82) 68%, var(--negro) 100%)}
+  #login{position:relative;z-index:1;max-width:360px;width:100%;text-align:center;padding:clamp(30px,5vw,44px) 30px;
+    border:1px solid rgba(200,155,108,.25);border-radius:8px;background:rgba(28,25,23,.72);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}
   #login::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
-    background:repeating-linear-gradient(135deg, rgba(204,163,83,.03) 0 2px, transparent 2px 14px)}
+    background:repeating-linear-gradient(135deg, rgba(204,163,83,.035) 0 2px, transparent 2px 14px)}
   #login > *{position:relative;z-index:1}
-  #login .kicker{display:block;font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--cobre);margin-bottom:14px}
-  #login h1{font-family:var(--serif);font-weight:600;font-size:24px;margin:0 0 6px}
+  #login .kicker{display:block;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--cobre);margin-bottom:16px}
+  #login h1{font-family:var(--serif);font-weight:600;font-size:28px;margin:0 0 8px;text-wrap:balance}
   #login h1 span{color:var(--cobre)}
-  #login p{color:var(--texto-mute);font-size:13px;margin:0 0 24px}
-  #login input{width:100%;margin-bottom:12px;padding:12px 14px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:14px}
+  #login p{color:var(--texto-2);font-size:13px;margin:0 0 26px}
+  #login input{width:100%;margin-bottom:12px;padding:13px 15px;background:rgba(20,18,18,.55);border:1px solid rgba(200,155,108,.3);border-radius:3px;color:var(--texto);font-family:inherit;font-size:14px}
   #login input:focus{outline:1px solid var(--cobre)}
-  #login button{width:100%;padding:12px}
+  #login button{width:100%;padding:14px}
   .msg{font-size:12.5px;margin-top:10px;min-height:1.2em}
   .msg.err{color:#e79a9c} .msg.ok{color:var(--ok)}
 
-  header.bar{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
-    border-bottom:1px solid rgba(200,155,108,.18);padding-bottom:18px;margin-bottom:30px}
-  header.bar .kicker{display:block;font-size:10.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--cobre);margin-bottom:8px}
-  header.bar h1{font-family:var(--serif);font-weight:600;font-size:26px;margin:0;letter-spacing:.02em;line-height:1}
-  header.bar h1 span{color:var(--cobre)}
+  /* ---- banda con foto arriba del panel, como el hero del blog ---- */
+  .hero-band{position:relative;min-height:clamp(180px,26vw,240px);display:flex;align-items:flex-end;overflow:hidden}
+  .hero-band__bg{position:absolute;inset:0;background:url('hero/hero.jpg') center 36%/cover no-repeat;filter:brightness(.68) saturate(.92)}
+  .hero-band__grad{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(20,18,18,.25) 0%, rgba(14,13,12,.4) 45%, var(--negro) 100%),
+      linear-gradient(100deg, rgba(14,13,12,.7) 0%, rgba(14,13,12,.2) 58%, rgba(14,13,12,0) 82%)}
+  .hero-band__inner{position:relative;z-index:1;max-width:920px;margin:0 auto;width:100%;
+    padding:26px clamp(20px,5vw,48px) 24px}
+  .hero-band .kicker{display:block;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--cobre);margin-bottom:8px;
+    text-shadow:0 2px 10px rgba(0,0,0,.6)}
+  .hero-band h1{font-family:var(--serif);font-weight:600;font-size:clamp(26px,4vw,34px);margin:0;letter-spacing:.01em;line-height:1;
+    text-shadow:0 2px 20px rgba(0,0,0,.65)}
+  .hero-band h1 span{color:var(--cobre)}
+  .hero-band__tools{position:absolute;z-index:2;top:22px;right:clamp(20px,5vw,48px);
+    display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-2)}
   .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
 
-  section.statusgroup{margin-bottom:34px}
-  section.statusgroup > .grouphead{display:flex;align-items:baseline;gap:10px;margin-bottom:16px}
-  section.statusgroup > .grouphead .kicker{font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--cobre)}
+  section.statusgroup{margin-bottom:38px}
+  section.statusgroup > .grouphead{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:10px;
+    border-bottom:1px solid rgba(200,155,108,.14)}
+  section.statusgroup > .grouphead .kicker{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--cobre)}
   section.statusgroup > .grouphead .count{font-size:11px;color:var(--texto-mute)}
-  section.statusgroup > .grouphead h2{font-family:var(--serif);font-weight:600;font-size:19px;margin:0}
+  section.statusgroup > .grouphead h2{font-family:var(--serif);font-weight:600;font-size:21px;margin:0}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:18px;align-items:start}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:20px;align-items:start}
   .prop{position:relative;overflow:hidden;background:var(--panel);border:1px solid rgba(200,155,108,.16);
-    border-left:3px solid var(--idle);border-radius:6px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:2px}
+    border-left:3px solid var(--idle);border-radius:6px;padding:22px 22px 20px;display:flex;flex-direction:column;gap:3px;
+    transition:border-color .2s ease, transform .2s ease}
   .prop.st-up{border-left-color:var(--ok)}
   .prop.st-down{border-left-color:var(--down)}
-  .prop.st-dev{opacity:.82}
+  .prop.st-dev{opacity:.8}
   .prop::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
     background:repeating-linear-gradient(135deg, rgba(204,163,83,.025) 0 2px, transparent 2px 14px)}
   .prop > *{position:relative;z-index:1}
-  .prop__top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-  .prop__logo-wrap{position:relative;flex:0 0 auto;width:44px;height:44px}
-  .prop__logo{width:44px;height:44px;object-fit:contain;display:block}
+  .prop__top{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+  .prop__logo-wrap{position:relative;flex:0 0 auto;width:54px;height:54px}
+  .prop__logo{width:54px;height:54px;object-fit:contain;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
   .prop__logo--fallback{display:flex;align-items:center;justify-content:center;background:var(--panel-2);
-    border:1px solid rgba(200,155,108,.25);border-radius:8px;font-family:var(--serif);font-weight:600;
-    font-size:19px;color:var(--dorado)}
-  .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:var(--idle);
+    border:1px solid rgba(200,155,108,.25);border-radius:9px;font-family:var(--serif);font-weight:600;
+    font-size:22px;color:var(--dorado)}
+  .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;background:var(--idle);
     position:absolute;bottom:-2px;right:-2px;border:2px solid var(--panel)}
-  .dot.up{background:var(--ok)} .dot.down{background:var(--down)}
-  .prop__titles{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .prop__name{font-family:var(--serif);font-weight:600;font-size:18px}
+  .dot.up{background:var(--ok);box-shadow:0 0 8px rgba(63,174,107,.6)} .dot.down{background:var(--down)}
+  .prop__titles{flex:1;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .prop__name{font-family:var(--serif);font-weight:600;font-size:20px;text-wrap:balance}
   .tag{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:3px 7px;border-radius:2px;border:1px solid rgba(204,163,83,.4);color:var(--dorado)}
-  .prop__desc{font-size:12.5px;color:var(--texto-mute);margin:0 0 12px}
-  .prop__group{border-top:1px solid rgba(200,155,108,.12);padding-top:11px;margin-top:9px;display:flex;flex-direction:column;gap:10px}
-  .prop__grouplabel{display:block;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--cobre)}
-  .prop__acts{display:flex;flex-wrap:wrap;gap:8px}
-  .prop__acts a.lnk{font-size:12px;border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:6px 11px;border-radius:3px}
-  .prop__acts a.lnk:hover{border-color:var(--cobre)}
+  .prop__desc{font-size:13px;color:var(--texto-2);margin:0 0 14px;line-height:1.55}
+  .prop__group{border-top:1px solid rgba(200,155,108,.12);padding-top:13px;margin-top:10px;display:flex;flex-direction:column;gap:11px}
+  .prop__grouplabel{display:block;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--cobre)}
+  .prop__acts{display:flex;flex-wrap:wrap;gap:9px}
+  .prop__acts a.lnk{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;
+    border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:8px 13px;border-radius:3px}
+  .prop__acts a.lnk:hover{border-color:var(--cobre);color:var(--hueso)}
   .gen{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .gen .lbl{font-size:12.5px;color:var(--texto-2)}
   .gen .lbl small{display:block;font-size:11px;color:var(--texto-mute)}
@@ -115,30 +136,37 @@
 </head>
 <body>
 
-<div id="login">
-  <span class="kicker">Ecosistema Musselli</span>
-  <h1>Panel <span>·</span> Operaciones</h1>
-  <p>Acceso restringido.</p>
-  <form id="loginForm">
-    <input type="email" id="email" placeholder="correo" autocomplete="username" required>
-    <input type="password" id="pass" placeholder="contraseña" autocomplete="current-password" required>
-    <button type="submit" class="btn-primary" id="loginBtn">Entrar</button>
-  </form>
-  <div class="msg" id="loginMsg"></div>
+<div id="loginScreen">
+  <div id="loginScreen__bg"></div>
+  <div id="loginScreen__grad"></div>
+  <div id="login">
+    <span class="kicker">Ecosistema Musselli</span>
+    <h1>Panel <span>·</span> Operaciones</h1>
+    <p>Acceso restringido.</p>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="correo" autocomplete="username" required>
+      <input type="password" id="pass" placeholder="contraseña" autocomplete="current-password" required>
+      <button type="submit" class="btn-primary" id="loginBtn">Entrar</button>
+    </form>
+    <div class="msg" id="loginMsg"></div>
+  </div>
 </div>
 
-<div class="wrap" id="dash" hidden>
-  <header class="bar">
-    <div>
+<div id="dash" hidden>
+  <div class="hero-band">
+    <div class="hero-band__bg"></div>
+    <div class="hero-band__grad"></div>
+    <div class="hero-band__inner">
       <span class="kicker">Ecosistema Musselli</span>
       <h1>Panel <span>·</span> Operaciones</h1>
     </div>
-    <span class="tools"><span id="who"></span>
+    <div class="hero-band__tools"><span id="who"></span>
       <button class="btn-ghost btn-mini" id="refresh">Actualizar</button>
       <button class="btn-ghost btn-mini" id="logout">Salir</button>
-    </span>
-  </header>
+    </div>
+  </div>
 
+  <div class="wrap">
   <div class="msg" id="topMsg"></div>
   <div class="prop__desc" id="costBanner" style="margin:0 0 18px;font-size:13px"></div>
   <div id="props"></div>
@@ -155,6 +183,7 @@
     Próximo en este panel: crear post / tendencia ahora · historial de publicados con ocultar/mostrar · cambiar foto ·
     consumo de cada proveedor · chat con Claude por propiedad.
   </p>
+  </div>
 </div>
 
 <dialog id="propDlg">
@@ -577,9 +606,9 @@ document.addEventListener("click", (ev) => {
 /* ---- login ---- */
 async function showDash(session){
   token = session.access_token; $("#who").textContent = session.user.email;
-  $("#login").hidden = true; $("#dash").hidden = false; await load();
+  $("#loginScreen").hidden = true; $("#dash").hidden = false; await load();
 }
-function showLogin(){ token = null; $("#dash").hidden = true; $("#login").hidden = false; }
+function showLogin(){ token = null; $("#dash").hidden = true; $("#loginScreen").hidden = false; }
 
 $("#loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
