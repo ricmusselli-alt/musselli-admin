@@ -174,6 +174,12 @@
   </form>
 </dialog>
 
+<dialog id="histDlg" style="max-width:560px">
+  <h3 id="histTitle">Historial</h3>
+  <div id="histList" style="max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
+  <div class="foot"><button class="btn-ghost btn-mini" id="histClose">Cerrar</button></div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL = "https://zquxompfcahmjquobnvk.supabase.co";
@@ -181,6 +187,10 @@ const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 const $ = (s) => document.querySelector(s);
 let token = null, DATA = { properties: [], providers: [], status: {} };
+const GEN = {
+  blog:       { fn: "generate-post",  product: "blog",  site: "https://blog.ricardomusselli.com/",       needsTopic: true },
+  tendencias: { fn: "generate-trend", product: "trend", site: "https://tendencias.ricardomusselli.com/", needsTopic: false },
+};
 
 async function api(method, body){
   const res = await fetch(SUPABASE_URL + "/functions/v1/admin-registry", {
@@ -224,7 +234,11 @@ function render(){
           <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
           <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
         </span>
-      </div>` : ''}
+      </div>
+      ${GEN[p.key] ? `<div style="display:flex;gap:8px">
+        <button class="btn-ghost btn-mini" data-genkey="${esc(p.key)}" ${GEN[p.key].needsTopic ? 'disabled title="Necesita elegir tema primero — pendiente"' : ''}>Crear ahora</button>
+        <button class="btn-ghost btn-mini" data-histkey="${esc(p.key)}">Historial</button>
+      </div>` : ''}` : ''}
       ${provs.length ? `<div class="prov-chips">${provs.map(chip).join('')}</div>` : ''}
       <div class="prop__edit"><button class="btn-ghost btn-mini" data-edit="${esc(p.key)}">Editar propiedad</button></div>
     </div>`;
@@ -252,6 +266,8 @@ async function load(){
 $("#props").addEventListener("click", async (ev) => {
   const tg = ev.target.closest("[data-toggle]");
   const ed = ev.target.closest("[data-edit]");
+  const gen = ev.target.closest("[data-genkey]");
+  const hist = ev.target.closest("[data-histkey]");
   if (tg){
     const key = tg.dataset.toggle;
     const p = DATA.properties.find(x => x.key === key);
@@ -261,6 +277,104 @@ $("#props").addEventListener("click", async (ev) => {
     catch(e){ $("#topMsg").className="msg err"; $("#topMsg").textContent = "Error: " + e.message; }
   }
   if (ed) openDialog(DATA.properties.find(x => x.key === ed.dataset.edit));
+  if (gen && !gen.disabled) await runGenerateNow(gen);
+  if (hist) openHist(hist.dataset.histkey);
+});
+
+/* ---- crear ahora ---- */
+async function runGenerateNow(btn){
+  const key = btn.dataset.genkey;
+  const g = GEN[key];
+  if (!g) return;
+  if (!confirm("¿Generar una publicación nueva de \"" + (DATA.properties.find(p=>p.key===key)?.name||key) + "\" ahora?")) return;
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = "Generando…";
+  try{
+    const res = await fetch(SUPABASE_URL + "/functions/v1/" + g.fn, {
+      method: "POST", headers: { "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error){
+      const m = typeof data.error === "string" ? data.error : (data.error ? JSON.stringify(data.error) : "HTTP " + res.status);
+      throw new Error(m);
+    }
+    alert(data.status === "sin_hallazgos"
+      ? "No encontró nada nuevo esta vez (sin_hallazgos). Podés volver a intentar."
+      : "Generado: \"" + (data.title || data.item?.title || "listo") + "\". Revisalo en el panel de revisión antes de aprobar.");
+  }catch(e){
+    alert("Error al generar: " + e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+
+/* ---- historial ---- */
+const histDlg = $("#histDlg");
+let histKey = null;
+async function openHist(key){
+  histKey = key;
+  const g = GEN[key];
+  $("#histTitle").textContent = "Historial · " + (DATA.properties.find(p=>p.key===key)?.name || key);
+  $("#histList").innerHTML = "Cargando…";
+  histDlg.showModal();
+  await loadHist(g);
+}
+async function loadHist(g){
+  try{
+    const { items } = await api("POST", { action:"list_content", product: g.product });
+    if (!items.length){ $("#histList").innerHTML = '<span class="prop__desc">Todavía no hay publicaciones.</span>'; return; }
+    $("#histList").innerHTML = items.map(it => {
+      const hidden = it.status !== "published";
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(200,155,108,.12);padding-bottom:9px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13.5px;${hidden?'color:var(--texto-mute)':''}">${esc(it.title)}${hidden?' <span class="tag" style="margin-left:6px">oculto</span>':''}</div>
+          <a href="${g.site}${esc(it.slug)}/" target="_blank" rel="noopener" style="font-size:11px">ver ↗</a>
+        </div>
+        <div style="display:flex;gap:6px;flex:0 0 auto">
+          ${it.status === "published"
+            ? `<button class="btn-ghost btn-mini" data-hide="${esc(it.id)}">Ocultar</button>`
+            : `<button class="btn-ghost btn-mini" data-show="${esc(it.id)}">Mostrar</button>`}
+          ${g.product === "blog" ? `<button class="btn-ghost btn-mini" data-rephoto="${esc(it.id)}">Cambiar foto</button>` : ''}
+        </div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    $("#histList").innerHTML = '<span class="msg err">Error: ' + esc(e.message) + '</span>';
+  }
+}
+$("#histClose").addEventListener("click", () => histDlg.close());
+$("#histList").addEventListener("click", async (ev) => {
+  const hide = ev.target.closest("[data-hide]");
+  const show = ev.target.closest("[data-show]");
+  const rephoto = ev.target.closest("[data-rephoto]");
+  const g = GEN[histKey];
+  if (hide){
+    if (!confirm("¿Ocultar esta publicación? Deja de verse en la portada; no se borra, se puede volver a mostrar.")) return;
+    try{ await api("POST", { action:"set_item_status", item_id: hide.dataset.hide, status:"rejected" }); loadHist(g); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  if (show){
+    try{ await api("POST", { action:"set_item_status", item_id: show.dataset.show, status:"published" }); loadHist(g); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  if (rephoto){
+    if (!confirm("¿Buscar una foto nueva para esta publicación? Se vuelve a publicar con la foto que le toque esta vez.")) return;
+    const original = rephoto.textContent;
+    rephoto.disabled = true; rephoto.textContent = "…";
+    try{
+      await api("POST", { action:"set_item_status", item_id: rephoto.dataset.rephoto, status:"pending_review" });
+      const res = await fetch(SUPABASE_URL + "/functions/v1/review-item", {
+        method: "POST", headers: { "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: rephoto.dataset.rephoto, decision: "approve" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
+      loadHist(g);
+    }catch(e){
+      alert("Error: " + e.message);
+      rephoto.disabled = false; rephoto.textContent = original;
+    }
+  }
 });
 
 /* ---- diálogo de propiedad ---- */
