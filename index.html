@@ -74,6 +74,24 @@
   .quicknav a:hover{background:rgba(200,155,108,.1);color:var(--hueso)}
   .quicknav a .go{font-size:11px;color:var(--texto-mute)}
   .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
+  .avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;flex:0 0 auto;cursor:pointer;
+    border:1.5px solid rgba(200,155,108,.5);display:flex;align-items:center;justify-content:center;
+    background:var(--panel-2);color:var(--dorado);font-family:var(--serif);font-weight:600;font-size:14px;
+    transition:border-color .2s ease}
+  .avatar:hover{border-color:var(--cobre)}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+  /* ---- tarjetas de números, de un vistazo ---- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:34px}
+  .kpi{position:relative;overflow:hidden;background:var(--panel);border:1px solid rgba(200,155,108,.16);
+    border-radius:6px;padding:18px 20px}
+  .kpi::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(135deg, rgba(204,163,83,.02) 0 2px, transparent 2px 14px)}
+  .kpi > *{position:relative}
+  .kpi__label{display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--cobre);margin-bottom:9px}
+  .kpi__value{display:block;font-family:var(--serif);font-weight:600;font-size:32px;color:var(--texto);line-height:1}
+  .kpi__sub{display:block;font-size:11.5px;color:var(--texto-mute);margin-top:5px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* ---- banda con foto arriba del panel, como el hero del blog ---- */
   .hero-band{position:relative;min-height:clamp(180px,26vw,240px);display:flex;align-items:flex-end;overflow:hidden}
@@ -191,7 +209,12 @@
         <button class="nav-drop__trigger" id="quickNavBtn">Accesos rápidos<i class="caret">▾</i></button>
         <div class="quicknav" id="quickNav"></div>
       </span>
-      <span class="tools"><span id="who"></span>
+      <span class="tools">
+        <span class="avatar" id="avatarBtn" title="Tu foto">
+          <img id="avatarImg" alt="" hidden>
+          <span id="avatarInitial">·</span>
+        </span>
+        <span id="who"></span>
         <button class="btn-ghost btn-mini" id="refresh">Actualizar</button>
         <button class="btn-ghost btn-mini" id="logout">Salir</button>
       </span>
@@ -210,7 +233,7 @@
 
   <div class="wrap">
   <div class="msg" id="topMsg"></div>
-  <div class="prop__desc" id="costBanner" style="margin:0 0 18px;font-size:13px"></div>
+  <div class="kpis" id="kpis"></div>
   <div id="props"></div>
 
   <div style="margin-top:16px"><button class="btn-ghost" id="addProp">＋ Agregar propiedad</button></div>
@@ -284,6 +307,18 @@
   <h3 id="histTitle">Historial</h3>
   <div id="histList" style="max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
   <div class="foot"><button class="btn-ghost btn-mini" id="histClose">Cerrar</button></div>
+</dialog>
+
+<dialog id="avatarDlg">
+  <h3>Tu foto</h3>
+  <p style="font-size:12.5px;color:var(--texto-mute);margin:0 0 16px;text-transform:none;letter-spacing:0">
+    Se guarda solo en este navegador — nadie más la ve.
+  </p>
+  <input type="file" id="avatarFile" accept="image/*">
+  <div class="foot">
+    <button type="button" class="btn-ghost btn-mini" id="avatarRemove">Quitar foto</button>
+    <button type="button" class="btn-ghost btn-mini" id="avatarCancel">Cerrar</button>
+  </div>
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -411,8 +446,6 @@ const STATUS_GROUPS = [
 function render(){
   const { properties, providers, status } = DATA;
   const totalStr = Object.entries(DATA.cost_by_currency || {}).map(([c,v]) => c + " $" + v.toFixed(2)).join(" + ");
-  $("#costBanner").textContent = "Gasto mensual cargado: " + (totalStr || "— (agregá el costo en cada proveedor)");
-
   const counts = { activo: 0, en_desarrollo: 0, planeado: 0 };
   properties.forEach(p => { counts[p.status || "activo"] = (counts[p.status || "activo"] || 0) + 1; });
   const genOn = properties.filter(p => p.has_generator && p.enabled).map(p => p.name);
@@ -423,6 +456,16 @@ function render(){
   ].filter(Boolean).join(" · ");
   const genStr = genOn.length ? `${genOn.join(" y ")} generando contenido solo${genOn.length>1?"s":""}.` : "Generación automática apagada por ahora.";
   $("#heroLede").innerHTML = `${ledeParts}. ${genStr}`;
+
+  const costedProv = providers.filter(v => typeof v.monthly_cost === "number").length;
+  $("#kpis").innerHTML = `
+    <div class="kpi"><span class="kpi__label">En vivo</span><span class="kpi__value">${counts.activo}</span>
+      <span class="kpi__sub">de ${properties.length} propiedades en total</span></div>
+    <div class="kpi"><span class="kpi__label">Generando contenido</span><span class="kpi__value">${genOn.length}</span>
+      <span class="kpi__sub">${genOn.length ? esc(genOn.join(", ")) : "ninguna activa ahora"}</span></div>
+    <div class="kpi"><span class="kpi__label">Gasto mensual</span><span class="kpi__value">${esc(totalStr || "—")}</span>
+      <span class="kpi__sub">${costedProv} proveedor${costedProv===1?"":"es"} con costo cargado</span></div>
+  `;
 
   $("#props").innerHTML = STATUS_GROUPS.map(g => {
     const items = properties.filter(p => (p.status || "activo") === g.key);
@@ -680,9 +723,29 @@ document.addEventListener("click", (ev) => {
   openProvDialog(DATA.providers.find(x => x.key === key));
 });
 
+/* ---- foto de perfil del administrador (solo en este navegador, sin backend) ---- */
+const AVATAR_KEY = "musselli_admin_avatar";
+function paintAvatar(email){
+  const data = localStorage.getItem(AVATAR_KEY);
+  const img = $("#avatarImg"), ini = $("#avatarInitial");
+  if (data){ img.src = data; img.hidden = false; ini.hidden = true; }
+  else { img.hidden = true; ini.hidden = false; ini.textContent = (email || "?").charAt(0).toUpperCase(); }
+}
+$("#avatarBtn").addEventListener("click", () => $("#avatarDlg").showModal());
+$("#avatarCancel").addEventListener("click", () => $("#avatarDlg").close());
+$("#avatarRemove").addEventListener("click", () => { localStorage.removeItem(AVATAR_KEY); paintAvatar($("#who").textContent); $("#avatarDlg").close(); });
+$("#avatarFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { localStorage.setItem(AVATAR_KEY, reader.result); paintAvatar($("#who").textContent); $("#avatarDlg").close(); };
+  reader.readAsDataURL(file);
+});
+
 /* ---- login ---- */
 async function showDash(session){
   token = session.access_token; $("#who").textContent = session.user.email;
+  paintAvatar(session.user.email);
   $("#loginScreen").hidden = true; $("#dash").hidden = false; await load();
 }
 function showLogin(){ token = null; $("#dash").hidden = true; $("#loginScreen").hidden = false; }
