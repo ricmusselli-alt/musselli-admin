@@ -85,9 +85,12 @@
     padding:26px clamp(20px,5vw,48px) 24px}
   .hero-band .kicker{display:block;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--cobre);margin-bottom:8px;
     text-shadow:0 2px 10px rgba(0,0,0,.6)}
-  .hero-band h1{font-family:var(--serif);font-weight:600;font-size:clamp(26px,4vw,34px);margin:0;letter-spacing:.01em;line-height:1;
-    text-shadow:0 2px 20px rgba(0,0,0,.65)}
-  .hero-band h1 span{color:var(--cobre)}
+  .hero-band h1{font-family:var(--serif);font-weight:500;font-size:clamp(27px,4.2vw,38px);margin:0 0 10px;letter-spacing:.005em;line-height:1.15;
+    text-shadow:0 2px 20px rgba(0,0,0,.65);text-wrap:balance;max-width:22ch}
+  .hero-band h1 em{font-style:italic;color:#e7c46b}
+  .hero-band .lede{font-family:var(--sans);font-weight:300;font-size:clamp(13px,1.5vw,15px);color:var(--texto-2);
+    margin:0;max-width:480px;line-height:1.6;text-shadow:0 1px 10px rgba(0,0,0,.65)}
+  .hero-band .lede b{color:var(--hueso);font-weight:500}
   .hero-band__tools{position:absolute;z-index:2;top:22px;right:clamp(20px,5vw,48px);
     display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-2)}
   .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
@@ -200,7 +203,8 @@
     <div class="hero-band__grad"></div>
     <div class="hero-band__inner">
       <span class="kicker">Ecosistema Musselli</span>
-      <h1>Panel <span>·</span> Operaciones</h1>
+      <h1>Todo lo que construimos, <em>en un solo lugar.</em></h1>
+      <p class="lede" id="heroLede">Cargando el estado del ecosistema…</p>
     </div>
   </div>
 
@@ -408,6 +412,17 @@ function render(){
   const { properties, providers, status } = DATA;
   const totalStr = Object.entries(DATA.cost_by_currency || {}).map(([c,v]) => c + " $" + v.toFixed(2)).join(" + ");
   $("#costBanner").textContent = "Gasto mensual cargado: " + (totalStr || "— (agregá el costo en cada proveedor)");
+
+  const counts = { activo: 0, en_desarrollo: 0, planeado: 0 };
+  properties.forEach(p => { counts[p.status || "activo"] = (counts[p.status || "activo"] || 0) + 1; });
+  const genOn = properties.filter(p => p.has_generator && p.enabled).map(p => p.name);
+  const ledeParts = [
+    `<b>${counts.activo}</b> en vivo`,
+    counts.en_desarrollo ? `<b>${counts.en_desarrollo}</b> en camino` : null,
+    counts.planeado ? `<b>${counts.planeado}</b> en el radar` : null,
+  ].filter(Boolean).join(" · ");
+  const genStr = genOn.length ? `${genOn.join(" y ")} generando contenido solo${genOn.length>1?"s":""}.` : "Generación automática apagada por ahora.";
+  $("#heroLede").innerHTML = `${ledeParts}. ${genStr}`;
 
   $("#props").innerHTML = STATUS_GROUPS.map(g => {
     const items = properties.filter(p => (p.status || "activo") === g.key);
