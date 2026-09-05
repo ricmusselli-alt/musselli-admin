@@ -4,994 +4,155 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Panel · Musselli</title>
+<title>Portada · Panel Musselli</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --negro:#141212; --panel:#1c1917; --panel-2:#232019;
-    --borgona:#5D0002; --hueso:#F5F0E6; --cobre:#C89B6C; --dorado:#CCA353;
-    --texto:#F5F0E6; --texto-2:#c9c2b6; --texto-mute:#8a8275;
-    --ok:#3fae6b; --down:#c65b5b; --idle:#6b6358;
-    --serif:'Cormorant Garamond',Georgia,serif; --sans:'Jost',system-ui,sans-serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--negro);color:var(--texto);font-family:var(--sans);font-weight:300;line-height:1.6;font-size:14.5px}
-  a{color:var(--cobre);text-decoration:none}
-  .wrap{max-width:920px;margin:0 auto;padding:clamp(22px,4vw,36px) clamp(20px,5vw,48px) clamp(40px,6vw,64px)}
-  button{font-family:inherit;font-size:12px;cursor:pointer;border:0;border-radius:22px;padding:11px 20px;
-    letter-spacing:.1em;text-transform:uppercase;font-weight:600;transition:background .2s ease,border-color .2s ease,color .2s ease}
-  button:disabled{opacity:.5;cursor:default}
-  .btn-primary{background:var(--borgona);color:var(--hueso)} .btn-primary:hover:not(:disabled){background:#7a0a0c}
-  .btn-ghost{background:transparent;color:var(--cobre);border:1px solid rgba(200,155,108,.45)}
-  .btn-ghost:hover:not(:disabled){border-color:var(--cobre);color:var(--hueso)}
-  .btn-solid{background:var(--dorado);color:var(--negro);font-weight:700;border:1px solid var(--dorado)}
-  .btn-solid:hover:not(:disabled){background:#e7c46b;border-color:#e7c46b}
-  .btn-mini{padding:8px 14px;font-size:10.5px}
-
-  /* ---- pantalla de login: foto de fondo, como el hero del blog ---- */
-  #loginScreen{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;padding:24px}
-  #loginScreen__bg{position:absolute;inset:0;background:#0e0d0c url('hero.jpg') center 40%/cover no-repeat;
-    filter:brightness(.6) saturate(.9)}
-  #loginScreen__grad{position:absolute;inset:0;
-    background:radial-gradient(120% 100% at 50% 30%, rgba(20,18,18,.35) 0%, rgba(14,13,12,.82) 68%, var(--negro) 100%)}
-  #login{position:relative;z-index:1;max-width:360px;width:100%;text-align:center;padding:clamp(30px,5vw,44px) 30px;
-    border:1px solid rgba(200,155,108,.25);border-radius:8px;background:rgba(28,25,23,.72);
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-    box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden}
-  #login::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
-    background:repeating-linear-gradient(135deg, rgba(204,163,83,.035) 0 2px, transparent 2px 14px)}
-  #login > *{position:relative;z-index:1}
-  #login .kicker{display:block;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--cobre);margin-bottom:16px}
-  #login h1{font-family:var(--serif);font-weight:600;font-size:28px;margin:0 0 8px;text-wrap:balance}
-  #login h1 span{color:var(--cobre)}
-  #login p{color:var(--texto-2);font-size:13px;margin:0 0 26px}
-  #login input{width:100%;margin-bottom:12px;padding:13px 15px;background:rgba(20,18,18,.55);border:1px solid rgba(200,155,108,.3);border-radius:3px;color:var(--texto);font-family:inherit;font-size:14px}
-  #login input:focus{outline:1px solid var(--cobre)}
-  #login button{width:100%;padding:14px}
-  .msg{font-size:12.5px;margin-top:10px;min-height:1.2em}
-  .msg.err{color:#e79a9c} .msg.ok{color:var(--ok)}
-
-  /* ---- barra fija con logo + accesos rápidos, como el header del sitio ---- */
-  .site-bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:20px;
-    padding:14px clamp(20px,5vw,48px);background:rgba(20,18,18,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    border-bottom:1px solid rgba(200,155,108,.16)}
-  .site-bar__logo img{height:30px;width:auto;display:block}
-  .site-bar__logo .fallback{font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.1em;color:var(--texto)}
-  .site-bar nav{display:flex;align-items:center;gap:16px}
-  .nav-drop{position:relative}
-  .nav-drop__trigger{background:transparent;border:1px solid rgba(200,155,108,.4);color:var(--cobre);
-    padding:9px 15px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;border-radius:3px;cursor:pointer}
-  .nav-drop__trigger:hover{border-color:var(--cobre);color:var(--hueso)}
-  .nav-drop__trigger .caret{margin-left:6px;font-style:normal;font-size:9px;transition:transform .2s ease}
-  .nav-drop.open .nav-drop__trigger .caret{transform:rotate(180deg)}
-  .quicknav{position:absolute;top:100%;right:0;margin-top:10px;min-width:280px;max-height:70vh;overflow-y:auto;
-    background:rgba(16,14,13,.98);backdrop-filter:blur(12px);border:1px solid rgba(200,155,108,.25);border-radius:6px;
-    box-shadow:0 20px 50px rgba(0,0,0,.55);padding:8px;display:none;z-index:50}
-  .nav-drop.open .quicknav{display:block}
-  .quicknav__group{padding:8px 10px 4px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--cobre)}
-  .quicknav a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:3px;
-    font-family:var(--sans);font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--texto-2)}
-  .quicknav a:hover{background:rgba(200,155,108,.1);color:var(--hueso)}
-  .quicknav a .go{font-size:11px;color:var(--texto-mute)}
-  .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
-  .avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;flex:0 0 auto;cursor:pointer;
-    border:1.5px solid rgba(200,155,108,.5);display:flex;align-items:center;justify-content:center;
-    background:var(--panel-2);color:var(--dorado);font-family:var(--serif);font-weight:600;font-size:14px;
-    transition:border-color .2s ease}
-  .avatar:hover{border-color:var(--cobre)}
-  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
-
-  /* ---- tarjetas de números, de un vistazo ---- */
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:34px}
-  .kpi{position:relative;overflow:hidden;background:var(--panel);border:1px solid rgba(200,155,108,.16);
-    border-radius:6px;padding:18px 20px}
-  .kpi::before{content:"";position:absolute;inset:0;pointer-events:none;
-    background:repeating-linear-gradient(135deg, rgba(204,163,83,.02) 0 2px, transparent 2px 14px)}
-  .kpi > *{position:relative}
-  .kpi__label{display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--cobre);margin-bottom:9px}
-  .kpi__value{display:block;font-family:var(--serif);font-weight:600;font-size:32px;color:var(--texto);line-height:1}
-  .kpi__sub{display:block;font-size:11.5px;color:var(--texto-mute);margin-top:5px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-  /* ---- banda con foto arriba del panel, como el hero del blog ---- */
-  .hero-band{position:relative;min-height:clamp(180px,26vw,240px);display:flex;align-items:flex-end;overflow:hidden}
-  .hero-band__bg{position:absolute;inset:0;background:url('hero.jpg') center 36%/cover no-repeat;filter:brightness(.68) saturate(.92)}
-  .hero-band__grad{position:absolute;inset:0;
-    background:linear-gradient(180deg, rgba(20,18,18,.25) 0%, rgba(14,13,12,.4) 45%, var(--negro) 100%),
-      linear-gradient(100deg, rgba(14,13,12,.7) 0%, rgba(14,13,12,.2) 58%, rgba(14,13,12,0) 82%)}
-  .hero-band__inner{position:relative;z-index:1;max-width:920px;margin:0 auto;width:100%;
-    padding:26px clamp(20px,5vw,48px) 24px}
-  .hero-band .kicker{display:block;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--cobre);margin-bottom:8px;
-    text-shadow:0 2px 10px rgba(0,0,0,.6)}
-  .hero-band h1{font-family:var(--serif);font-weight:500;font-size:clamp(27px,4.2vw,38px);margin:0 0 10px;letter-spacing:.005em;line-height:1.15;
-    text-shadow:0 2px 20px rgba(0,0,0,.65);text-wrap:balance;max-width:22ch}
-  .hero-band h1 em{font-style:italic;color:#e7c46b}
-  .hero-band .lede{font-family:var(--sans);font-weight:300;font-size:clamp(13px,1.5vw,15px);color:var(--texto-2);
-    margin:0;max-width:480px;line-height:1.6;text-shadow:0 1px 10px rgba(0,0,0,.65)}
-  .hero-band .lede b{color:var(--hueso);font-weight:500}
-  .hero-band__tools{position:absolute;z-index:2;top:22px;right:clamp(20px,5vw,48px);
-    display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-2)}
-  .tools{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--texto-mute)}
-
-  section.statusgroup{margin-bottom:38px}
-  section.statusgroup > .grouphead{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;padding-bottom:10px;
-    border-bottom:1px solid rgba(200,155,108,.14)}
-  section.statusgroup > .grouphead .kicker{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--cobre)}
-  section.statusgroup > .grouphead .count{font-size:11px;color:var(--texto-mute)}
-  section.statusgroup > .grouphead h2{font-family:var(--serif);font-weight:600;font-size:21px;margin:0}
-
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:22px;align-items:start}
-  .prop{position:relative;overflow:hidden;cursor:default;
-    background:linear-gradient(165deg, var(--panel-2) 0%, var(--panel) 55%);
-    border:1px solid rgba(200,155,108,.18);border-radius:18px;padding:24px 24px 22px;
-    display:flex;flex-direction:column;gap:3px;
-    box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 10px 24px rgba(0,0,0,.18);
-    transition:transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease, border-color .28s ease}
-  .prop:hover{transform:translateY(-5px);border-color:rgba(204,163,83,.5);
-    box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 40px rgba(0,0,0,.32), 0 0 0 1px rgba(204,163,83,.08)}
-  .prop.st-up::after{background:radial-gradient(closest-side, rgba(63,174,107,.5), transparent)}
-  .prop.st-down::after{background:radial-gradient(closest-side, rgba(198,91,91,.5), transparent)}
-  .prop.st-dev{opacity:.88}
-  .prop::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
-    background:repeating-linear-gradient(135deg, rgba(204,163,83,.025) 0 2px, transparent 2px 14px)}
-  .prop::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;pointer-events:none;z-index:0;
-    background:radial-gradient(closest-side, rgba(200,155,108,.35), transparent);opacity:.5;filter:blur(2px)}
-  .prop > *{position:relative;z-index:1}
-  .prop__top{display:flex;align-items:center;gap:14px;margin-bottom:12px}
-  .prop__logo-wrap{position:relative;flex:0 0 auto;width:56px;height:56px;border-radius:14px;
-    background:rgba(245,240,230,.04);display:flex;align-items:center;justify-content:center;
-    transition:transform .28s ease}
-  .prop:hover .prop__logo-wrap{transform:scale(1.06)}
-  .prop__logo{width:40px;height:40px;object-fit:contain;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
-  .prop__logo--fallback{display:flex;align-items:center;justify-content:center;background:var(--panel-2);
-    border:1px solid rgba(200,155,108,.25);border-radius:14px;font-family:var(--serif);font-weight:600;
-    font-size:22px;color:var(--dorado);width:100%;height:100%}
-  .prop__status{position:absolute;top:16px;right:16px;z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px}
-  .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:var(--idle)}
-  .dot.up{background:var(--ok);box-shadow:0 0 8px rgba(63,174,107,.65)} .dot.down{background:var(--down);box-shadow:0 0 8px rgba(198,91,91,.55)}
-  .prop__statuslabel{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--texto-mute)}
-  .prop__statuslabel.up{color:var(--ok)} .prop__statuslabel.down{color:var(--down)}
-  .prop__titles{flex:1;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .prop__name{font-family:var(--serif);font-weight:600;font-size:21px;text-wrap:balance}
-  .tag{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:4px 9px;border-radius:20px;border:1px solid rgba(204,163,83,.4);color:var(--dorado)}
-  .prop__desc{font-size:13px;color:var(--texto-2);margin:0 0 14px;line-height:1.6}
-  .prop__group{border-top:1px solid rgba(245,240,230,.07);padding-top:14px;margin-top:10px;display:flex;flex-direction:column;gap:11px}
-  .prop__grouplabel{display:block;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--cobre)}
-  .prop__acts{display:flex;flex-wrap:wrap;gap:9px}
-  .prop__acts a.lnk{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;
-    border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:9px 15px;border-radius:20px;
-    transition:background .2s ease,border-color .2s ease,color .2s ease,transform .2s ease}
-  .prop__acts a.lnk:hover{border-color:var(--cobre);color:var(--negro);background:var(--cobre);transform:translateY(-1px)}
-  .gen{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(245,240,230,.03);
-    border-radius:12px;padding:10px 14px;margin:0 -6px}
-  .gen .lbl{font-size:12.5px;color:var(--texto-2)}
-  .gen .lbl small{display:block;font-size:11px;color:var(--texto-mute)}
-  .state{font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-right:2px}
-  .state.on{color:var(--ok)} .state.off{color:var(--idle)}
-  .toggle{position:relative;width:44px;height:25px;flex:0 0 auto;border-radius:13px;background:#3a352c;border:1px solid rgba(200,155,108,.3);transition:background .2s ease}
-  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--texto-2);transition:transform .2s ease,background .2s ease}
-  .toggle.on{background:rgba(63,174,107,.35);border-color:var(--ok)}
-  .toggle.on::after{transform:translateX(19px);background:var(--ok)}
-  .toggle:disabled{opacity:.5;cursor:default}
-  .prop__edit{border-top:1px solid rgba(245,240,230,.07);padding-top:12px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
-
-  section.block{margin-top:28px}
-  section.block > h2{font-family:var(--sans);font-weight:500;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cobre);margin:0 0 12px}
-  .prov-chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel-2);border:1px solid rgba(200,155,108,.16);border-radius:3px;padding:7px 12px;font-size:12.5px;color:var(--texto-2)}
-  .chip a{color:var(--cobre)}
-
-  dialog{background:var(--panel);color:var(--texto);border:1px solid rgba(200,155,108,.3);border-radius:6px;padding:22px;max-width:420px;width:92vw}
-  dialog::backdrop{background:rgba(0,0,0,.6)}
-  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 14px;font-size:18px}
-  dialog label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-mute);margin:10px 0 4px}
-  dialog input,dialog select{width:100%;padding:9px 11px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:13px}
-  dialog .row{display:flex;align-items:center;gap:8px;margin-top:12px}
-  dialog .row input[type=checkbox]{width:auto}
-  dialog .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-  .fine{font-size:12px;color:var(--texto-mute);margin-top:26px;line-height:1.7}
-  [hidden]{display:none!important}
-</style>
+<link rel="stylesheet" href="panel.css">
 </head>
 <body>
+<div class="wrap" id="app" hidden>
 
-<div id="loginScreen">
-  <div id="loginScreen__bg"></div>
-  <div id="loginScreen__grad"></div>
-  <div id="login">
-    <span class="kicker">Ecosistema Musselli</span>
-    <h1>Panel <span>·</span> Operaciones</h1>
-    <p>Acceso restringido.</p>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="correo" autocomplete="username" required>
-      <input type="password" id="pass" placeholder="contraseña" autocomplete="current-password" required>
-      <button type="submit" class="btn-primary" id="loginBtn">Entrar</button>
-    </form>
-    <div class="msg" id="loginMsg"></div>
-  </div>
-</div>
-
-<div id="dash" hidden>
-  <header class="site-bar">
-    <a class="site-bar__logo" href="#">
-      <img src="logos/_musselli.png" alt="Musselli"
-           onerror="this.style.display='none';this.nextElementSibling.style.display='inline'">
-      <span class="fallback" style="display:none">MUSSELLI</span>
-    </a>
-    <nav>
-      <span class="nav-drop" id="quickNavDrop">
-        <button class="nav-drop__trigger" id="quickNavBtn">Accesos rápidos<i class="caret">▾</i></button>
-        <div class="quicknav" id="quickNav"></div>
-      </span>
-      <span class="tools">
-        <span class="avatar" id="avatarBtn" title="Tu foto">
-          <img id="avatarImg" alt="" hidden>
-          <span id="avatarInitial">·</span>
-        </span>
-        <span id="who"></span>
-        <button class="btn-ghost btn-mini" id="refresh">Actualizar</button>
-        <button class="btn-ghost btn-mini" id="logout">Salir</button>
-      </span>
-    </nav>
-  </header>
-
-  <div class="hero-band">
-    <div class="hero-band__bg"></div>
-    <div class="hero-band__grad"></div>
-    <div class="hero-band__inner">
-      <span class="kicker">Ecosistema Musselli</span>
-      <h1>Todo lo que construimos, <em>en un solo lugar.</em></h1>
-      <p class="lede" id="heroLede">Cargando el estado del ecosistema…</p>
-    </div>
+  <div class="page-head">
+    <span class="crumb">Ecosistema Musselli</span>
+    <h1>Portada</h1>
+    <p>El estado de todo el ecosistema de un vistazo. Cada familia tiene su propio centro de control:
+       tocá una tarjeta para entrar.</p>
   </div>
 
-  <div class="wrap">
   <div class="msg" id="topMsg"></div>
-  <div class="kpis" id="kpis"></div>
-  <div id="props"></div>
 
-  <div style="margin-top:16px"><button class="btn-ghost" id="addProp">＋ Agregar propiedad</button></div>
+  <!-- lectura rápida -->
+  <div class="resumen" id="resumen"></div>
 
-  <section class="block">
-    <h2>Proveedores compartidos</h2>
-    <div class="prov-chips" id="sharedProv"></div>
-    <div style="margin-top:12px"><button class="btn-ghost btn-mini" id="addProv">＋ Agregar proveedor</button></div>
-  </section>
-
-  <p class="fine">
-    Próximo en este panel: crear post / tendencia ahora · historial de publicados con ocultar/mostrar · cambiar foto ·
-    consumo de cada proveedor · chat con Claude por propiedad.
-  </p>
+  <!-- tarjetas de familia -->
+  <div class="seccion">
+    <div class="seccion__head">
+      <span class="kicker">Familias</span>
+      <h2>Todo lo que construimos</h2>
+      <span class="count" id="famCount"></span>
+    </div>
+    <div class="familias" id="familias"></div>
   </div>
+
+  <p style="font-size:12px;color:var(--texto-mute);margin-top:26px;line-height:1.7">
+    Para agregar o editar una familia (URL, repo, descripción, estado) entrá a su centro de control.
+    Los proveedores y sus costos ahora viven en la sección <a href="costos.html">Costos</a>.
+  </p>
+
 </div>
-
-<dialog id="propDlg">
-  <form method="dialog" id="propForm">
-    <h3 id="dlgTitle">Nueva propiedad</h3>
-    <label>Clave (sin espacios, ej. "academia")</label>
-    <input id="f_key" required pattern="[a-z0-9\-]+">
-    <label>Nombre</label>
-    <input id="f_name" required>
-    <label>Descripción</label>
-    <input id="f_description">
-    <label>URL en vivo</label>
-    <input id="f_live_url" placeholder="https://...">
-    <label>Repo GitHub (opcional)</label>
-    <input id="f_repo_url" placeholder="https://github.com/...">
-    <label>Desarrollo (Claude Code, contacto del dev, docs…)</label>
-    <input id="f_dev_url" placeholder="https://claude.ai/code">
-    <label>Estado</label>
-    <select id="f_status"><option value="activo">activo</option><option value="en_desarrollo">en desarrollo</option></select>
-    <div class="row"><input type="checkbox" id="f_has_generator"><label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--texto-2)">Tiene generación automática de contenido</label></div>
-    <div class="foot">
-      <button type="button" class="btn-ghost btn-mini" id="dlgDelete" hidden>Eliminar</button>
-      <button type="button" class="btn-ghost btn-mini" id="dlgCancel">Cancelar</button>
-      <button type="submit" class="btn-primary btn-mini">Guardar</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog id="provDlg">
-  <form method="dialog" id="provForm">
-    <h3 id="pDlgTitle">Nuevo proveedor</h3>
-    <label>Clave (sin espacios, ej. "r2-academia")</label>
-    <input id="p_key" required pattern="[a-z0-9\-]+">
-    <label>Nombre</label>
-    <input id="p_name" required>
-    <label>Propiedad a la que pertenece</label>
-    <select id="p_property_key"><option value="">— Compartido —</option></select>
-    <label>Link a su consola</label>
-    <input id="p_console_url" placeholder="https://...">
-    <label>Plan contratado</label>
-    <input id="p_plan_name" placeholder='ej: "Pro", "Free", "Team 5 asientos"'>
-    <label>Precio del plan</label>
-    <div style="display:flex;gap:8px">
-      <input id="p_plan_price" type="number" step="0.01" placeholder="0.00" style="flex:2">
-      <select id="p_currency" style="flex:1"><option>USD</option><option>ARS</option><option>MXN</option><option>EUR</option></select>
-      <select id="p_billing_cycle" style="flex:1"><option value="mensual">por mes</option><option value="anual">por año</option></select>
-    </div>
-    <label>Próxima fecha de renovación/cobro</label>
-    <input id="p_renewal_date" type="date">
-    <label>Notas</label>
-    <input id="p_notes">
-    <div class="foot">
-      <button type="button" class="btn-ghost btn-mini" id="pDlgDelete" hidden>Eliminar</button>
-      <button type="button" class="btn-ghost btn-mini" id="pDlgCancel">Cancelar</button>
-      <button type="submit" class="btn-primary btn-mini">Guardar</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog id="histDlg" style="max-width:560px">
-  <h3 id="histTitle">Historial</h3>
-  <div id="histList" style="max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
-  <div class="foot"><button class="btn-ghost btn-mini" id="histClose">Cerrar</button></div>
-</dialog>
-
-<dialog id="avatarDlg">
-  <h3>Tu foto</h3>
-  <p style="font-size:12.5px;color:var(--texto-mute);margin:0 0 16px;text-transform:none;letter-spacing:0">
-    Se guarda solo en este navegador — nadie más la ve.
-  </p>
-  <input type="file" id="avatarFile" accept="image/*">
-  <div class="foot">
-    <button type="button" class="btn-ghost btn-mini" id="avatarRemove">Quitar foto</button>
-    <button type="button" class="btn-ghost btn-mini" id="avatarCancel">Cerrar</button>
-  </div>
-</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="panel.js"></script>
 <script>
-const SUPABASE_URL = "https://zquxompfcahmjquobnvk.supabase.co";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxdXhvbXBmY2FobWpxdW9ibnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxMDk2NjAsImV4cCI6MjEwMzY4NTY2MH0.ZMa0_ZFsEKVK0lRydq1zjxQDcteGXxOKdmr00D-62wk";
-const sb = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
-const $ = (s) => document.querySelector(s);
-let token = null, DATA = { properties: [], providers: [], status: {} };
-const GEN = {
-  blog:       { product: "blog",  site: "https://blog.ricardomusselli.com/",       supportsHint: true },
-  tendencias: { product: "trend", site: "https://tendencias.ricardomusselli.com/", supportsHint: true },
-  carrusel:   { product: "carousel" },
+const { $, esc, ayuda, api } = Panel;
+
+/* Qué es cada familia, en una línea (por si en 6 meses no nos acordamos). */
+const DESC_FAMILIA = {
+  blog:       "Artículos largos del blog. El sistema propone temas, escribe el borrador y vos aprobás.",
+  tendencias: "Notas cortas de novedades del sector, verificadas antes de publicarse.",
+  carrusel:   "Carruseles de Instagram (Guitar Tech y Luthería), con diseño automático y aprobación humana.",
+  web:        "La web madre ricardomusselli.com. La desarrolla un tercero; acá solo vemos si está en vivo.",
+  portfolio:  "El portfolio de trabajos. Subcarpeta de la web.",
 };
+const ICONO_FAMILIA = { blog:"✒", tendencias:"◷", carrusel:"▤", web:"◉", portfolio:"❖" };
 
-/* ---- bloque especial de generación de Carruseles: línea, tema opcional, Lead Magnet ---- */
-function carruselGenHtml(){
-  const fieldStyle = "flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px";
-  const cfg = {}; (DATA.carrusel_config || []).forEach(c => cfg[c.category] = c);
-  const freqOf = (cat) => cfg[cat]?.frecuencia_mensual ?? 1;
-  const activoOf = (cat) => cfg[cat]?.activo !== false;
-  const opt = (sel) => [1,2,4].map(n => `<option value="${n}"${n===sel?' selected':''}>${n} por mes</option>`).join('');
-  const lineaRow = (cat, label) => `<div style="display:flex;gap:8px;align-items:center">
-      <span style="font-size:12px;color:var(--texto-2);flex:0 0 70px">${label}</span>
-      <span class="state ${activoOf(cat)?'on':'off'}" style="flex:0 0 auto">${activoOf(cat)?'on':'off'}</span>
-      <button class="toggle ${activoOf(cat)?'on':''}" data-carractivo="${cat}" aria-label="on/off"></button>
-      <select data-carrfreq="${cat}" style="${fieldStyle};flex:0 0 auto;padding:4px 6px;margin-left:auto">${opt(freqOf(cat))}</select>
-    </div>`;
-  return `<div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(245,240,230,.03);border-radius:8px">
-    ${lineaRow('guitar-tech', 'Guitar Tech')}
-    ${lineaRow('luthier', 'Luthería')}
-    <div style="height:1px;background:rgba(200,155,108,.14);margin:2px 0"></div>
-    <div style="display:flex;gap:6px">
-      <select id="carr_category" style="${fieldStyle};flex:0 0 150px">
-        <option value="guitar-tech">Guitar Tech</option>
-        <option value="luthier">Luthería</option>
-      </select>
-      <input type="text" id="carr_topic" placeholder="Tema (vacío = lo elige el Radar)" style="${fieldStyle}">
-    </div>
-    <label style="display:flex;align-items:center;gap:8px;margin:0;text-transform:none;letter-spacing:0;font-size:12px;color:var(--texto-2);cursor:pointer">
-      <input type="checkbox" id="carr_leadmagnet" style="margin:0">
-      Lead Magnet (hook y cierre a medida)
-    </label>
-    <div id="carr_leadmagnet_fields" hidden style="display:flex;flex-direction:column;gap:6px">
-      <input type="text" id="carr_hook" placeholder="Hook (frase de la slide 1)" style="${fieldStyle}">
-      <input type="text" id="carr_cta" placeholder='CTA de cierre (ej: "Escribí CUERDA y te envío todo.")' style="${fieldStyle}">
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-solid btn-mini" id="carr_crear">Crear carrusel</button>
-      <button class="btn-ghost btn-mini" data-histkey="carrusel">Historial</button>
-    </div>
-    ${carruselDraftsHtml()}
-    ${igTokenHtml()}
-  </div>`;
+function pendientesDe(key, DATA){
+  if (key === "carrusel") return (DATA.carrusel_drafts || []).length;
+  if (key === "blog")      return (DATA.blog_drafts || []).length;      // lo llenará el backend más adelante
+  if (key === "tendencias")return (DATA.trend_drafts || []).length;
+  return 0;
 }
 
-/* ---- borradores de carrusel esperando aprobación ---- */
-function carruselDraftsHtml(){
-  const drafts = DATA.carrusel_drafts || [];
-  if (!drafts.length) return '';
-  return `<div style="height:1px;background:rgba(200,155,108,.14);margin:4px 0"></div>
-    <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Borradores pendientes (${drafts.length})</span>
-    ${drafts.map(d => {
-      const imgs = (d.content && d.content.imagenes) || [];
-      const cap = (d.content && d.content.caption) || d.title || '';
-      return `<div style="border:1px solid rgba(200,155,108,.18);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px">
-        <div style="display:flex;gap:4px;overflow-x:auto">${imgs.slice(0,7).map(u=>`<img src="${esc(u)}" style="height:64px;border-radius:3px;flex:0 0 auto">`).join('')}</div>
-        <div style="font-size:11.5px;color:var(--texto-2);max-height:54px;overflow:hidden">${esc(cap)}</div>
-        <div style="display:flex;gap:6px">
-          <span class="tag">${d.category === 'luthier' ? 'Luthería' : 'Guitar Tech'}</span>
-          <button class="btn-solid btn-mini" data-carrpublish="${esc(d.id)}" style="margin-left:auto">Aprobar y publicar</button>
-          <button class="btn-ghost btn-mini" data-carrreject="${esc(d.id)}">Rechazar</button>
-        </div>
-      </div>`;
-    }).join('')}`;
-}
-
-/* ---- estado y renovación del token de Instagram (un clic = Login con Instagram) ---- */
-function igTokenHtml(){
-  const toks = {}; (DATA.ig_tokens || []).forEach(t => toks[t.category] = t.updated_at);
-  const OAUTH = SUPABASE_URL + "/functions/v1/ig-oauth?category=";
-  const linea = (cat, label) => {
-    const upd = toks[cat];
-    let estado = '<span style="color:var(--texto-mute)">sin token</span>';
-    if (upd){
-      const dias = 60 - Math.floor((Date.now() - new Date(upd).getTime())/86400000);
-      const col = dias <= 7 ? 'var(--down)' : dias <= 20 ? 'var(--dorado)' : 'var(--ok)';
-      estado = `<span style="color:${col}">vence en ${dias} día${dias===1?'':'s'}</span>`;
-    }
-    return `<div style="display:flex;gap:8px;align-items:center;font-size:12px">
-      <span style="color:var(--texto-2);flex:0 0 70px">${label}</span>
-      ${estado}
-      <a class="btn-solid btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener" style="margin-left:auto;text-decoration:none">Renovar con Instagram</a>
-    </div>`;
-  };
-  return `<div style="height:1px;background:rgba(200,155,108,.14);margin:4px 0"></div>
-    <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Tokens de Instagram</span>
-    ${linea('guitar-tech','Guitar Tech')}
-    ${linea('luthier','Luthería')}
-    <span style="font-size:10.5px;color:var(--texto-mute)">"Renovar" abre el login de Instagram; al aprobar, el token se guarda solo.</span>`;
-}
-
-async function edgeFn(name, body){
-  const res = await fetch(SUPABASE_URL + "/functions/v1/" + name, {
-    method: "POST", headers: { "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify(body || {}),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.error){
-    const m = typeof data.error === "string" ? data.error : (data.error ? JSON.stringify(data.error) : "HTTP " + res.status);
-    throw new Error(m);
-  }
-  return data;
-}
-
-// Dispara la generación. hint = tema propuesto (si lo hay). Devuelve {status:'generado'|'sin_hallazgos', title}
-async function doGenerate(key, hint){
-  if (key === "tendencias"){
-    const data = await edgeFn("generate-trend", { manual: true, ...(hint ? { hint } : {}) });
-    return { status: data.status || "generado", title: data.title };
-  }
-  if (key === "blog"){
-    let topicId, title;
-    if (hint){
-      const { topic } = await api("POST", { action: "propose_topic", topic: hint });
-      topicId = topic.id; title = topic.topic;
-    } else {
-      const { candidates } = await edgeFn("get-candidates", {});
-      const pick = candidates[Math.floor(Math.random() * candidates.length)];
-      topicId = pick.id; title = pick.topic;
-    }
-    const data = await edgeFn("generate-post", { topic_id: topicId });
-    return { status: "generado", title: data.title || title };
-  }
-  throw new Error("No sé cómo generar para " + key);
-}
-
-async function api(method, body){
-  const res = await fetch(SUPABASE_URL + "/functions/v1/admin-registry", {
-    method,
-    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok){
-    const m = typeof data.error === "string" ? data.error : (data.error ? JSON.stringify(data.error) : "HTTP " + res.status);
-    throw new Error(m);
-  }
-  return data;
-}
-function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
-function cardHtml(p, status, providers){
-  const st = status[p.key] || "unknown";
-  const provs = providers.filter(v => v.property_key === p.key);
-  const stClass = p.status !== 'activo' ? 'st-dev' : (st === 'up' ? 'st-up' : st === 'down' ? 'st-down' : '');
-  return `<div class="prop ${stClass}" data-key="${esc(p.key)}" id="prop-${esc(p.key)}">
-      ${p.status === 'activo' ? `<div class="prop__status" title="${st}">
-          <span class="dot ${st==='up'?'up':st==='down'?'down':''}"></span>
-          <span class="prop__statuslabel ${st==='up'?'up':st==='down'?'down':''}">${st==='up'?'Live':st==='down'?'Caído':'—'}</span>
-        </div>` : ''}
-      <div class="prop__top">
-        <div class="prop__logo-wrap">
-          <img class="prop__logo" src="logos/${esc(p.key)}.png" alt=""
-               onerror="var s=document.createElement('span');s.className='prop__logo prop__logo--fallback';s.textContent='${esc((p.name||'?').charAt(0).toUpperCase())}';this.replaceWith(s);">
-        </div>
-        <div class="prop__titles">
-          <span class="prop__name">${esc(p.name)}</span>
-          ${p.status !== 'activo' ? `<span class="tag">${p.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>` : ''}
-        </div>
+function familiaCard(p, DATA){
+  const st = (DATA.status || {})[p.key] || "unknown";
+  const enVivo = p.status === "activo";
+  const pend = pendientesDe(p.key, DATA);
+  const desc = p.description || DESC_FAMILIA[p.key] || "";
+  const ini = ICONO_FAMILIA[p.key] || (p.name || "?").charAt(0).toUpperCase();
+  return `<a class="familia" href="familia.html?f=${encodeURIComponent(p.key)}">
+    ${enVivo ? `<div class="familia__status">
+        <span class="dot ${st==='up'?'up':st==='down'?'down':''}"></span>
+        <span class="familia__statuslabel ${st==='up'?'up':st==='down'?'down':''}">${st==='up'?'Live':st==='down'?'Caído':'—'}</span>
+      </div>` : ``}
+    <div class="familia__top">
+      <div class="familia__logo-wrap">
+        <img class="familia__logo" src="logos/${esc(p.key)}.png" alt=""
+          onerror="var s=document.createElement('span');s.className='familia__logo familia__logo--fallback';s.textContent='${esc(String(ini).slice(0,1))}';this.replaceWith(s);">
       </div>
-      ${p.description ? `<div class="prop__desc">${esc(p.description)}</div>` : ''}
-
-      <div class="prop__group">
-        <span class="prop__grouplabel">Sitio</span>
-        <div class="prop__acts">
-          ${p.live_url ? `<a class="lnk" href="${esc(p.live_url)}" target="_blank" rel="noopener">Abrir ↗</a>` : ''}
-          ${p.repo_url ? `<a class="lnk" href="${esc(p.repo_url)}" target="_blank" rel="noopener">Repo ↗</a>` : ''}
-          ${p.dev_url ? `<a class="lnk" href="${esc(p.dev_url)}" target="_blank" rel="noopener">Desarrollo ↗</a>` : ''}
-          ${!p.live_url && !p.repo_url && !p.dev_url ? '<span class="prop__desc" style="margin:0">— nada cargado todavía —</span>' : ''}
-        </div>
+      <div>
+        <div class="familia__name">${esc(p.name)}</div>
+        ${!enVivo ? `<span class="tag">${p.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>` : ``}
       </div>
+    </div>
+    <div class="familia__desc">${esc(desc)}</div>
+    <div class="familia__foot">
+      <span class="familia__pend">${pend ? `<b>${pend}</b> por aprobar` : `Sin pendientes`}</span>
+      <span class="familia__enter">Entrar →</span>
+    </div>
+  </a>`;
+}
 
-      ${p.has_generator ? `
-      <div class="prop__group">
-        <span class="prop__grouplabel">Generación automática</span>
-        ${p.key === 'carrusel' ? '' : `<div class="gen">
-          <span class="lbl">El cron respeta este interruptor</span>
-          <span style="display:flex;align-items:center;gap:6px">
-            <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
-            <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
-          </span>
-        </div>`}
-        ${p.key === 'carrusel' ? carruselGenHtml() : ''}
-        ${GEN[p.key] ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn-solid btn-mini" data-genkey="${esc(p.key)}">Crear ahora</button>
-          <button class="btn-ghost btn-mini" data-histkey="${esc(p.key)}">Historial</button>
-        </div>
-        ${GEN[p.key].supportsHint ? `<div style="display:flex;gap:6px">
-          <input type="text" data-hintinput="${esc(p.key)}" placeholder="Proponer un tema (ej. humedad y la madera)"
-            style="flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px">
-          <button class="btn-solid btn-mini" data-hintbtn="${esc(p.key)}">Proponer y crear</button>
-        </div>` : ''}` : ''}
-      </div>` : ''}
+function pendientesResumen(DATA){
+  const map = { "Carruseles": (DATA.carrusel_drafts||[]).length,
+                "Blog": (DATA.blog_drafts||[]).length,
+                "Tendencias": (DATA.trend_drafts||[]).length };
+  const conAlgo = Object.entries(map).filter(([,n]) => n > 0);
+  const total = conAlgo.reduce((a,[,n]) => a+n, 0);
+  const detalle = conAlgo.length ? conAlgo.map(([f,n]) => `${n} ${f.toLowerCase()}`).join(" · ") : "nada esperando";
+  return { total, detalle };
+}
 
-      ${provs.length ? `<div class="prop__group"><span class="prop__grouplabel">Proveedores</span><div class="prov-chips">${provs.map(chip).join('')}</div></div>` : ''}
-      <div class="prop__edit"><button class="btn-ghost btn-mini" data-edit="${esc(p.key)}">Editar propiedad</button></div>
+function render(DATA){
+  const props = DATA.properties || [];
+  const cost = DATA.cost_by_currency || {};
+  const totalStr = Object.entries(cost).map(([c,v]) => c + " $" + v.toFixed(2)).join("  +  ") || "—";
+  const enVivo = props.filter(p => p.status === "activo").length;
+  const genOn = props.filter(p => p.has_generator && p.enabled).map(p => p.name);
+  const { total: pendTotal, detalle: pendDet } = pendientesResumen(DATA);
+
+  $("#resumen").innerHTML = `
+    <div class="resumen__item">
+      <span class="resumen__label">Gasto del mes ${ayuda("Suma de todos los proveedores con costo cargado, expresado por moneda. El detalle está en la sección Costos.", true)}</span>
+      <span class="resumen__value">${esc(totalStr)}</span>
+      <span class="resumen__sub">${Object.keys(cost).length} moneda${Object.keys(cost).length===1?"":"s"}</span>
+    </div>
+    <div class="resumen__item ${pendTotal ? "alerta" : ""}">
+      <span class="resumen__label">Por aprobar ${ayuda("Publicaciones generadas por el sistema que están esperando tu OK. Entrá a Contenido para revisarlas.", true)}</span>
+      <span class="resumen__value">${pendTotal}</span>
+      <span class="resumen__sub">${esc(pendDet)}</span>
+    </div>
+    <div class="resumen__item">
+      <span class="resumen__label">Sitios en vivo</span>
+      <span class="resumen__value">${enVivo}</span>
+      <span class="resumen__sub">de ${props.length} familias</span>
+    </div>
+    <div class="resumen__item">
+      <span class="resumen__label">Generando solas ${ayuda("Familias con la generación automática encendida. El resto solo genera cuando apretás el botón.", true)}</span>
+      <span class="resumen__value">${genOn.length}</span>
+      <span class="resumen__sub">${genOn.length ? esc(genOn.join(", ")) : "ninguna ahora"}</span>
     </div>`;
+
+  const orden = { activo:0, en_desarrollo:1, planeado:2 };
+  const sorted = [...props].sort((a,b) => (orden[a.status||"activo"]??9) - (orden[b.status||"activo"]??9));
+  $("#familias").innerHTML = sorted.map(p => familiaCard(p, DATA)).join("") ||
+    '<div class="vacio">Todavía no hay familias cargadas.</div>';
+  $("#famCount").textContent = "· " + props.length;
 }
 
-const STATUS_GROUPS = [
-  { key: "activo",        kicker: "En vivo",      title: "Funcionando ahora" },
-  { key: "en_desarrollo", kicker: "En camino",    title: "En desarrollo" },
-  { key: "planeado",      kicker: "En el radar",  title: "Planeado" },
-];
-
-function render(){
-  const { properties, providers, status } = DATA;
-  const totalStr = Object.entries(DATA.cost_by_currency || {}).map(([c,v]) => c + " $" + v.toFixed(2)).join(" + ");
-  const counts = { activo: 0, en_desarrollo: 0, planeado: 0 };
-  properties.forEach(p => { counts[p.status || "activo"] = (counts[p.status || "activo"] || 0) + 1; });
-  const genOn = properties.filter(p => p.has_generator && p.enabled).map(p => p.name);
-  const ledeParts = [
-    `<b>${counts.activo}</b> en vivo`,
-    counts.en_desarrollo ? `<b>${counts.en_desarrollo}</b> en camino` : null,
-    counts.planeado ? `<b>${counts.planeado}</b> en el radar` : null,
-  ].filter(Boolean).join(" · ");
-  const genStr = genOn.length ? `${genOn.join(" y ")} generando contenido solo${genOn.length>1?"s":""}.` : "Generación automática apagada por ahora.";
-  $("#heroLede").innerHTML = `${ledeParts}. ${genStr}`;
-
-  const costedProv = providers.filter(v => typeof v.monthly_cost === "number").length;
-  $("#kpis").innerHTML = `
-    <div class="kpi"><span class="kpi__label">En vivo</span><span class="kpi__value">${counts.activo}</span>
-      <span class="kpi__sub">de ${properties.length} propiedades en total</span></div>
-    <div class="kpi"><span class="kpi__label">Generando contenido</span><span class="kpi__value">${genOn.length}</span>
-      <span class="kpi__sub">${genOn.length ? esc(genOn.join(", ")) : "ninguna activa ahora"}</span></div>
-    <div class="kpi"><span class="kpi__label">Gasto mensual</span><span class="kpi__value">${esc(totalStr || "—")}</span>
-      <span class="kpi__sub">${costedProv} proveedor${costedProv===1?"":"es"} con costo cargado</span></div>
-  `;
-
-  $("#props").innerHTML = STATUS_GROUPS.map(g => {
-    const items = properties.filter(p => (p.status || "activo") === g.key);
-    if (!items.length) return "";
-    return `<section class="statusgroup">
-      <div class="grouphead">
-        <span class="kicker">${g.kicker}</span><h2>${g.title}</h2><span class="count">· ${items.length}</span>
-      </div>
-      <div class="grid">${items.map(p => cardHtml(p, status, providers)).join("")}</div>
-    </section>`;
-  }).join("");
-
-  $("#sharedProv").innerHTML = providers.filter(v => !v.property_key).map(chip).join("") || '<span class="prop__desc">—</span>';
-
-  $("#quickNav").innerHTML = STATUS_GROUPS.map(g => {
-    const items = properties.filter(p => (p.status || "activo") === g.key);
-    if (!items.length) return "";
-    const links = items.map(p => p.live_url
-      ? `<a href="${esc(p.live_url)}" target="_blank" rel="noopener">${esc(p.name)}<span class="go">abrir ↗</span></a>`
-      : `<a href="#prop-${esc(p.key)}" data-jump="${esc(p.key)}">${esc(p.name)}<span class="go">ver ↓</span></a>`
-    ).join("");
-    return `<div class="quicknav__group">${g.kicker}</div>${links}`;
-  }).join("");
-}
-
-(function(){
-  const drop = $("#quickNavDrop");
-  $("#quickNavBtn").addEventListener("click", (e) => { e.stopPropagation(); drop.classList.toggle("open"); });
-  document.addEventListener("click", (e) => { if (!drop.contains(e.target)) drop.classList.remove("open"); });
-  $("#quickNav").addEventListener("click", (e) => {
-    const jump = e.target.closest("[data-jump]");
-    drop.classList.remove("open");
-    if (jump){
-      e.preventDefault();
-      document.getElementById("prop-" + jump.dataset.jump)?.scrollIntoView({ behavior: "smooth", block: "center" });
+Panel.init({
+  page: "portada",
+  onReady: async () => {
+    $("#app").hidden = false;
+    $("#topMsg").textContent = "Cargando…";
+    try {
+      const DATA = await api("GET");
+      render(DATA);
+      $("#topMsg").textContent = "";
+    } catch (e) {
+      $("#topMsg").className = "msg err";
+      $("#topMsg").textContent = "No se pudo cargar: " + e.message;
     }
-  });
-})();
-function chip(v){
-  const cost = (typeof v.monthly_cost === "number") ? ` · ${esc(v.currency||"USD")} $${v.monthly_cost.toFixed(2)}/mes` : '';
-  const plan = v.plan_name ? ` (${esc(v.plan_name)})` : '';
-  let renews = '';
-  if (v.renewal_date){
-    const d = new Date(v.renewal_date + "T00:00:00");
-    const soon = (d - new Date()) < 1000*60*60*24*7;
-    renews = ` · <span style="${soon ? 'color:var(--down)' : ''}">renueva ${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</span>`;
-  }
-  const src = v.usage_source === 'api' ? ' <span title="Dato en vivo desde la API del proveedor" style="color:var(--ok)">●</span>' : '';
-  return `<span class="chip" data-edit-provider="${esc(v.key)}" style="cursor:pointer" title="Editar proveedor">${esc(v.name)}${plan}${cost}${src}${renews}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">consola ↗</a>` : ''}</span>`;
-}
-
-async function load(){
-  $("#topMsg").textContent = "Cargando…"; $("#topMsg").className = "msg";
-  try{
-    DATA = await api("GET");
-    render();
-    $("#topMsg").textContent = "";
-  }catch(e){
-    $("#topMsg").className = "msg err";
-    $("#topMsg").textContent = "No se pudo cargar: " + e.message;
-  }
-}
-
-$("#props").addEventListener("change", async (ev) => {
-  if (ev.target.id === "carr_leadmagnet"){
-    $("#carr_leadmagnet_fields").hidden = !ev.target.checked;
-  }
-  const freqSel = ev.target.closest("[data-carrfreq]");
-  if (freqSel){
-    const category = freqSel.dataset.carrfreq;
-    const frecuencia = Number(freqSel.value);
-    freqSel.disabled = true;
-    try{
-      await api("POST", { action: "set_carrusel_freq", category, frecuencia });
-      const row = (DATA.carrusel_config || []).find(c => c.category === category);
-      if (row) row.frecuencia_mensual = frecuencia; else (DATA.carrusel_config = DATA.carrusel_config || []).push({ category, frecuencia_mensual: frecuencia });
-    }catch(e){ alert("Error guardando frecuencia: " + e.message); }
-    finally{ freqSel.disabled = false; }
-  }
+  },
 });
-$("#props").addEventListener("click", async (ev) => {
-  const tg = ev.target.closest("[data-toggle]");
-  const ed = ev.target.closest("[data-edit]");
-  const gen = ev.target.closest("[data-genkey]");
-  const hist = ev.target.closest("[data-histkey]");
-  const hintBtn = ev.target.closest("[data-hintbtn]");
-  const igRenew = ev.target.closest("[data-igrenew]");
-  if (igRenew){
-    const box = document.getElementById("igrenew_" + igRenew.dataset.igrenew);
-    if (box) box.hidden = !box.hidden;
-    return;
-  }
-  const igSave = ev.target.closest("[data-igtokensave]");
-  if (igSave){
-    const cat = igSave.dataset.igtokensave;
-    const inp = document.querySelector('[data-igtokeninput="' + cat + '"]');
-    const tok = (inp?.value || "").trim();
-    if (tok.length < 20){ alert("El token pegado parece incompleto."); return; }
-    igSave.disabled = true;
-    try{ await api("POST", { action:"set_ig_token", category: cat, token: tok }); alert("Token actualizado."); load(); }
-    catch(e){ alert("Error: " + e.message); igSave.disabled = false; }
-    return;
-  }
-  const carrPub = ev.target.closest("[data-carrpublish]");
-  if (carrPub){
-    if (!confirm("¿Aprobar y publicar este carrusel en Instagram ahora?")) return;
-    carrPub.disabled = true; carrPub.textContent = "Publicando…";
-    try{
-      const r = await api("POST", { action:"carrusel_publish", item_id: carrPub.dataset.carrpublish });
-      alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
-      load();
-    }catch(e){ alert("No se pudo publicar: " + e.message); carrPub.disabled = false; carrPub.textContent = "Aprobar y publicar"; }
-    return;
-  }
-  const carrRej = ev.target.closest("[data-carrreject]");
-  if (carrRej){
-    if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
-    try{ await api("POST", { action:"carrusel_reject", item_id: carrRej.dataset.carrreject }); load(); }
-    catch(e){ alert("Error: " + e.message); }
-    return;
-  }
-  const carrActivo = ev.target.closest("[data-carractivo]");
-  if (carrActivo){
-    const category = carrActivo.dataset.carractivo;
-    const row = (DATA.carrusel_config || []).find(c => c.category === category);
-    const next = !(row?.activo !== false);
-    carrActivo.disabled = true;
-    try{
-      await api("POST", { action: "set_carrusel_activo", category, activo: next });
-      if (row) row.activo = next; else (DATA.carrusel_config = DATA.carrusel_config || []).push({ category, activo: next, frecuencia_mensual: 1 });
-      render();
-    }catch(e){ alert("Error: " + e.message); carrActivo.disabled = false; }
-    return;
-  }
-  const carrBtn = ev.target.closest("#carr_crear");
-  if (carrBtn){
-    const category = $("#carr_category").value;
-    const topic = $("#carr_topic").value.trim();
-    const useLead = $("#carr_leadmagnet").checked;
-    const hook = $("#carr_hook").value.trim();
-    const cta = $("#carr_cta").value.trim();
-    if (useLead && (!hook || !cta)){ alert("Para Lead Magnet completá el hook y el CTA de cierre."); return; }
-    const confirmMsg = topic
-      ? `¿Crear un carrusel de ${category === 'luthier' ? 'Luthería' : 'Guitar Tech'} sobre "${topic}"${useLead ? ' (Lead Magnet)' : ''}?`
-      : `¿Crear un carrusel de ${category === 'luthier' ? 'Luthería' : 'Guitar Tech'} con un tema del Radar?`;
-    if (!confirm(confirmMsg)) return;
-    const original = carrBtn.textContent;
-    carrBtn.disabled = true; carrBtn.textContent = "Generando…";
-    try{
-      const body = { category, manual: true };
-      if (topic) body.topic = topic;
-      if (useLead) body.lead_magnet = { hook, cta };
-      const data = await edgeFn("generate-carrusel", body);
-      if (data.status === "sin_temas_disponibles"){
-        alert("No hay temas disponibles en el Radar de Carruseles todavía. Probá con un tema puntual.");
-      } else if (data.status === "apagado"){
-        alert("La generación automática de Carruseles está apagada en el panel.");
-      } else {
-        alert('Generado: "' + (data.topic || "listo") + '". Revisalo en el panel de revisión antes de aprobar.');
-        $("#carr_topic").value = ""; $("#carr_hook").value = ""; $("#carr_cta").value = "";
-        $("#carr_leadmagnet").checked = false; $("#carr_leadmagnet_fields").hidden = true;
-      }
-    }catch(e){
-      alert("Error: " + e.message);
-    }finally{
-      carrBtn.disabled = false; carrBtn.textContent = original;
-    }
-  }
-  if (tg){
-    const key = tg.dataset.toggle;
-    const p = DATA.properties.find(x => x.key === key);
-    const next = !p.enabled;
-    tg.disabled = true;
-    try{ const { property } = await api("POST", { action:"toggle", key, enabled: next }); Object.assign(p, property); render(); }
-    catch(e){ $("#topMsg").className="msg err"; $("#topMsg").textContent = "Error: " + e.message; }
-  }
-  if (ed) openDialog(DATA.properties.find(x => x.key === ed.dataset.edit));
-  if (gen && !gen.disabled) await runGenerateNow(gen);
-  if (hist) openHist(hist.dataset.histkey);
-  if (hintBtn) await runGenerateNow(hintBtn, true);
-});
-
-/* ---- crear ahora (con o sin tema propuesto) ---- */
-async function runGenerateNow(btn, isHint){
-  const key = isHint ? btn.dataset.hintbtn : btn.dataset.genkey;
-  const g = GEN[key];
-  if (!g) return;
-  let hint = "";
-  if (isHint){
-    const input = document.querySelector('[data-hintinput="' + key + '"]');
-    hint = (input?.value || "").trim();
-    if (!hint){ alert("Escribí un tema antes de proponerlo."); return; }
-  }
-  const label = DATA.properties.find(p=>p.key===key)?.name || key;
-  if (!confirm(isHint
-    ? "¿Buscar y generar sobre \"" + hint + "\" para " + label + "?"
-    : "¿Generar una publicación nueva de \"" + label + "\" ahora?")) return;
-  const original = btn.textContent;
-  btn.disabled = true; btn.textContent = isHint ? "Buscando…" : "Generando…";
-  try{
-    const data = await doGenerate(key, hint);
-    if (data.status === "sin_hallazgos"){
-      alert("No encontró nada verificable" + (hint ? (" sobre \"" + hint + "\"") : "") + " esta vez. Podés volver a intentar.");
-    } else {
-      alert("Generado: \"" + (data.title || "listo") + "\". Revisalo en el panel de revisión antes de aprobar.");
-      if (isHint){ const input = document.querySelector('[data-hintinput="' + key + '"]'); if (input) input.value = ""; }
-    }
-  }catch(e){
-    alert("Error al generar: " + e.message);
-  }finally{
-    btn.disabled = false; btn.textContent = original;
-  }
-}
-
-/* ---- historial ---- */
-const histDlg = $("#histDlg");
-let histKey = null;
-async function openHist(key){
-  histKey = key;
-  const g = GEN[key];
-  $("#histTitle").textContent = "Historial · " + (DATA.properties.find(p=>p.key===key)?.name || key);
-  $("#histList").innerHTML = "Cargando…";
-  histDlg.showModal();
-  await loadHist(g);
-}
-async function loadHist(g){
-  try{
-    const { items } = await api("POST", { action:"list_content", product: g.product });
-    if (!items.length){ $("#histList").innerHTML = '<span class="prop__desc">Todavía no hay publicaciones.</span>'; return; }
-    $("#histList").innerHTML = items.map(it => {
-      const hidden = it.status !== "published";
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(200,155,108,.12);padding-bottom:9px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13.5px;${hidden?'color:var(--texto-mute)':''}">${esc(it.title)}${hidden?' <span class="tag" style="margin-left:6px">oculto</span>':''}</div>
-          ${g.site ? `<a href="${g.site}${esc(it.slug)}/" target="_blank" rel="noopener" style="font-size:11px">ver ↗</a>` : `<span style="font-size:11px;color:var(--texto-mute)">${esc(it.category || '')}</span>`}
-        </div>
-        <div style="display:flex;gap:6px;flex:0 0 auto">
-          ${it.status === "published"
-            ? `<button class="btn-ghost btn-mini" data-hide="${esc(it.id)}">Ocultar</button>`
-            : `<button class="btn-ghost btn-mini" data-show="${esc(it.id)}">Mostrar</button>`}
-          ${g.product === "blog" ? `<button class="btn-ghost btn-mini" data-rephoto="${esc(it.id)}">Cambiar foto</button>` : ''}
-        </div>
-      </div>`;
-    }).join("");
-  }catch(e){
-    $("#histList").innerHTML = '<span class="msg err">Error: ' + esc(e.message) + '</span>';
-  }
-}
-$("#histClose").addEventListener("click", () => histDlg.close());
-$("#histList").addEventListener("click", async (ev) => {
-  const hide = ev.target.closest("[data-hide]");
-  const show = ev.target.closest("[data-show]");
-  const rephoto = ev.target.closest("[data-rephoto]");
-  const g = GEN[histKey];
-  if (hide){
-    if (!confirm("¿Ocultar esta publicación? Deja de verse en la portada; no se borra, se puede volver a mostrar.")) return;
-    try{ await api("POST", { action:"set_item_status", item_id: hide.dataset.hide, status:"rejected" }); loadHist(g); }
-    catch(e){ alert("Error: " + e.message); }
-  }
-  if (show){
-    try{ await api("POST", { action:"set_item_status", item_id: show.dataset.show, status:"published" }); loadHist(g); }
-    catch(e){ alert("Error: " + e.message); }
-  }
-  if (rephoto){
-    if (!confirm("¿Buscar una foto nueva para esta publicación? Se vuelve a publicar con la foto que le toque esta vez.")) return;
-    const original = rephoto.textContent;
-    rephoto.disabled = true; rephoto.textContent = "…";
-    try{
-      await api("POST", { action:"set_item_status", item_id: rephoto.dataset.rephoto, status:"pending_review" });
-      const res = await fetch(SUPABASE_URL + "/functions/v1/review-item", {
-        method: "POST", headers: { "Authorization": "Bearer " + ANON_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: rephoto.dataset.rephoto, decision: "approve" }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.error) throw new Error(data.error || ("HTTP " + res.status));
-      loadHist(g);
-    }catch(e){
-      alert("Error: " + e.message);
-      rephoto.disabled = false; rephoto.textContent = original;
-    }
-  }
-});
-
-/* ---- diálogo de propiedad ---- */
-const dlg = $("#propDlg");
-function openDialog(p){
-  const isNew = !p;
-  $("#dlgTitle").textContent = isNew ? "Nueva propiedad" : "Editar " + p.name;
-  $("#f_key").value = p?.key || ""; $("#f_key").disabled = !isNew;
-  $("#f_name").value = p?.name || "";
-  $("#f_description").value = p?.description || "";
-  $("#f_live_url").value = p?.live_url || "";
-  $("#f_repo_url").value = p?.repo_url || "";
-  $("#f_dev_url").value = p?.dev_url || "";
-  $("#f_status").value = p?.status || "activo";
-  $("#f_has_generator").checked = !!p?.has_generator;
-  $("#dlgDelete").hidden = isNew;
-  $("#dlgDelete").onclick = async () => {
-    if (!confirm("¿Eliminar la propiedad \"" + p.name + "\"? (no borra el sitio, solo la saca del panel)")) return;
-    try{ await api("POST", { action:"delete_property", key: p.key }); dlg.close(); load(); }
-    catch(e){ alert("Error: " + e.message); }
-  };
-  dlg.showModal();
-}
-$("#addProp").addEventListener("click", () => openDialog(null));
-$("#dlgCancel").addEventListener("click", () => dlg.close());
-$("#propForm").addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  const property = {
-    key: $("#f_key").value.trim(), name: $("#f_name").value.trim(),
-    description: $("#f_description").value.trim(), live_url: $("#f_live_url").value.trim(),
-    repo_url: $("#f_repo_url").value.trim(), dev_url: $("#f_dev_url").value.trim(), status: $("#f_status").value,
-    has_generator: $("#f_has_generator").checked,
-  };
-  try{ await api("POST", { action:"upsert_property", property }); dlg.close(); load(); }
-  catch(e){ alert("Error: " + e.message); }
-});
-
-/* ---- diálogo de proveedor ---- */
-const provDlg = $("#provDlg");
-function openProvDialog(v){
-  const isNew = !v;
-  $("#pDlgTitle").textContent = isNew ? "Nuevo proveedor" : "Editar " + v.name;
-  const sel = $("#p_property_key");
-  sel.innerHTML = '<option value="">— Compartido —</option>' +
-    DATA.properties.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join("");
-  $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
-  $("#p_name").value = v?.name || "";
-  sel.value = v?.property_key || "";
-  $("#p_console_url").value = v?.console_url || "";
-  $("#p_plan_name").value = v?.plan_name || "";
-  $("#p_plan_price").value = (typeof v?.plan_price === "number") ? v.plan_price : "";
-  $("#p_currency").value = v?.currency || "USD";
-  $("#p_billing_cycle").value = v?.billing_cycle || "mensual";
-  $("#p_renewal_date").value = v?.renewal_date || "";
-  $("#p_notes").value = v?.notes || "";
-  $("#pDlgDelete").hidden = isNew;
-  $("#pDlgDelete").onclick = async () => {
-    if (!confirm('¿Eliminar el proveedor "' + v.name + '"?')) return;
-    try{ await api("POST", { action:"delete_provider", key: v.key }); provDlg.close(); load(); }
-    catch(e){ alert("Error: " + e.message); }
-  };
-  provDlg.showModal();
-}
-$("#addProv").addEventListener("click", () => openProvDialog(null));
-$("#pDlgCancel").addEventListener("click", () => provDlg.close());
-$("#provForm").addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  const priceRaw = $("#p_plan_price").value;
-  const existing = DATA.providers.find(x => x.key === $("#p_key").value.trim());
-  const provider = {
-    key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
-    property_key: $("#p_property_key").value || null,
-    console_url: $("#p_console_url").value.trim(),
-    plan_name: $("#p_plan_name").value.trim(),
-    plan_price: priceRaw === "" ? null : Number(priceRaw),
-    currency: $("#p_currency").value,
-    billing_cycle: $("#p_billing_cycle").value,
-    renewal_date: $("#p_renewal_date").value || null,
-    usage_source: existing?.usage_source || "manual",
-    notes: $("#p_notes").value.trim(),
-  };
-  try{ await api("POST", { action:"upsert_provider", provider }); provDlg.close(); load(); }
-  catch(e){ alert("Error: " + e.message); }
-});
-document.addEventListener("click", (ev) => {
-  const c = ev.target.closest("[data-edit-provider]");
-  if (!c) return;
-  const key = c.dataset.editProvider;
-  openProvDialog(DATA.providers.find(x => x.key === key));
-});
-
-/* ---- foto de perfil del administrador (solo en este navegador, sin backend) ---- */
-const AVATAR_KEY = "musselli_admin_avatar";
-function paintAvatar(email){
-  const data = localStorage.getItem(AVATAR_KEY);
-  const img = $("#avatarImg"), ini = $("#avatarInitial");
-  if (data){ img.src = data; img.hidden = false; ini.hidden = true; }
-  else { img.hidden = true; ini.hidden = false; ini.textContent = (email || "?").charAt(0).toUpperCase(); }
-}
-$("#avatarBtn").addEventListener("click", () => $("#avatarDlg").showModal());
-$("#avatarCancel").addEventListener("click", () => $("#avatarDlg").close());
-$("#avatarRemove").addEventListener("click", () => { localStorage.removeItem(AVATAR_KEY); paintAvatar($("#who").textContent); $("#avatarDlg").close(); });
-$("#avatarFile").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => { localStorage.setItem(AVATAR_KEY, reader.result); paintAvatar($("#who").textContent); $("#avatarDlg").close(); };
-  reader.readAsDataURL(file);
-});
-
-/* ---- login ---- */
-async function showDash(session){
-  token = session.access_token; $("#who").textContent = session.user.email;
-  paintAvatar(session.user.email);
-  $("#loginScreen").hidden = true; $("#dash").hidden = false; await load();
-}
-function showLogin(){ token = null; $("#dash").hidden = true; $("#loginScreen").hidden = false; }
-
-$("#loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const btn = $("#loginBtn"), msg = $("#loginMsg");
-  btn.disabled = true; msg.className = "msg"; msg.textContent = "Entrando…";
-  const { data, error } = await sb.auth.signInWithPassword({ email: $("#email").value.trim(), password: $("#pass").value });
-  btn.disabled = false;
-  if (error){ msg.className = "msg err"; msg.textContent = "No se pudo entrar: " + error.message; return; }
-  showDash(data.session);
-});
-$("#logout").addEventListener("click", async () => { await sb.auth.signOut(); showLogin(); });
-$("#refresh").addEventListener("click", load);
-
-(async () => {
-  const { data } = await sb.auth.getSession();
-  if (data.session) showDash(data.session); else showLogin();
-})();
 </script>
 </body>
 </html>
