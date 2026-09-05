@@ -350,13 +350,22 @@ let token = null, DATA = { properties: [], providers: [], status: {} };
 const GEN = {
   blog:       { product: "blog",  site: "https://blog.ricardomusselli.com/",       supportsHint: true },
   tendencias: { product: "trend", site: "https://tendencias.ricardomusselli.com/", supportsHint: true },
-  carrusel:   { product: "carrusel" },
+  carrusel:   { product: "carousel" },
 };
 
 /* ---- bloque especial de generación de Carruseles: línea, tema opcional, Lead Magnet ---- */
 function carruselGenHtml(){
   const fieldStyle = "flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px";
+  const cfg = {}; (DATA.carrusel_config || []).forEach(c => cfg[c.category] = c.frecuencia_mensual);
+  const opt = (sel) => [1,2,4].map(n => `<option value="${n}"${n===sel?' selected':''}>${n} por mes</option>`).join('');
   return `<div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(245,240,230,.03);border-radius:8px">
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:11px;color:var(--texto-mute);flex:0 0 auto">Frecuencia automática:</span>
+      <label style="font-size:11px;color:var(--texto-2);display:flex;align-items:center;gap:4px">GT
+        <select data-carrfreq="guitar-tech" style="${fieldStyle};flex:0 0 auto;padding:4px 6px">${opt(cfg['guitar-tech'] ?? 1)}</select></label>
+      <label style="font-size:11px;color:var(--texto-2);display:flex;align-items:center;gap:4px">Luth
+        <select data-carrfreq="luthier" style="${fieldStyle};flex:0 0 auto;padding:4px 6px">${opt(cfg['luthier'] ?? 1)}</select></label>
+    </div>
     <div style="display:flex;gap:6px">
       <select id="carr_category" style="${fieldStyle};flex:0 0 150px">
         <option value="guitar-tech">Guitar Tech</option>
@@ -579,9 +588,21 @@ async function load(){
   }
 }
 
-$("#props").addEventListener("change", (ev) => {
+$("#props").addEventListener("change", async (ev) => {
   if (ev.target.id === "carr_leadmagnet"){
     $("#carr_leadmagnet_fields").hidden = !ev.target.checked;
+  }
+  const freqSel = ev.target.closest("[data-carrfreq]");
+  if (freqSel){
+    const category = freqSel.dataset.carrfreq;
+    const frecuencia = Number(freqSel.value);
+    freqSel.disabled = true;
+    try{
+      await api("POST", { action: "set_carrusel_freq", category, frecuencia });
+      const row = (DATA.carrusel_config || []).find(c => c.category === category);
+      if (row) row.frecuencia_mensual = frecuencia; else (DATA.carrusel_config = DATA.carrusel_config || []).push({ category, frecuencia_mensual: frecuencia });
+    }catch(e){ alert("Error guardando frecuencia: " + e.message); }
+    finally{ freqSel.disabled = false; }
   }
 });
 $("#props").addEventListener("click", async (ev) => {
