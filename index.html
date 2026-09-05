@@ -389,7 +389,62 @@ function carruselGenHtml(){
       <button class="btn-solid btn-mini" id="carr_crear">Crear carrusel</button>
       <button class="btn-ghost btn-mini" data-histkey="carrusel">Historial</button>
     </div>
+    ${carruselDraftsHtml()}
+    ${igTokenHtml()}
   </div>`;
+}
+
+/* ---- borradores de carrusel esperando aprobación ---- */
+function carruselDraftsHtml(){
+  const drafts = DATA.carrusel_drafts || [];
+  if (!drafts.length) return '';
+  return `<div style="height:1px;background:rgba(200,155,108,.14);margin:4px 0"></div>
+    <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Borradores pendientes (${drafts.length})</span>
+    ${drafts.map(d => {
+      const imgs = (d.content && d.content.imagenes) || [];
+      const cap = (d.content && d.content.caption) || d.title || '';
+      return `<div style="border:1px solid rgba(200,155,108,.18);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:4px;overflow-x:auto">${imgs.slice(0,7).map(u=>`<img src="${esc(u)}" style="height:64px;border-radius:3px;flex:0 0 auto">`).join('')}</div>
+        <div style="font-size:11.5px;color:var(--texto-2);max-height:54px;overflow:hidden">${esc(cap)}</div>
+        <div style="display:flex;gap:6px">
+          <span class="tag">${d.category === 'luthier' ? 'Luthería' : 'Guitar Tech'}</span>
+          <button class="btn-solid btn-mini" data-carrpublish="${esc(d.id)}" style="margin-left:auto">Aprobar y publicar</button>
+          <button class="btn-ghost btn-mini" data-carrreject="${esc(d.id)}">Rechazar</button>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+/* ---- estado y renovación del token de Instagram ---- */
+function igTokenHtml(){
+  const toks = {}; (DATA.ig_tokens || []).forEach(t => toks[t.category] = t.updated_at);
+  const META_TOKEN_URL = "https://developers.facebook.com/apps/1388747369285994/instagram-business/API-Setup/";
+  const fieldStyle = "flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px";
+  const linea = (cat, label) => {
+    const upd = toks[cat];
+    let estado = '<span style="color:var(--texto-mute)">sin token cargado</span>';
+    if (upd){
+      const dias = 60 - Math.floor((Date.now() - new Date(upd).getTime())/86400000);
+      const col = dias <= 7 ? 'var(--down)' : dias <= 20 ? 'var(--dorado)' : 'var(--ok)';
+      estado = `<span style="color:${col}">vence en ${dias} día${dias===1?'':'s'}</span>`;
+    }
+    return `<div style="display:flex;gap:8px;align-items:center;font-size:12px">
+      <span style="color:var(--texto-2);flex:0 0 70px">${label}</span>
+      ${estado}
+      <button class="btn-ghost btn-mini" data-igrenew="${cat}" style="margin-left:auto">Renovar</button>
+    </div>
+    <div id="igrenew_${cat}" hidden style="display:flex;gap:6px">
+      <input type="text" data-igtokeninput="${cat}" placeholder="Pegá acá el token nuevo" style="${fieldStyle}">
+      <button class="btn-solid btn-mini" data-igtokensave="${cat}">Guardar</button>
+    </div>`;
+  };
+  return `<div style="height:1px;background:rgba(200,155,108,.14);margin:4px 0"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Tokens de Instagram</span>
+      <a class="lnk" href="${META_TOKEN_URL}" target="_blank" rel="noopener" style="font-size:10px">Ir a Meta ↗</a>
+    </div>
+    ${linea('guitar-tech','Guitar Tech')}
+    ${linea('luthier','Luthería')}`;
 }
 
 async function edgeFn(name, body){
@@ -615,6 +670,41 @@ $("#props").addEventListener("click", async (ev) => {
   const gen = ev.target.closest("[data-genkey]");
   const hist = ev.target.closest("[data-histkey]");
   const hintBtn = ev.target.closest("[data-hintbtn]");
+  const igRenew = ev.target.closest("[data-igrenew]");
+  if (igRenew){
+    const box = document.getElementById("igrenew_" + igRenew.dataset.igrenew);
+    if (box) box.hidden = !box.hidden;
+    return;
+  }
+  const igSave = ev.target.closest("[data-igtokensave]");
+  if (igSave){
+    const cat = igSave.dataset.igtokensave;
+    const inp = document.querySelector('[data-igtokeninput="' + cat + '"]');
+    const tok = (inp?.value || "").trim();
+    if (tok.length < 20){ alert("El token pegado parece incompleto."); return; }
+    igSave.disabled = true;
+    try{ await api("POST", { action:"set_ig_token", category: cat, token: tok }); alert("Token actualizado."); load(); }
+    catch(e){ alert("Error: " + e.message); igSave.disabled = false; }
+    return;
+  }
+  const carrPub = ev.target.closest("[data-carrpublish]");
+  if (carrPub){
+    if (!confirm("¿Aprobar y publicar este carrusel en Instagram ahora?")) return;
+    carrPub.disabled = true; carrPub.textContent = "Publicando…";
+    try{
+      const r = await api("POST", { action:"carrusel_publish", item_id: carrPub.dataset.carrpublish });
+      alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
+      load();
+    }catch(e){ alert("No se pudo publicar: " + e.message); carrPub.disabled = false; carrPub.textContent = "Aprobar y publicar"; }
+    return;
+  }
+  const carrRej = ev.target.closest("[data-carrreject]");
+  if (carrRej){
+    if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
+    try{ await api("POST", { action:"carrusel_reject", item_id: carrRej.dataset.carrreject }); load(); }
+    catch(e){ alert("Error: " + e.message); }
+    return;
+  }
   const carrActivo = ev.target.closest("[data-carractivo]");
   if (carrActivo){
     const category = carrActivo.dataset.carractivo;
