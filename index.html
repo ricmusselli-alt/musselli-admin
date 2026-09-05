@@ -356,16 +356,20 @@ const GEN = {
 /* ---- bloque especial de generación de Carruseles: línea, tema opcional, Lead Magnet ---- */
 function carruselGenHtml(){
   const fieldStyle = "flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px";
-  const cfg = {}; (DATA.carrusel_config || []).forEach(c => cfg[c.category] = c.frecuencia_mensual);
+  const cfg = {}; (DATA.carrusel_config || []).forEach(c => cfg[c.category] = c);
+  const freqOf = (cat) => cfg[cat]?.frecuencia_mensual ?? 1;
+  const activoOf = (cat) => cfg[cat]?.activo !== false;
   const opt = (sel) => [1,2,4].map(n => `<option value="${n}"${n===sel?' selected':''}>${n} por mes</option>`).join('');
+  const lineaRow = (cat, label) => `<div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:12px;color:var(--texto-2);flex:0 0 70px">${label}</span>
+      <span class="state ${activoOf(cat)?'on':'off'}" style="flex:0 0 auto">${activoOf(cat)?'on':'off'}</span>
+      <button class="toggle ${activoOf(cat)?'on':''}" data-carractivo="${cat}" aria-label="on/off"></button>
+      <select data-carrfreq="${cat}" style="${fieldStyle};flex:0 0 auto;padding:4px 6px;margin-left:auto">${opt(freqOf(cat))}</select>
+    </div>`;
   return `<div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(245,240,230,.03);border-radius:8px">
-    <div style="display:flex;gap:6px;align-items:center">
-      <span style="font-size:11px;color:var(--texto-mute);flex:0 0 auto">Frecuencia automática:</span>
-      <label style="font-size:11px;color:var(--texto-2);display:flex;align-items:center;gap:4px">GT
-        <select data-carrfreq="guitar-tech" style="${fieldStyle};flex:0 0 auto;padding:4px 6px">${opt(cfg['guitar-tech'] ?? 1)}</select></label>
-      <label style="font-size:11px;color:var(--texto-2);display:flex;align-items:center;gap:4px">Luth
-        <select data-carrfreq="luthier" style="${fieldStyle};flex:0 0 auto;padding:4px 6px">${opt(cfg['luthier'] ?? 1)}</select></label>
-    </div>
+    ${lineaRow('guitar-tech', 'Guitar Tech')}
+    ${lineaRow('luthier', 'Luthería')}
+    <div style="height:1px;background:rgba(200,155,108,.14);margin:2px 0"></div>
     <div style="display:flex;gap:6px">
       <select id="carr_category" style="${fieldStyle};flex:0 0 150px">
         <option value="guitar-tech">Guitar Tech</option>
@@ -472,13 +476,13 @@ function cardHtml(p, status, providers){
       ${p.has_generator ? `
       <div class="prop__group">
         <span class="prop__grouplabel">Generación automática</span>
-        <div class="gen">
+        ${p.key === 'carrusel' ? '' : `<div class="gen">
           <span class="lbl">El cron respeta este interruptor</span>
           <span style="display:flex;align-items:center;gap:6px">
             <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
             <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
           </span>
-        </div>
+        </div>`}
         ${p.key === 'carrusel' ? carruselGenHtml() : ''}
         ${GEN[p.key] ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-solid btn-mini" data-genkey="${esc(p.key)}">Crear ahora</button>
@@ -611,6 +615,19 @@ $("#props").addEventListener("click", async (ev) => {
   const gen = ev.target.closest("[data-genkey]");
   const hist = ev.target.closest("[data-histkey]");
   const hintBtn = ev.target.closest("[data-hintbtn]");
+  const carrActivo = ev.target.closest("[data-carractivo]");
+  if (carrActivo){
+    const category = carrActivo.dataset.carractivo;
+    const row = (DATA.carrusel_config || []).find(c => c.category === category);
+    const next = !(row?.activo !== false);
+    carrActivo.disabled = true;
+    try{
+      await api("POST", { action: "set_carrusel_activo", category, activo: next });
+      if (row) row.activo = next; else (DATA.carrusel_config = DATA.carrusel_config || []).push({ category, activo: next, frecuencia_mensual: 1 });
+      render();
+    }catch(e){ alert("Error: " + e.message); carrActivo.disabled = false; }
+    return;
+  }
   const carrBtn = ev.target.closest("#carr_crear");
   if (carrBtn){
     const category = $("#carr_category").value;
