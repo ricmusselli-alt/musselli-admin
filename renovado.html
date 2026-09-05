@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Token de Instagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--negro:#141212;--panel:#1c1917;--hueso:#F5F0E6;--dorado:#CCA353;--cobre:#C89B6C;--ok:#3fae6b;--down:#c65b5b;--texto-2:#c9c2b6}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--negro);color:var(--hueso);font-family:'Jost',system-ui,sans-serif;font-weight:300;
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{max-width:420px;width:100%;text-align:center;padding:44px 34px;background:var(--panel);
+    border:1px solid rgba(200,155,108,.2);border-radius:10px;
+    background-image:repeating-linear-gradient(135deg, rgba(204,163,83,.03) 0 2px, transparent 2px 14px)}
+  .icono{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+    font-size:38px;line-height:1}
+  .icono.ok{background:rgba(63,174,107,.14);color:var(--ok)}
+  .icono.err{background:rgba(198,91,91,.14);color:var(--down)}
+  h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:30px;margin-bottom:10px}
+  h1.ok{color:var(--dorado)} h1.err{color:var(--down)}
+  p{font-size:15px;line-height:1.6;color:var(--texto-2)}
+  .fine{margin-top:22px;font-size:12.5px;color:#8a8275}
+  .detalle{margin-top:14px;font-size:12px;color:#8a8275;word-break:break-word;max-height:120px;overflow:auto}
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="icono ok" id="icono">✓</div>
+    <h1 class="ok" id="titulo">Token actualizado</h1>
+    <p id="msg">Listo.</p>
+    <div class="detalle" id="detalle" hidden></div>
+    <p class="fine">Ya podés cerrar esta ventana.</p>
+  </div>
+<script>
+  var q = new URLSearchParams(location.search);
+  var estado = q.get('estado');       // 'ok' | 'error'
+  var linea  = q.get('linea') || '';  // 'Guitar Tech' | 'Luthería'
+  var detalle = q.get('detalle') || '';
+  var esOk = estado !== 'error';
+  document.getElementById('icono').className = 'icono ' + (esOk ? 'ok' : 'err');
+  document.getElementById('icono').textContent = esOk ? '✓' : '!';
+  document.getElementById('titulo').className = esOk ? 'ok' : 'err';
+  document.getElementById('titulo').textContent = esOk ? 'Token actualizado' : 'No se pudo renovar';
+  document.getElementById('msg').textContent = esOk
+    ? ('El token de ' + (linea || 'Instagram') + ' quedó renovado por 60 días más.')
+    : 'Hubo un problema al renovar el token. Probá de nuevo desde el panel.';
+  if (!esOk && detalle){
+    var d = document.getElementById('detalle');
+    d.hidden = false; d.textContent = detalle;
+  }
+</script>
+</body>
+</html>
