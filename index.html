@@ -350,7 +350,34 @@ let token = null, DATA = { properties: [], providers: [], status: {} };
 const GEN = {
   blog:       { product: "blog",  site: "https://blog.ricardomusselli.com/",       supportsHint: true },
   tendencias: { product: "trend", site: "https://tendencias.ricardomusselli.com/", supportsHint: true },
+  carrusel:   { product: "carrusel" },
 };
+
+/* ---- bloque especial de generación de Carruseles: línea, tema opcional, Lead Magnet ---- */
+function carruselGenHtml(){
+  const fieldStyle = "flex:1;padding:7px 9px;background:var(--panel-2);border:1px solid rgba(200,155,108,.25);border-radius:3px;color:var(--texto);font-family:inherit;font-size:12px";
+  return `<div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(245,240,230,.03);border-radius:8px">
+    <div style="display:flex;gap:6px">
+      <select id="carr_category" style="${fieldStyle};flex:0 0 150px">
+        <option value="guitar-tech">Guitar Tech</option>
+        <option value="luthier">Luthería</option>
+      </select>
+      <input type="text" id="carr_topic" placeholder="Tema (vacío = lo elige el Radar)" style="${fieldStyle}">
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;margin:0;text-transform:none;letter-spacing:0;font-size:12px;color:var(--texto-2);cursor:pointer">
+      <input type="checkbox" id="carr_leadmagnet" style="margin:0">
+      Lead Magnet (hook y cierre a medida)
+    </label>
+    <div id="carr_leadmagnet_fields" hidden style="display:flex;flex-direction:column;gap:6px">
+      <input type="text" id="carr_hook" placeholder="Hook (frase de la slide 1)" style="${fieldStyle}">
+      <input type="text" id="carr_cta" placeholder='CTA de cierre (ej: "Escribí CUERDA y te envío todo.")' style="${fieldStyle}">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-solid btn-mini" id="carr_crear">Crear carrusel</button>
+      <button class="btn-ghost btn-mini" data-histkey="carrusel">Historial</button>
+    </div>
+  </div>`;
+}
 
 async function edgeFn(name, body){
   const res = await fetch(SUPABASE_URL + "/functions/v1/" + name, {
@@ -443,6 +470,7 @@ function cardHtml(p, status, providers){
             <button class="toggle ${p.enabled?'on':''}" data-toggle="${esc(p.key)}" aria-label="on/off"></button>
           </span>
         </div>
+        ${p.key === 'carrusel' ? carruselGenHtml() : ''}
         ${GEN[p.key] ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-solid btn-mini" data-genkey="${esc(p.key)}">Crear ahora</button>
           <button class="btn-ghost btn-mini" data-histkey="${esc(p.key)}">Historial</button>
@@ -551,12 +579,51 @@ async function load(){
   }
 }
 
+$("#props").addEventListener("change", (ev) => {
+  if (ev.target.id === "carr_leadmagnet"){
+    $("#carr_leadmagnet_fields").hidden = !ev.target.checked;
+  }
+});
 $("#props").addEventListener("click", async (ev) => {
   const tg = ev.target.closest("[data-toggle]");
   const ed = ev.target.closest("[data-edit]");
   const gen = ev.target.closest("[data-genkey]");
   const hist = ev.target.closest("[data-histkey]");
   const hintBtn = ev.target.closest("[data-hintbtn]");
+  const carrBtn = ev.target.closest("#carr_crear");
+  if (carrBtn){
+    const category = $("#carr_category").value;
+    const topic = $("#carr_topic").value.trim();
+    const useLead = $("#carr_leadmagnet").checked;
+    const hook = $("#carr_hook").value.trim();
+    const cta = $("#carr_cta").value.trim();
+    if (useLead && (!hook || !cta)){ alert("Para Lead Magnet completá el hook y el CTA de cierre."); return; }
+    const confirmMsg = topic
+      ? `¿Crear un carrusel de ${category === 'luthier' ? 'Luthería' : 'Guitar Tech'} sobre "${topic}"${useLead ? ' (Lead Magnet)' : ''}?`
+      : `¿Crear un carrusel de ${category === 'luthier' ? 'Luthería' : 'Guitar Tech'} con un tema del Radar?`;
+    if (!confirm(confirmMsg)) return;
+    const original = carrBtn.textContent;
+    carrBtn.disabled = true; carrBtn.textContent = "Generando…";
+    try{
+      const body = { category, manual: true };
+      if (topic) body.topic = topic;
+      if (useLead) body.lead_magnet = { hook, cta };
+      const data = await edgeFn("generate-carrusel", body);
+      if (data.status === "sin_temas_disponibles"){
+        alert("No hay temas disponibles en el Radar de Carruseles todavía. Probá con un tema puntual.");
+      } else if (data.status === "apagado"){
+        alert("La generación automática de Carruseles está apagada en el panel.");
+      } else {
+        alert('Generado: "' + (data.topic || "listo") + '". Revisalo en el panel de revisión antes de aprobar.');
+        $("#carr_topic").value = ""; $("#carr_hook").value = ""; $("#carr_cta").value = "";
+        $("#carr_leadmagnet").checked = false; $("#carr_leadmagnet_fields").hidden = true;
+      }
+    }catch(e){
+      alert("Error: " + e.message);
+    }finally{
+      carrBtn.disabled = false; carrBtn.textContent = original;
+    }
+  }
   if (tg){
     const key = tg.dataset.toggle;
     const p = DATA.properties.find(x => x.key === key);
@@ -623,7 +690,7 @@ async function loadHist(g){
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(200,155,108,.12);padding-bottom:9px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13.5px;${hidden?'color:var(--texto-mute)':''}">${esc(it.title)}${hidden?' <span class="tag" style="margin-left:6px">oculto</span>':''}</div>
-          <a href="${g.site}${esc(it.slug)}/" target="_blank" rel="noopener" style="font-size:11px">ver ↗</a>
+          ${g.site ? `<a href="${g.site}${esc(it.slug)}/" target="_blank" rel="noopener" style="font-size:11px">ver ↗</a>` : `<span style="font-size:11px;color:var(--texto-mute)">${esc(it.category || '')}</span>`}
         </div>
         <div style="display:flex;gap:6px;flex:0 0 auto">
           ${it.status === "published"
