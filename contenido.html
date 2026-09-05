@@ -61,13 +61,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="panel.js"></script>
 <script>
-const { $, esc, ayuda, api } = Panel;
+const { $, esc, ayuda, api, edgeFn } = Panel;
 let DATA = null;
 
 const TIPOS = [
   { key:"carrusel",   ico:"▤", nom:"Carruseles",  desc:"Guitar Tech y Luthería. Previsualizás las 7 slides y aprobás o rechazás.", listo:true },
-  { key:"blog",       ico:"✒", nom:"Blog",        desc:"Artículos largos. Revisás el borrador antes de publicar.", listo:false },
-  { key:"tendencias", ico:"◷", nom:"Tendencias",  desc:"Notas cortas verificadas. Revisás antes de publicar.", listo:false },
+  { key:"blog",       ico:"✒", nom:"Blog",        desc:"Artículos largos. Revisás el borrador antes de publicar.", listo:true },
+  { key:"tendencias", ico:"◷", nom:"Tendencias",  desc:"Notas cortas verificadas. Revisás antes de publicar.", listo:true },
   { key:"tiktok",     ico:"♪", nom:"TikTok",      desc:"Próximamente: carruseles en formato 9:16 para TikTok.", listo:false },
 ];
 
@@ -127,13 +127,49 @@ function renderCarrusel(){
   $("#viewTipo").hidden = false;
 }
 
+/* ---------- revisión de blog / tendencias (texto) ---------- */
+function textoItem(d, product){
+  const c = d.content || {};
+  const cuerpo = product === "trend" ? (c.why_now || "") : (c.body || "");
+  const preview = cuerpo.length > 1400 ? cuerpo.slice(0, 1400) + "…" : cuerpo;
+  const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
+  const extra = product === "trend" && (c.price_usd || c.source)
+    ? `<div class="mini-note" style="font-size:11px;color:var(--texto-mute);margin:6px 0">
+         ${c.price_usd ? `Precio: USD $${esc(String(c.price_usd))}` : ""}${c.price_usd && c.source ? " · " : ""}${c.source ? `Fuente: ${esc(c.source)}` : ""}
+       </div>` : "";
+  return `<div class="revitem" data-id="${esc(d.id)}">
+    <div class="revitem__head">
+      <span class="t">${esc(d.title || "(sin título)")}</span>
+      <span class="tag">${linea}</span>
+    </div>
+    ${extra}
+    <div class="cap" style="max-height:22em">${esc(preview)}</div>
+    <div class="revitem__acts">
+      <button class="btn-solid btn-mini" data-txapprove="${esc(d.id)}">Aprobar y publicar ${ayuda("Publica el artículo en su sitio (blog o tendencias). No se puede deshacer desde acá.", true)}</button>
+      <button class="btn-ghost btn-mini" data-txredo="${esc(d.id)}">Rehacer ${ayuda("Lo manda a regenerar: el sistema vuelve a escribir el borrador.", true)}</button>
+      <button class="btn-danger btn-mini" data-txreject="${esc(d.id)}">Rechazar ${ayuda("Descarta el borrador. No se publica.", true)}</button>
+    </div>
+  </div>`;
+}
+
+function renderTexto(t){
+  const product = t.key === "tendencias" ? "trend" : "blog";
+  const drafts = product === "trend" ? (DATA.trend_drafts || []) : (DATA.blog_drafts || []);
+  $("#hTitle").textContent = t.nom + " por aprobar";
+  $("#hDesc").textContent = product === "trend"
+    ? "Notas cortas verificadas. Revisá el texto y aprobá, rehacé o rechazá."
+    : "Artículos largos. Revisá el borrador y aprobá, rehacé o rechazá.";
+  $("#revList").innerHTML = drafts.length
+    ? drafts.map(d => textoItem(d, product)).join("")
+    : `<div class="vacio">No hay ${esc(t.nom.toLowerCase())} esperando aprobación.</div>`;
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+}
+
 function renderPlaceholder(t){
   $("#hTitle").textContent = t.nom;
   $("#hDesc").textContent = t.desc;
-  $("#revList").innerHTML = `<div class="vacio">
-    La revisión de ${esc(t.nom)} dentro de este panel todavía no está conectada.<br>
-    ${t.key === "tiktok" ? "Se habilita cuando integremos TikTok." : "Falta ampliar el backend para traer los borradores acá."}
-  </div>`;
+  $("#revList").innerHTML = `<div class="vacio">Se habilita cuando integremos TikTok.</div>`;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -143,6 +179,7 @@ function route(){
   const t = TIPOS.find(x => x.key === h);
   if (!t){ renderHub(); return; }
   if (t.key === "carrusel") renderCarrusel();
+  else if (t.key === "blog" || t.key === "tendencias") renderTexto(t);
   else renderPlaceholder(t);
 }
 
@@ -165,6 +202,27 @@ $("#revList").addEventListener("click", async (ev) => {
     if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
     try { await api("POST", { action:"carrusel_reject", item_id: rej.dataset.rej }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); }
+  }
+
+  // ---- blog / tendencias (texto) ----
+  const txA = ev.target.closest("[data-txapprove]");
+  const txR = ev.target.closest("[data-txredo]");
+  const txX = ev.target.closest("[data-txreject]");
+  const tx = txA || txR || txX;
+  if (tx){
+    const id = tx.dataset.txapprove || tx.dataset.txredo || tx.dataset.txreject;
+    const decision = txA ? "approve" : txR ? "redo" : "reject";
+    const msg = { approve:"¿Aprobar y publicar este artículo? No se puede deshacer.",
+                  redo:"¿Mandar a rehacer este borrador?",
+                  reject:"¿Rechazar este borrador? No se publica." }[decision];
+    if (!confirm(msg)) return;
+    const orig = tx.textContent; tx.disabled = true; tx.textContent = "…";
+    try {
+      const r = await edgeFn("review-item", { item_id: id, decision });
+      if (decision === "approve") alert("Publicado. " + (r.published_url || ""));
+      else if (decision === "redo") alert("Mandado a rehacer. Va a aparecer un borrador nuevo cuando termine.");
+      await reload(); route();
+    } catch(e){ alert("Error: " + e.message); tx.disabled = false; tx.textContent = orig; }
   }
 });
 
