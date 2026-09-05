@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Base de datos · Panel Musselli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .db-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+  .filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .filtros select,.filtros input{width:auto;min-width:150px}
+  .seg{display:inline-flex;border:1px solid var(--linea-fuerte);border-radius:22px;overflow:hidden}
+  .seg button{border:0;border-radius:0;background:transparent;color:var(--texto-2);padding:8px 15px;font-size:10.5px}
+  .seg button.on{background:var(--dorado);color:var(--negro)}
+  .lead-table{width:100%;border-collapse:collapse;font-size:13px}
+  .lead-table th{text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobre);
+    padding:10px 12px;border-bottom:1px solid var(--linea-fuerte)}
+  .lead-table td{padding:11px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2)}
+  .cat-pill{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid}
+  .cat-gt{color:var(--borgona-vivo);border-color:var(--borgona-vivo)}
+  .cat-lu{color:var(--cobre);border-color:var(--cobre)}
+  .cat-ambos{color:var(--dorado);border-color:var(--dorado)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+
+  <div class="page-head">
+    <span class="crumb"><a href="index.html">← Portada</a> · Base de datos</span>
+    <h1>Base de datos</h1>
+    <p>Las personas que se anotaron en cualquier formulario de captación de la web. Desde acá vas a poder
+       segmentarlas y disparar envíos de mail.</p>
+  </div>
+
+  <div class="msg" id="topMsg"></div>
+
+  <div class="db-stats" id="stats"></div>
+
+  <div class="card" style="margin-bottom:26px">
+    <h3>Enviar un mail ${ayuda("Elegís a qué segmento le querés escribir (Guitar Tech, Luthería o ambos) y el envío sale por el proveedor de email. La conexión real con el proveedor se integra más adelante.")}</h3>
+    <div class="filtros" style="margin-bottom:10px">
+      <div class="seg" id="segEnvio">
+        <button data-aud="todos" class="on">Todos</button>
+        <button data-aud="guitartech">Guitar Tech</button>
+        <button data-aud="luthier">Luthería</button>
+        <button data-aud="ambos">Ambos</button>
+      </div>
+      <button class="btn-solid btn-mini" id="btnEnvio" disabled>Preparar envío</button>
+    </div>
+    <p class="mini-note" style="font-size:11px;color:var(--texto-mute)">
+      Pendiente de conectar con MailerLite / ManyChat. Por ahora este botón solo muestra a cuántas personas alcanzaría.
+    </p>
+  </div>
+
+  <div class="seccion">
+    <div class="seccion__head">
+      <span class="kicker">Contactos</span><h2>Listado</h2><span class="count" id="leadCount"></span>
+    </div>
+    <div class="filtros">
+      <div class="seg" id="segFiltro">
+        <button data-cat="todos" class="on">Todos</button>
+        <button data-cat="guitartech">Guitar Tech</button>
+        <button data-cat="luthier">Luthería</button>
+        <button data-cat="ambos">Ambos</button>
+      </div>
+      <input type="search" id="buscar" placeholder="Buscar por mail o nombre…">
+    </div>
+    <div style="overflow-x:auto">
+      <table class="lead-table">
+        <thead><tr><th>Mail</th><th>Nombre</th><th>Categoría</th><th>Origen</th><th>Alta</th></tr></thead>
+        <tbody id="leadBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="panel.js"></script>
+<script>
+const { $, $$, esc, ayuda, api } = Panel;
+let LEADS = [], filtroCat = "todos", audEnvio = "todos";
+
+const catPill = (c) => {
+  if (c === "ambos") return '<span class="cat-pill cat-ambos">Ambos</span>';
+  if (c === "luthier") return '<span class="cat-pill cat-lu">Luthería</span>';
+  if (c === "guitartech") return '<span class="cat-pill cat-gt">Guitar Tech</span>';
+  return '<span class="cat-pill" style="color:var(--texto-mute);border-color:var(--linea-fuerte)">sin clasificar</span>';
+};
+
+function cuenta(aud){
+  if (aud === "todos") return LEADS.length;
+  if (aud === "ambos") return LEADS.filter(l => l.categoria === "ambos").length;
+  return LEADS.filter(l => l.categoria === aud || l.categoria === "ambos").length;
+}
+
+function renderStats(){
+  const g = cuenta("guitartech"), l = cuenta("luthier"), a = cuenta("ambos");
+  $("#stats").innerHTML = `
+    <div class="resumen__item"><span class="resumen__label">Total</span>
+      <span class="resumen__value">${LEADS.length}</span><span class="resumen__sub">contactos</span></div>
+    <div class="resumen__item"><span class="resumen__label">Guitar Tech</span>
+      <span class="resumen__value">${g}</span><span class="resumen__sub">incluye "ambos"</span></div>
+    <div class="resumen__item"><span class="resumen__label">Luthería</span>
+      <span class="resumen__value">${l}</span><span class="resumen__sub">incluye "ambos"</span></div>
+    <div class="resumen__item"><span class="resumen__label">Ambos intereses</span>
+      <span class="resumen__value">${a}</span><span class="resumen__sub">luthier + guitartech</span></div>`;
+}
+
+function renderTabla(){
+  const q = ($("#buscar").value || "").toLowerCase().trim();
+  let rows = LEADS.slice();
+  if (filtroCat !== "todos") rows = rows.filter(l => l.categoria === filtroCat || (filtroCat !== "ambos" && l.categoria === "ambos"));
+  if (q) rows = rows.filter(l => (l.email||"").toLowerCase().includes(q) || (l.nombre||"").toLowerCase().includes(q));
+  $("#leadCount").textContent = "· " + rows.length;
+  $("#leadBody").innerHTML = rows.length ? rows.map(l => `<tr>
+      <td>${esc(l.email||"")}</td>
+      <td>${esc(l.nombre||"—")}</td>
+      <td>${catPill(l.categoria)}</td>
+      <td>${esc(l.origen||"—")}</td>
+      <td>${l.created_at ? new Date(l.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'}) : "—"}</td>
+    </tr>`).join("")
+    : `<tr><td colspan="5" style="text-align:center;color:var(--texto-mute);padding:24px">
+        ${LEADS.length ? "Ningún contacto con ese filtro." :
+        "Todavía no hay contactos. Se llenará cuando conectemos los formularios de captación con la base (falta esa parte del backend)."}
+      </td></tr>`;
+}
+
+$("#segFiltro").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-cat]"); if (!b) return;
+  $$("#segFiltro button").forEach(x => x.classList.toggle("on", x === b));
+  filtroCat = b.dataset.cat; renderTabla();
+});
+$("#segEnvio").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-aud]"); if (!b) return;
+  $$("#segEnvio button").forEach(x => x.classList.toggle("on", x === b));
+  audEnvio = b.dataset.aud;
+  $("#btnEnvio").disabled = LEADS.length === 0;
+});
+$("#buscar").addEventListener("input", renderTabla);
+$("#btnEnvio").addEventListener("click", () => {
+  alert(`El envío a "${audEnvio}" alcanzaría a ${cuenta(audEnvio)} contactos.\n\nLa conexión con el proveedor de email todavía no está integrada.`);
+});
+
+Panel.init({
+  page: "datos",
+  onReady: async () => {
+    $("#app").hidden = false;
+    $("#topMsg").textContent = "Cargando…";
+    try {
+      const DATA = await api("GET");
+      LEADS = DATA.leads || [];
+      renderStats(); renderTabla();
+      $("#btnEnvio").disabled = LEADS.length === 0;
+      $("#topMsg").textContent = LEADS.length ? "" : "";
+    } catch(e){
+      $("#topMsg").className = "msg err";
+      $("#topMsg").textContent = "No se pudo cargar: " + e.message;
+    }
+  },
+});
+</script>
+</body>
+</html>

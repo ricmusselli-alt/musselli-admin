@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Contenido · Panel Musselli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .tipos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:18px}
+  .tipo{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;text-align:left;color:inherit;
+    background:linear-gradient(165deg,var(--panel-2),var(--panel) 60%);border:1px solid rgba(200,155,108,.18);
+    border-radius:16px;padding:22px;box-shadow:var(--sombra-card);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+  .tipo:hover{transform:translateY(-4px);border-color:rgba(204,163,83,.5);box-shadow:var(--sombra-hover)}
+  .tipo[aria-disabled=true]{opacity:.5;pointer-events:none}
+  .tipo .ico{font-size:22px}
+  .tipo h3{font-family:var(--serif);font-weight:600;font-size:19px;margin:2px 0 0}
+  .tipo p{font-size:12px;color:var(--texto-2);margin:0;line-height:1.5}
+  .tipo .badge{margin-top:10px;font-size:11px;color:var(--texto-mute)}
+  .tipo .badge b{color:var(--aviso)}
+
+  .back{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--cobre);cursor:pointer;background:none;border:0;padding:0;margin-bottom:16px}
+
+  .revitem{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:20px}
+  .revitem__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .revitem__head .t{font-family:var(--serif);font-weight:600;font-size:18px;flex:1;min-width:200px}
+  .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
+  .slides img{height:360px;width:auto;border-radius:6px;flex:0 0 auto;scroll-snap-align:center;
+    border:1px solid rgba(200,155,108,.2);background:#0e0d0c}
+  .cap{font-size:13px;color:var(--texto-2);white-space:pre-wrap;margin:12px 0;line-height:1.6;
+    max-height:9em;overflow:auto;border-left:2px solid var(--linea-fuerte);padding-left:12px}
+  .revitem__acts{display:flex;gap:9px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+
+  <div class="page-head">
+    <span class="crumb"><a href="index.html">← Portada</a> · Contenido</span>
+    <h1 id="hTitle">Contenido</h1>
+    <p id="hDesc">Todo lo que Blog, Tendencias y Carruseles generan, esperando tu OK. Elegí qué querés revisar.</p>
+  </div>
+
+  <div class="msg" id="topMsg"></div>
+
+  <!-- vista de cards -->
+  <div id="viewHub">
+    <div class="tipos" id="tipos"></div>
+  </div>
+
+  <!-- vista de revisión de un tipo -->
+  <div id="viewTipo" hidden>
+    <button class="back" id="btnBack">← Volver a Contenido</button>
+    <div id="revList"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="panel.js"></script>
+<script>
+const { $, esc, ayuda, api } = Panel;
+let DATA = null;
+
+const TIPOS = [
+  { key:"carrusel",   ico:"▤", nom:"Carruseles",  desc:"Guitar Tech y Luthería. Previsualizás las 7 slides y aprobás o rechazás.", listo:true },
+  { key:"blog",       ico:"✒", nom:"Blog",        desc:"Artículos largos. Revisás el borrador antes de publicar.", listo:false },
+  { key:"tendencias", ico:"◷", nom:"Tendencias",  desc:"Notas cortas verificadas. Revisás antes de publicar.", listo:false },
+  { key:"tiktok",     ico:"♪", nom:"TikTok",      desc:"Próximamente: carruseles en formato 9:16 para TikTok.", listo:false },
+];
+
+function pendDe(key){
+  if (key === "carrusel") return (DATA.carrusel_drafts || []).length;
+  if (key === "blog")     return (DATA.blog_drafts || []).length;
+  if (key === "tendencias")return (DATA.trend_drafts || []).length;
+  return 0;
+}
+
+function renderHub(){
+  $("#hTitle").textContent = "Contenido";
+  $("#hDesc").textContent = "Todo lo que Blog, Tendencias y Carruseles generan, esperando tu OK. Elegí qué querés revisar.";
+  $("#tipos").innerHTML = TIPOS.map(t => {
+    const n = pendDe(t.key);
+    const dis = !t.listo;
+    return `<a class="tipo" ${dis ? 'aria-disabled="true"' : `href="#${t.key}"`}>
+      <span class="ico">${t.ico}</span>
+      <h3>${t.nom}</h3>
+      <p>${esc(t.desc)}</p>
+      <span class="badge">${t.listo ? (n ? `<b>${n}</b> por aprobar` : "sin pendientes") : "en preparación"}</span>
+    </a>`;
+  }).join("");
+  $("#viewHub").hidden = false;
+  $("#viewTipo").hidden = true;
+}
+
+/* ---------- revisión de carruseles ---------- */
+function carruselItem(d){
+  const imgs = (d.content && d.content.imagenes) || [];
+  const cap = (d.content && (d.content.caption || d.content.descripcion)) || d.title || "";
+  const tags = (d.content && d.content.hashtags) || [];
+  const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
+  const variante = d.content && d.content.variante ? ` · ${esc(d.content.variante)}` : "";
+  return `<div class="revitem" data-id="${esc(d.id)}">
+    <div class="revitem__head">
+      <span class="t">${esc(d.title || "(sin título)")}</span>
+      <span class="tag">${linea}${variante}</span>
+    </div>
+    <div class="slides">${imgs.map(u => `<img src="${esc(u)}" alt="" loading="lazy">`).join("")}</div>
+    <div class="cap">${esc(cap)}${tags.length ? "\n\n#" + tags.map(esc).join(" #") : ""}</div>
+    <div class="revitem__acts">
+      <button class="btn-solid btn-mini" data-pub="${esc(d.id)}">Aprobar y publicar ${ayuda("Sube el carrusel a Instagram tal cual lo ves. No se puede deshacer.", true)}</button>
+      <button class="btn-danger btn-mini" data-rej="${esc(d.id)}">Rechazar ${ayuda("Descarta el borrador. No se publica y sale de la lista.", true)}</button>
+    </div>
+  </div>`;
+}
+
+function renderCarrusel(){
+  $("#hTitle").textContent = "Carruseles por aprobar";
+  $("#hDesc").textContent = "Cada borrador con sus 7 slides a tamaño real. Aprobá para publicar en Instagram o rechazá.";
+  const drafts = DATA.carrusel_drafts || [];
+  $("#revList").innerHTML = drafts.length
+    ? drafts.map(carruselItem).join("")
+    : '<div class="vacio">No hay carruseles esperando aprobación.</div>';
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+}
+
+function renderPlaceholder(t){
+  $("#hTitle").textContent = t.nom;
+  $("#hDesc").textContent = t.desc;
+  $("#revList").innerHTML = `<div class="vacio">
+    La revisión de ${esc(t.nom)} dentro de este panel todavía no está conectada.<br>
+    ${t.key === "tiktok" ? "Se habilita cuando integremos TikTok." : "Falta ampliar el backend para traer los borradores acá."}
+  </div>`;
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+}
+
+function route(){
+  const h = (location.hash || "").replace("#", "");
+  const t = TIPOS.find(x => x.key === h);
+  if (!t){ renderHub(); return; }
+  if (t.key === "carrusel") renderCarrusel();
+  else renderPlaceholder(t);
+}
+
+$("#btnBack").addEventListener("click", () => { location.hash = ""; });
+window.addEventListener("hashchange", route);
+
+$("#revList").addEventListener("click", async (ev) => {
+  const pub = ev.target.closest("[data-pub]");
+  const rej = ev.target.closest("[data-rej]");
+  if (pub){
+    if (!confirm("¿Aprobar y publicar este carrusel en Instagram ahora? No se puede deshacer.")) return;
+    pub.disabled = true; pub.textContent = "Publicando…";
+    try {
+      const r = await api("POST", { action:"carrusel_publish", item_id: pub.dataset.pub });
+      alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
+      await reload(); route();
+    } catch(e){ alert("No se pudo publicar: " + e.message); pub.disabled = false; pub.textContent = "Aprobar y publicar"; }
+  }
+  if (rej){
+    if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
+    try { await api("POST", { action:"carrusel_reject", item_id: rej.dataset.rej }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+});
+
+async function reload(){ DATA = await api("GET"); }
+
+Panel.init({
+  page: "contenido",
+  onReady: async () => {
+    $("#app").hidden = false;
+    $("#topMsg").textContent = "Cargando…";
+    try { await reload(); $("#topMsg").textContent = ""; route(); }
+    catch(e){ $("#topMsg").className = "msg err"; $("#topMsg").textContent = "No se pudo cargar: " + e.message; }
+  },
+});
+</script>
+</body>
+</html>

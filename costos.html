@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Costos · Panel Musselli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .cost-top{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:32px}
+  @media(min-width:820px){ .cost-top{grid-template-columns:280px 1fr} }
+  .big-total{display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .big-total .n{font-family:var(--serif);font-weight:600;font-size:46px;line-height:1;color:var(--dorado)}
+  .big-total .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cobre)}
+  .big-total .s{font-size:12px;color:var(--texto-mute)}
+  .chart{width:100%;height:180px;display:block}
+  .chart .bar{fill:var(--cobre)}
+  .chart .bar.cur{fill:var(--dorado)}
+  .chart text{fill:var(--texto-mute);font-size:9px;font-family:var(--sans)}
+  .prov-table{width:100%;border-collapse:collapse;font-size:13px}
+  .prov-table th{text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobre);
+    padding:10px 12px;border-bottom:1px solid var(--linea-fuerte)}
+  .prov-table td{padding:11px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2)}
+  .prov-table tr:hover td{background:rgba(245,240,230,.02)}
+  .prov-table .nom{color:var(--texto);font-weight:400}
+  .src-api{color:var(--ok);font-size:11px}
+  .src-man{color:var(--texto-mute);font-size:11px}
+  .ren-soon{color:var(--down)}
+  dialog{background:var(--panel);color:var(--texto);border:1px solid var(--linea-fuerte);border-radius:8px;padding:22px;max-width:460px;width:92vw}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 14px;font-size:19px}
+  .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+  .row2{display:flex;gap:8px}
+  .row2 > *{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+
+  <div class="page-head">
+    <span class="crumb"><a href="index.html">← Portada</a> · Costos</span>
+    <h1>Costos</h1>
+    <p>Cuánto cuesta sostener todo el ecosistema por mes. Lo que tiene API se actualiza solo;
+       el resto lo cargás a mano con su plan y fecha de renovación.</p>
+  </div>
+
+  <div class="msg" id="topMsg"></div>
+
+  <div class="cost-top">
+    <div class="card big-total">
+      <span class="l">Gasto del mes</span>
+      <span class="n" id="totalN">—</span>
+      <span class="s" id="totalS"></span>
+    </div>
+    <div class="card">
+      <h3>Gasto por familia · este mes ${ayuda("Suma del costo mensual de los proveedores, agrupado por la familia a la que pertenecen. Los compartidos van aparte.")}</h3>
+      <svg class="chart" id="chartFam" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:32px">
+    <h3>Gasto histórico ${ayuda("Cómo evolucionó el gasto total mes a mes, para ver en qué meses gastamos más o menos. Necesita que el sistema guarde una foto del total cada mes.")}</h3>
+    <svg class="chart" id="chartHist" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+    <p class="mini-note" id="histNote" style="font-size:11px;color:var(--texto-mute);margin-top:8px"></p>
+  </div>
+
+  <div class="seccion">
+    <div class="seccion__head">
+      <span class="kicker">Detalle</span>
+      <h2>Todos los proveedores</h2>
+      <span class="count" id="provCount"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="prov-table">
+        <thead><tr>
+          <th>Proveedor</th><th>Familia</th><th>Plan</th><th>Costo / mes</th><th>Renueva</th><th>Origen</th><th></th>
+        </tr></thead>
+        <tbody id="provBody"></tbody>
+      </table>
+    </div>
+    <button class="btn-ghost btn-mini" id="addProv" style="margin-top:14px">＋ Agregar proveedor</button>
+  </div>
+
+</div>
+
+<dialog id="provDlg">
+  <form method="dialog" id="provForm">
+    <h3 id="pTitle">Nuevo proveedor</h3>
+    <label class="campo"><span>Clave · sin espacios (ej. r2-academia)</span><input id="p_key" required pattern="[a-z0-9\-]+"></label>
+    <label class="campo"><span>Nombre</span><input id="p_name" required></label>
+    <label class="campo"><span>Familia a la que pertenece</span><select id="p_prop"><option value="">— Compartido —</option></select></label>
+    <label class="campo"><span>Link a su consola</span><input id="p_console" placeholder="https://…"></label>
+    <label class="campo"><span>Plan contratado</span><input id="p_plan" placeholder='ej: Pro, Free, Team 5 asientos'></label>
+    <div class="campo"><span>Precio del plan</span>
+      <div class="row2">
+        <input id="p_price" type="number" step="0.01" placeholder="0.00" style="flex:2">
+        <select id="p_cur"><option>USD</option><option>ARS</option><option>MXN</option><option>EUR</option></select>
+        <select id="p_cycle"><option value="mensual">por mes</option><option value="anual">por año</option></select>
+      </div>
+    </div>
+    <label class="campo"><span>Próxima fecha de renovación / cobro</span><input id="p_renew" type="date"></label>
+    <label class="campo"><span>Notas</span><input id="p_notes"></label>
+    <div class="foot">
+      <button type="button" class="btn-danger btn-mini" id="pDelete" hidden>Eliminar</button>
+      <button type="button" class="btn-ghost btn-mini" id="pCancel">Cancelar</button>
+      <button type="submit" class="btn-primary btn-mini">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="panel.js"></script>
+<script>
+const { $, esc, ayuda, api } = Panel;
+let DATA = null;
+
+const famName = (k) => (DATA.properties.find(p => p.key === k) || {}).name || k;
+
+function barChart(svgId, pairs, opts){
+  opts = opts || {};
+  const svg = $("#" + svgId);
+  if (!pairs.length){ svg.innerHTML = `<text x="12" y="90">Sin datos todavía.</text>`; return; }
+  const max = Math.max(...pairs.map(p => p.v), 1);
+  const W = 600, H = 180, pad = 24, bw = (W - pad*2) / pairs.length;
+  svg.innerHTML = pairs.map((p, i) => {
+    const h = Math.max(2, (p.v / max) * (H - 46));
+    const x = pad + i*bw, y = H - 26 - h;
+    return `<rect class="bar ${opts.lastCur && i === pairs.length-1 ? 'cur' : ''}" x="${x+4}" y="${y}" width="${bw-8}" height="${h}" rx="2"></rect>
+      <text x="${x + bw/2}" y="${H - 12}" text-anchor="middle">${esc(p.k)}</text>
+      <text x="${x + bw/2}" y="${y - 5}" text-anchor="middle">${esc(p.t || ('$'+p.v.toFixed(0)))}</text>`;
+  }).join("");
+}
+
+function render(){
+  const provs = DATA.providers || [];
+  const cost = DATA.cost_by_currency || {};
+  const totalStr = Object.entries(cost).map(([c,v]) => c + " $" + v.toFixed(2)).join("  +  ") || "—";
+  $("#totalN").textContent = (cost.USD != null) ? ("USD $" + cost.USD.toFixed(2)) : totalStr;
+  $("#totalS").textContent = Object.keys(cost).length > 1
+    ? "Monedas sin convertir: " + totalStr
+    : provs.filter(v => typeof v.monthly_cost === "number").length + " proveedores con costo cargado";
+
+  // gasto por familia (este mes)
+  const porFam = {};
+  provs.forEach(v => {
+    if (typeof v.monthly_cost !== "number") return;
+    const k = v.property_key ? famName(v.property_key) : "Compartido";
+    porFam[k] = (porFam[k] || 0) + v.monthly_cost;
+  });
+  barChart("chartFam", Object.entries(porFam).map(([k,v]) => ({ k, v })));
+
+  // gasto histórico
+  const hist = DATA.cost_history || [];
+  if (hist.length){
+    barChart("chartHist", hist.map(h => ({ k: h.month.slice(5), v: h.total_usd, t: "$"+Math.round(h.total_usd) })), { lastCur: true });
+    $("#histNote").textContent = "";
+  } else {
+    barChart("chartHist", []);
+    $("#histNote").textContent = "Todavía no hay historial. Se empieza a llenar cuando el sistema guarde el total cada mes (falta esa parte del backend).";
+  }
+
+  // tabla
+  $("#provCount").textContent = "· " + provs.length;
+  $("#provBody").innerHTML = provs.map(v => {
+    const fam = v.property_key ? esc(famName(v.property_key)) : '<span style="color:var(--texto-mute)">Compartido</span>';
+    const costo = (typeof v.monthly_cost === "number") ? `${esc(v.currency||"USD")} $${v.monthly_cost.toFixed(2)}` : "—";
+    let ren = "—";
+    if (v.renewal_date){
+      const d = new Date(v.renewal_date + "T00:00:00");
+      const soon = (d - new Date()) < 1000*60*60*24*7;
+      ren = `<span class="${soon ? 'ren-soon' : ''}">${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'})}</span>`;
+    }
+    const src = v.usage_source === "api"
+      ? '<span class="src-api">● API</span>'
+      : '<span class="src-man">manual</span>';
+    return `<tr>
+      <td class="nom">${esc(v.name)}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ""}</td>
+      <td>${fam}</td>
+      <td>${v.plan_name ? esc(v.plan_name) : "—"}</td>
+      <td>${costo}</td>
+      <td>${ren}</td>
+      <td>${src}</td>
+      <td><button class="btn-ghost btn-mini" data-edit="${esc(v.key)}">Editar</button></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--texto-mute)">Sin proveedores cargados.</td></tr>`;
+}
+
+/* ---- diálogo ---- */
+const dlg = $("#provDlg");
+function openProv(v){
+  const isNew = !v;
+  $("#pTitle").textContent = isNew ? "Nuevo proveedor" : "Editar " + v.name;
+  $("#p_prop").innerHTML = '<option value="">— Compartido —</option>' +
+    DATA.properties.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join("");
+  $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
+  $("#p_name").value = v?.name || "";
+  $("#p_prop").value = v?.property_key || "";
+  $("#p_console").value = v?.console_url || "";
+  $("#p_plan").value = v?.plan_name || "";
+  $("#p_price").value = (typeof v?.plan_price === "number") ? v.plan_price : "";
+  $("#p_cur").value = v?.currency || "USD";
+  $("#p_cycle").value = v?.billing_cycle || "mensual";
+  $("#p_renew").value = v?.renewal_date || "";
+  $("#p_notes").value = v?.notes || "";
+  $("#pDelete").hidden = isNew;
+  $("#pDelete").onclick = async () => {
+    if (!confirm(`¿Eliminar el proveedor "${v.name}"?`)) return;
+    try { await api("POST", { action:"delete_provider", key: v.key }); dlg.close(); await reload(); render(); }
+    catch(e){ alert("Error: " + e.message); }
+  };
+  dlg.showModal();
+}
+$("#pCancel").addEventListener("click", () => dlg.close());
+$("#addProv").addEventListener("click", () => openProv(null));
+$("#provBody").addEventListener("click", (ev) => {
+  const b = ev.target.closest("[data-edit]");
+  if (b) openProv(DATA.providers.find(x => x.key === b.dataset.edit));
+});
+$("#provForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const priceRaw = $("#p_price").value;
+  const existing = DATA.providers.find(x => x.key === $("#p_key").value.trim());
+  const provider = {
+    key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
+    property_key: $("#p_prop").value || null, console_url: $("#p_console").value.trim(),
+    plan_name: $("#p_plan").value.trim(), plan_price: priceRaw === "" ? null : Number(priceRaw),
+    currency: $("#p_cur").value, billing_cycle: $("#p_cycle").value,
+    renewal_date: $("#p_renew").value || null, usage_source: existing?.usage_source || "manual",
+    notes: $("#p_notes").value.trim(),
+  };
+  try { await api("POST", { action:"upsert_provider", provider }); dlg.close(); await reload(); render(); }
+  catch(e){ alert("Error: " + e.message); }
+});
+
+async function reload(){ DATA = await api("GET"); }
+
+Panel.init({
+  page: "costos",
+  onReady: async () => {
+    $("#app").hidden = false;
+    $("#topMsg").textContent = "Cargando…";
+    try { await reload(); render(); $("#topMsg").textContent = ""; }
+    catch(e){ $("#topMsg").className = "msg err"; $("#topMsg").textContent = "No se pudo cargar: " + e.message; }
+  },
+});
+</script>
+</body>
+</html>

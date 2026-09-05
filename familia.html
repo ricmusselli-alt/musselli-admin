@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Familia · Panel Musselli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .fam-hero{display:flex;align-items:center;gap:18px;margin-bottom:8px}
+  .fam-hero__logo{width:64px;height:64px;border-radius:16px;background:rgba(245,240,230,.04);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .fam-hero__logo img{width:44px;height:44px;object-fit:contain}
+  .fam-hero__logo .fb{font-family:var(--serif);font-weight:600;font-size:26px;color:var(--dorado)}
+  .fam-hero h1{margin:0}
+  .fam-hero .estado{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--texto-mute);margin-top:4px}
+  .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
+  .card .fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .card .fila a.lnk{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+    border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:8px 13px;border-radius:20px}
+  .card .fila a.lnk:hover{border-color:var(--cobre);color:var(--negro);background:var(--cobre)}
+  .mini-note{font-size:11px;color:var(--texto-mute);margin-top:8px;line-height:1.55}
+  .linea-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(200,155,108,.1)}
+  .linea-row:last-child{border-bottom:0}
+  .linea-row .nom{font-size:12.5px;color:var(--texto-2);flex:0 0 90px}
+  .alert-box{background:rgba(217,164,65,.1);border:1px solid rgba(217,164,65,.4);border-radius:10px;
+    padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .alert-box a{font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.1em;color:var(--dorado)}
+  dialog{background:var(--panel);color:var(--texto);border:1px solid var(--linea-fuerte);border-radius:8px;
+    padding:22px;max-width:440px;width:92vw}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 14px;font-size:19px}
+  .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+
+  <div class="page-head">
+    <span class="crumb"><a href="index.html">← Portada</a> · Centro de control</span>
+    <div class="fam-hero">
+      <div class="fam-hero__logo" id="famLogo"></div>
+      <div>
+        <h1 id="famName">…</h1>
+        <span class="estado" id="famEstado"></span>
+      </div>
+    </div>
+    <p id="famDesc"></p>
+  </div>
+
+  <div class="msg" id="topMsg"></div>
+  <div id="alertPend"></div>
+  <div class="ctrl-grid" id="ctrl"></div>
+
+</div>
+
+<dialog id="editDlg">
+  <form method="dialog" id="editForm">
+    <h3 id="editTitle">Editar familia</h3>
+    <label class="campo"><span>Nombre</span><input id="e_name" required></label>
+    <label class="campo"><span>Descripción · para qué sirve</span><textarea id="e_desc"></textarea></label>
+    <label class="campo"><span>URL en vivo</span><input id="e_live" placeholder="https://…"></label>
+    <label class="campo"><span>Repo GitHub (opcional)</span><input id="e_repo" placeholder="https://github.com/…"></label>
+    <label class="campo"><span>Desarrollo · Claude Code, dev, docs</span><input id="e_dev" placeholder="https://claude.ai/project/…"></label>
+    <label class="campo"><span>Estado</span>
+      <select id="e_status">
+        <option value="activo">en vivo</option>
+        <option value="en_desarrollo">en desarrollo</option>
+        <option value="planeado">planeado</option>
+      </select></label>
+    <div class="foot">
+      <button type="button" class="btn-ghost btn-mini" id="editCancel">Cancelar</button>
+      <button type="submit" class="btn-primary btn-mini">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="panel.js"></script>
+<script>
+const { $, $$, esc, ayuda, api, edgeFn } = Panel;
+const FKEY = new URLSearchParams(location.search).get("f") || "";
+let DATA = null, FAM = null;
+
+const DESC_FAMILIA = {
+  blog:       "Artículos largos del blog. El sistema propone temas, escribe el borrador y vos aprobás antes de publicar.",
+  tendencias: "Notas cortas de novedades del sector, verificadas antes de publicarse.",
+  carrusel:   "Carruseles de Instagram (Guitar Tech y Luthería), con diseño automático y aprobación humana. Nunca publica sola.",
+  web:        "La web madre ricardomusselli.com. La desarrolla un tercero; acá solo vemos si está en vivo.",
+  portfolio:  "El portfolio de trabajos. Subcarpeta de la web.",
+};
+// A qué apunta "Crear ahora" / historial de cada familia
+const GEN = {
+  blog:       { product: "blog",  site: "https://blog.ricardomusselli.com/",       hint: true },
+  tendencias: { product: "trend", site: "https://tendencias.ricardomusselli.com/", hint: true },
+  carrusel:   { product: "carousel" },
+};
+
+/* ---------------- tarjeta: estado y enlaces ---------------- */
+function cardEnlaces(){
+  const p = FAM;
+  const links = [
+    p.live_url ? `<a class="lnk" href="${esc(p.live_url)}" target="_blank" rel="noopener">Abrir sitio ↗</a>` : "",
+    p.repo_url ? `<a class="lnk" href="${esc(p.repo_url)}" target="_blank" rel="noopener">Repo ↗</a>` : "",
+    p.dev_url  ? `<a class="lnk" href="${esc(p.dev_url)}" target="_blank" rel="noopener">Desarrollo ↗</a>` : "",
+  ].filter(Boolean).join("");
+  return `<div class="card">
+    <h3>Estado y enlaces ${ayuda("Los links de esta familia y su estado. El botón Editar abre el formulario para cambiar nombre, descripción, URLs y estado.")}</h3>
+    <div class="fila">${links || '<span class="mini-note">Todavía no hay links cargados.</span>'}</div>
+    <button class="btn-ghost btn-mini" id="btnEdit" style="margin-top:6px">Editar familia</button>
+  </div>`;
+}
+
+/* ---------------- tarjeta: generación (blog / tendencias) ---------------- */
+function cardGenSimple(){
+  const p = FAM;
+  return `<div class="card">
+    <h3>Generación automática ${ayuda("Si está encendido, el sistema genera contenido nuevo solo, en el horario del cron. Si está apagado, solo se genera cuando apretás Crear ahora.")}</h3>
+    <div class="switch-row">
+      <span class="lbl">El cron respeta este interruptor
+        <small>${p.enabled ? "Encendido: genera solo" : "Apagado: solo manual"}</small></span>
+      <span style="display:flex;align-items:center;gap:7px">
+        <span class="state ${p.enabled?'on':'off'}">${p.enabled?'on':'off'}</span>
+        <button class="toggle ${p.enabled?'on':''}" id="btnToggle" aria-label="on/off"></button>
+      </span>
+    </div>
+    <div class="fila" style="margin-top:12px">
+      <button class="btn-solid btn-mini" id="btnCrear">Crear ahora</button>
+      <a class="btn btn-ghost btn-mini" href="contenido.html#${esc(FKEY)}" style="text-decoration:none">Ver / aprobar</a>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <input type="text" id="hintInput" placeholder="Proponer un tema (ej. humedad y la madera)">
+      <button class="btn-solid btn-mini" id="btnHint" style="flex:0 0 auto">Proponer y crear</button>
+    </div>
+    <p class="mini-note">"Crear ahora" arma un borrador y lo deja esperando tu aprobación en la sección Contenido. No publica nada.</p>
+  </div>`;
+}
+
+/* ---------------- tarjeta: generación de carruseles ---------------- */
+function cfgOf(cat){ return (DATA.carrusel_config || []).find(c => c.category === cat) || {}; }
+function cardGenCarrusel(){
+  const row = (cat, label) => {
+    const c = cfgOf(cat), activo = c.activo !== false, freq = c.frecuencia_mensual ?? 1;
+    const opt = [1,2,4].map(n => `<option value="${n}"${n===freq?' selected':''}>${n} por mes</option>`).join("");
+    return `<div class="linea-row">
+      <span class="nom">${label}</span>
+      <span class="state ${activo?'on':'off'}">${activo?'on':'off'}</span>
+      <button class="toggle ${activo?'on':''}" data-carractivo="${cat}" aria-label="on/off"></button>
+      <select data-carrfreq="${cat}" style="margin-left:auto;width:auto;padding:5px 7px">${opt}</select>
+    </div>`;
+  };
+  return `<div class="card">
+    <h3>Carruseles · generación ${ayuda("Guitar Tech y Luthería se manejan por separado: podés apagar una y dejar la otra andando. La frecuencia es cuántos carruseles por mes genera esa línea como máximo.")}</h3>
+    ${row('guitar-tech','Guitar Tech')}
+    ${row('luthier','Luthería')}
+    <div style="height:1px;background:var(--linea);margin:12px 0"></div>
+    <label class="campo"><span>Línea del carrusel a crear</span>
+      <select id="carr_cat"><option value="guitar-tech">Guitar Tech</option><option value="luthier">Luthería</option></select></label>
+    <label class="campo"><span>Tema ${ayuda("Si lo dejás vacío, el tema lo elige el Radar de Carruseles.")}</span>
+      <input type="text" id="carr_topic" placeholder="Vacío = lo elige el Radar"></label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--texto-2);cursor:pointer;margin-bottom:10px">
+      <input type="checkbox" id="carr_lead" style="width:auto">
+      Lead Magnet ${ayuda("Carrusel de captación: vos escribís el gancho de la primera slide y el llamado a la acción del cierre; el sistema arma el resto y el epígrafe retoma ambos.")}
+    </label>
+    <div id="carr_leadFields" hidden style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+      <input type="text" id="carr_hook" placeholder="Hook (frase de la slide 1)">
+      <input type="text" id="carr_cta" placeholder='CTA de cierre (ej: "Escribí CUERDA y te envío todo.")'>
+    </div>
+    <div class="fila">
+      <button class="btn-solid btn-mini" id="carr_crear">Crear carrusel</button>
+      <a class="btn btn-ghost btn-mini" href="contenido.html#carrusel" style="text-decoration:none">Ver / aprobar</a>
+    </div>
+    <p class="mini-note">Genera un borrador con sus 7 slides y lo deja en Contenido para que lo apruebes. Nunca publica solo.</p>
+  </div>`;
+}
+
+/* ---------------- tarjeta: tokens de Instagram ---------------- */
+function cardTokens(){
+  const toks = {}; (DATA.ig_tokens || []).forEach(t => toks[t.category] = t.updated_at);
+  const OAUTH = Panel.SUPABASE_URL + "/functions/v1/ig-oauth?category=";
+  const linea = (cat, label) => {
+    const upd = toks[cat];
+    let estado = '<span style="color:var(--texto-mute)">sin token</span>';
+    if (upd){
+      const dias = 60 - Math.floor((Date.now() - new Date(upd).getTime())/86400000);
+      const col = dias <= 7 ? 'var(--down)' : dias <= 20 ? 'var(--dorado)' : 'var(--ok)';
+      estado = `<span style="color:${col}">vence en ${dias} día${dias===1?'':'s'}</span>`;
+    }
+    return `<div class="linea-row">
+      <span class="nom">${label}</span>${estado}
+      <a class="btn btn-solid btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener"
+         style="margin-left:auto;text-decoration:none">Renovar</a>
+    </div>`;
+  };
+  return `<div class="card">
+    <h3>Tokens de Instagram ${ayuda("El permiso para publicar en cada cuenta. Dura 60 días. El botón Renovar abre el login de Instagram; al aprobar, el token se guarda solo por 60 días más.")}</h3>
+    ${linea('guitar-tech','Guitar Tech')}
+    ${linea('luthier','Luthería')}
+  </div>`;
+}
+
+/* ---------------- tarjeta: proveedores de la familia ---------------- */
+function cardProveedores(){
+  const provs = (DATA.providers || []).filter(v => v.property_key === FKEY);
+  const chips = provs.map(v => {
+    const cost = (typeof v.monthly_cost === "number") ? ` · ${esc(v.currency||"USD")} $${v.monthly_cost.toFixed(2)}/mes` : "";
+    return `<span class="chip">${esc(v.name)}${v.plan_name?` (${esc(v.plan_name)})`:""}${cost}</span>`;
+  }).join("");
+  return `<div class="card">
+    <h3>Proveedores de esta familia ${ayuda("Servicios que usa solo esta familia (hosting, base de datos, etc.). Para editar el plan, el costo o la fecha de renovación, entrá a la sección Costos.")}</h3>
+    <div class="fila">${chips || '<span class="mini-note">Ninguno asignado a esta familia.</span>'}</div>
+    <a class="btn btn-ghost btn-mini" href="costos.html" style="margin-top:6px;text-decoration:none">Ir a Costos</a>
+  </div>`;
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const st = (DATA.status || {})[FKEY] || "unknown";
+  const enVivo = FAM.status === "activo";
+  const ini = (FAM.name || "?").charAt(0).toUpperCase();
+  $("#famLogo").innerHTML =
+    `<img src="logos/${esc(FKEY)}.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fb',textContent:'${esc(ini)}'}))">`;
+  $("#famName").textContent = FAM.name;
+  $("#famEstado").innerHTML = enVivo
+    ? `<span class="dot ${st==='up'?'up':st==='down'?'down':''}"></span> ${st==='up'?'Live':st==='down'?'Caído':'sin datos'}`
+    : `<span class="tag">${FAM.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>`;
+  $("#famDesc").textContent = FAM.description || DESC_FAMILIA[FKEY] || "";
+
+  const pend = FKEY === "carrusel" ? (DATA.carrusel_drafts||[]).length
+             : FKEY === "blog" ? (DATA.blog_drafts||[]).length
+             : FKEY === "tendencias" ? (DATA.trend_drafts||[]).length : 0;
+  $("#alertPend").innerHTML = pend
+    ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pend===1?'publicación':'publicaciones'} esperando tu aprobación</span>
+        <a href="contenido.html#${esc(FKEY)}">Revisar ahora →</a></div>` : "";
+
+  const cards = [ cardEnlaces() ];
+  if (FAM.has_generator && FKEY === "carrusel"){ cards.push(cardGenCarrusel(), cardTokens()); }
+  else if (FAM.has_generator && GEN[FKEY]){ cards.push(cardGenSimple()); }
+  cards.push(cardProveedores());
+  $("#ctrl").innerHTML = cards.join("");
+
+  wire();
+}
+
+/* ---------------- eventos ---------------- */
+function wire(){
+  const edit = $("#btnEdit");
+  if (edit) edit.onclick = openEdit;
+
+  const tg = $("#btnToggle");
+  if (tg) tg.onclick = async () => {
+    const next = !FAM.enabled;
+    tg.disabled = true;
+    try { const { property } = await api("POST", { action:"toggle", key: FKEY, enabled: next }); Object.assign(FAM, property); render(); }
+    catch(e){ alert("Error: " + e.message); tg.disabled = false; }
+  };
+
+  const crear = $("#btnCrear");
+  if (crear) crear.onclick = () => generar(false);
+  const hintBtn = $("#btnHint");
+  if (hintBtn) hintBtn.onclick = () => generar(true);
+
+  const lead = $("#carr_lead");
+  if (lead) lead.onchange = () => { $("#carr_leadFields").hidden = !lead.checked; };
+
+  $$("[data-carractivo]").forEach(b => b.onclick = async () => {
+    const cat = b.dataset.carractivo, c = cfgOf(cat), next = !(c.activo !== false);
+    b.disabled = true;
+    try {
+      await api("POST", { action:"set_carrusel_activo", category: cat, activo: next });
+      if (c.category) c.activo = next; else (DATA.carrusel_config = DATA.carrusel_config||[]).push({ category:cat, activo:next, frecuencia_mensual:1 });
+      render();
+    } catch(e){ alert("Error: " + e.message); b.disabled = false; }
+  });
+  $$("[data-carrfreq]").forEach(s => s.onchange = async () => {
+    const cat = s.dataset.carrfreq, frecuencia = Number(s.value);
+    s.disabled = true;
+    try {
+      await api("POST", { action:"set_carrusel_freq", category: cat, frecuencia });
+      const c = cfgOf(cat); if (c.category) c.frecuencia_mensual = frecuencia;
+      else (DATA.carrusel_config = DATA.carrusel_config||[]).push({ category:cat, frecuencia_mensual:frecuencia, activo:true });
+    } catch(e){ alert("Error: " + e.message); }
+    finally { s.disabled = false; }
+  });
+
+  const carrCrear = $("#carr_crear");
+  if (carrCrear) carrCrear.onclick = crearCarrusel;
+}
+
+/* blog / tendencias */
+async function generar(isHint){
+  const g = GEN[FKEY]; if (!g) return;
+  let hint = "";
+  if (isHint){
+    hint = ($("#hintInput").value || "").trim();
+    if (!hint){ alert("Escribí un tema antes de proponerlo."); return; }
+  }
+  if (!confirm(isHint ? `¿Buscar y generar sobre "${hint}"?` : `¿Generar una publicación nueva de ${FAM.name} ahora?`)) return;
+  const btn = isHint ? $("#btnHint") : $("#btnCrear");
+  const orig = btn.textContent; btn.disabled = true; btn.textContent = isHint ? "Buscando…" : "Generando…";
+  try {
+    let out;
+    if (FKEY === "tendencias"){
+      out = await edgeFn("generate-trend", { manual: true, ...(hint ? { hint } : {}) });
+    } else {
+      let topicId, title;
+      if (hint){ const { topic } = await api("POST", { action:"propose_topic", topic: hint }); topicId = topic.id; title = topic.topic; }
+      else { const { candidates } = await edgeFn("get-candidates", {}); const p = candidates[Math.floor(Math.random()*candidates.length)]; topicId = p.id; title = p.topic; }
+      const d = await edgeFn("generate-post", { topic_id: topicId });
+      out = { status: "generado", title: d.title || title };
+    }
+    if (out.status === "sin_hallazgos") alert("No encontró nada verificable esta vez. Probá de nuevo.");
+    else { alert(`Generado: "${out.title || "listo"}". Revisalo en Contenido antes de aprobar.`); if (isHint) $("#hintInput").value = ""; }
+  } catch(e){ alert("Error al generar: " + e.message); }
+  finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+/* carrusel */
+async function crearCarrusel(){
+  const category = $("#carr_cat").value;
+  const topic = $("#carr_topic").value.trim();
+  const useLead = $("#carr_lead").checked;
+  const hook = ($("#carr_hook").value || "").trim(), cta = ($("#carr_cta").value || "").trim();
+  if (useLead && (!hook || !cta)){ alert("Para Lead Magnet completá el hook y el CTA de cierre."); return; }
+  if (!confirm(topic ? `¿Crear un carrusel de ${category==='luthier'?'Luthería':'Guitar Tech'} sobre "${topic}"${useLead?' (Lead Magnet)':''}?`
+                     : `¿Crear un carrusel de ${category==='luthier'?'Luthería':'Guitar Tech'} con un tema del Radar?`)) return;
+  const btn = $("#carr_crear"); const orig = btn.textContent; btn.disabled = true; btn.textContent = "Generando…";
+  try {
+    const body = { category, manual: true };
+    if (topic) body.topic = topic;
+    if (useLead) body.lead_magnet = { hook, cta };
+    const d = await edgeFn("generate-carrusel", body);
+    if (d.status === "sin_temas_disponibles") alert("El Radar de Carruseles no tiene temas todavía. Probá con un tema puntual.");
+    else if (d.status === "apagado") alert("La generación de esa línea está apagada arriba.");
+    else if (d.status === "frecuencia_alcanzada") alert("Esa línea ya llegó a su límite de carruseles del mes. Subí la frecuencia si querés más.");
+    else {
+      alert(`Generado: "${d.topic || "listo"}". Revisalo en Contenido antes de aprobar.`);
+      $("#carr_topic").value = ""; $("#carr_hook").value = ""; $("#carr_cta").value = "";
+      $("#carr_lead").checked = false; $("#carr_leadFields").hidden = true;
+    }
+  } catch(e){ alert("Error: " + e.message); }
+  finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+/* editar familia */
+function openEdit(){
+  $("#e_name").value = FAM.name || "";
+  $("#e_desc").value = FAM.description || "";
+  $("#e_live").value = FAM.live_url || "";
+  $("#e_repo").value = FAM.repo_url || "";
+  $("#e_dev").value  = FAM.dev_url || "";
+  $("#e_status").value = FAM.status || "activo";
+  $("#editDlg").showModal();
+}
+$("#editCancel").addEventListener("click", () => $("#editDlg").close());
+$("#editForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const property = {
+    key: FKEY, name: $("#e_name").value.trim(), description: $("#e_desc").value.trim(),
+    live_url: $("#e_live").value.trim(), repo_url: $("#e_repo").value.trim(),
+    dev_url: $("#e_dev").value.trim(), status: $("#e_status").value, has_generator: FAM.has_generator,
+  };
+  try { await api("POST", { action:"upsert_property", property }); $("#editDlg").close(); await reload(); }
+  catch(e){ alert("Error: " + e.message); }
+});
+
+async function reload(){
+  DATA = await api("GET");
+  FAM = (DATA.properties || []).find(p => p.key === FKEY);
+  if (!FAM){ $("#topMsg").className = "msg err"; $("#topMsg").textContent = `No existe la familia "${FKEY}".`; return; }
+  render();
+}
+
+Panel.init({
+  page: "portada",
+  onReady: async () => {
+    $("#app").hidden = false;
+    if (!FKEY){ $("#topMsg").className = "msg err"; $("#topMsg").textContent = "Falta indicar la familia."; return; }
+    $("#topMsg").textContent = "Cargando…";
+    try { await reload(); $("#topMsg").textContent = ""; }
+    catch(e){ $("#topMsg").className = "msg err"; $("#topMsg").textContent = "No se pudo cargar: " + e.message; }
+  },
+});
+</script>
+</body>
+</html>
