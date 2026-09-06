@@ -14,10 +14,11 @@
   let token = null, userEmail = "";
 
   const SECCIONES = [
-    { page: "portada",   href: "index.html",      ico: "◈", txt: "Portada" },
-    { page: "contenido", href: "contenido.html",  ico: "▦", txt: "Contenido" },
-    { page: "costos",    href: "costos.html",     ico: "$", txt: "Costos" },
-    { page: "datos",     href: "base-datos.html", ico: "☷", txt: "Base de datos" },
+    { page: "portada",   href: "index.html",         ico: "◈", txt: "Portada" },
+    { page: "contenido", href: "contenido.html",     ico: "▦", txt: "Contenido" },
+    { page: "costos",    href: "costos.html",        ico: "$", txt: "Costos" },
+    { page: "datos",     href: "base-datos.html",    ico: "☷", txt: "Base de datos" },
+    { page: "notif",     href: "notificaciones.html", ico: "◔", txt: "Notificaciones" },
   ];
 
   function esc(s) {

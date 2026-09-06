@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Notificaciones · Panel Musselli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .salud-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+  .chk{display:flex;align-items:flex-start;gap:11px;background:var(--panel);border:1px solid var(--linea);
+    border-radius:10px;padding:14px 16px}
+  .chk .dot{margin-top:5px}
+  .chk__nom{font-size:13.5px;color:var(--texto);font-weight:400}
+  .chk__det{font-size:11.5px;color:var(--texto-mute);margin-top:2px;line-height:1.5}
+  .chk__fam{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre);margin-top:4px}
+  .chk.falla{border-color:rgba(198,91,91,.45)}
+  .chk.aviso{border-color:rgba(217,164,65,.4)}
+
+  .notif-list{display:flex;flex-direction:column;gap:8px}
+  .notif{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-radius:10px;
+    background:var(--panel);border:1px solid var(--linea)}
+  .notif.no-vista{background:var(--panel-2);border-color:var(--linea-fuerte)}
+  .notif__ico{font-size:15px;margin-top:1px}
+  .notif__ico.falla{color:var(--down)} .notif__ico.aviso{color:var(--aviso)}
+  .notif__cuerpo{flex:1;min-width:0}
+  .notif__tit{font-size:13.5px;color:var(--texto)}
+  .notif__meta{font-size:11px;color:var(--texto-mute);margin-top:3px}
+  .notif__wa{font-size:10px;color:var(--ok);letter-spacing:.08em;text-transform:uppercase}
+  .empty{color:var(--texto-mute);font-size:13px;padding:22px;text-align:center;border:1px dashed var(--linea-fuerte);border-radius:10px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" hidden>
+
+  <div class="page-head">
+    <span class="crumb"><a href="index.html">← Portada</a> · Notificaciones</span>
+    <h1>Centro de Notificaciones</h1>
+    <p>El centinela revisa el sistema 2 veces por día. Acá ves qué está bien, qué necesita atención, y el historial de avisos.</p>
+  </div>
+
+  <div class="msg" id="topMsg"></div>
+
+  <div class="seccion">
+    <div class="seccion__head">
+      <span class="kicker">Estado ahora</span>
+      <h2 id="saludTitulo">Chequeos</h2>
+      <span class="count" id="saludCount"></span>
+      <button class="btn-ghost btn-mini" id="btnRevisar" style="margin-left:auto">Revisar ahora</button>
+    </div>
+    <div class="salud-grid" id="saludGrid"></div>
+    <p class="mini-note" id="saludHora" style="font-size:11px;color:var(--texto-mute);margin-top:10px"></p>
+  </div>
+
+  <div class="seccion">
+    <div class="seccion__head">
+      <span class="kicker">Historial</span><h2>Avisos</h2><span class="count" id="notifCount"></span>
+      <button class="btn-ghost btn-mini" id="btnVistas" style="margin-left:auto">Marcar todo como visto</button>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="panel.js"></script>
+<script>
+const { $, esc, ayuda, api } = Panel;
+let DATA = null;
+
+const ORDEN = { falla:0, aviso:1, ok:2, desconocido:3 };
+const FAMILIA_LABEL = { transversal:"Transversal", datos:"Base de datos", blog:"Blog", tendencias:"Tendencias", carrusel:"Carruseles" };
+
+function render(){
+  const checks = (DATA.health_checks || []).slice().sort((a,b) =>
+    (ORDEN[a.estado]??9) - (ORDEN[b.estado]??9) || a.familia.localeCompare(b.familia));
+  const falla = checks.filter(c => c.estado === "falla").length;
+  const aviso = checks.filter(c => c.estado === "aviso").length;
+
+  $("#saludTitulo").textContent = falla ? `${falla} problema${falla>1?"s":""}` : aviso ? `${aviso} alerta${aviso>1?"s":""}` : "Todo en orden";
+  $("#saludCount").textContent = "· " + checks.length + " chequeos";
+  $("#saludGrid").innerHTML = checks.length ? checks.map(c => {
+    const cls = c.estado === "falla" ? "falla" : c.estado === "aviso" ? "aviso" : c.estado === "ok" ? "up" : "";
+    const dotCls = c.estado === "falla" ? "down" : c.estado === "aviso" ? "warn" : c.estado === "ok" ? "up" : "";
+    return `<div class="chk ${cls}">
+      <span class="dot ${dotCls}"></span>
+      <div>
+        <div class="chk__nom">${esc(c.nombre)}</div>
+        ${c.detalle ? `<div class="chk__det">${esc(c.detalle)}</div>` : ""}
+        <div class="chk__fam">${esc(FAMILIA_LABEL[c.familia] || c.familia)}</div>
+      </div>
+    </div>`;
+  }).join("") : '<div class="empty">El centinela todavía no corrió. Tocá "Revisar ahora".</div>';
+
+  const ultima = checks.reduce((m,c) => c.last_run > m ? c.last_run : m, "");
+  $("#saludHora").textContent = ultima ? "Última revisión: " + new Date(ultima).toLocaleString('es-AR') : "";
+
+  const notifs = DATA.notificaciones || [];
+  const sinVer = notifs.filter(n => !n.vista).length;
+  $("#notifCount").textContent = sinVer ? `· ${sinVer} sin ver` : `· ${notifs.length}`;
+  $("#notifList").innerHTML = notifs.length ? notifs.map(n => `
+    <div class="notif ${n.vista ? "" : "no-vista"}">
+      <span class="notif__ico ${n.gravedad}">${n.gravedad === "falla" ? "⚠" : "!"}</span>
+      <div class="notif__cuerpo">
+        <div class="notif__tit">${esc(n.titulo)}${n.detalle ? ` — <span style="color:var(--texto-2)">${esc(n.detalle)}</span>` : ""}</div>
+        <div class="notif__meta">${new Date(n.created_at).toLocaleString('es-AR')} · ${esc(FAMILIA_LABEL[n.familia] || n.familia || "")}
+          ${n.enviado_wa ? '· <span class="notif__wa">enviado por WhatsApp</span>' : ""}</div>
+      </div>
+    </div>`).join("") : '<div class="empty">Sin avisos todavía. Cuando algo falle, aparece acá y te llega un WhatsApp.</div>';
+}
+
+async function reload(){ DATA = await api("GET"); render(); }
+
+$("#btnRevisar").addEventListener("click", async () => {
+  const b = $("#btnRevisar"); b.disabled = true; b.innerHTML = '<span class="spin"></span>Revisando';
+  try { await api("POST", { action: "run_centinela" }); await reload(); }
+  catch(e){ alert("Error: " + e.message); }
+  finally { b.disabled = false; b.textContent = "Revisar ahora"; }
+});
+$("#btnVistas").addEventListener("click", async () => {
+  try { await api("POST", { action: "notif_vista" }); await reload(); }
+  catch(e){ alert("Error: " + e.message); }
+});
+
+Panel.init({
+  page: "notif",
+  onReady: async () => {
+    $("#app").hidden = false;
+    $("#topMsg").textContent = "Cargando…";
+    try { await reload(); $("#topMsg").textContent = ""; }
+    catch(e){ $("#topMsg").className = "msg err"; $("#topMsg").textContent = "No se pudo cargar: " + e.message; }
+  },
+});
+</script>
+</body>
+</html>
