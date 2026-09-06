@@ -36,16 +36,18 @@
 <script>
   var q = new URLSearchParams(location.search);
   var estado = q.get('estado');       // 'ok' | 'error'
-  var linea  = q.get('linea') || '';  // 'Guitar Tech' | 'Luthería'
+  var linea  = q.get('linea') || '';  // 'Guitar Tech' | 'Luthería' | '... (TikTok)'
+  var red    = q.get('red') || 'instagram';
   var detalle = q.get('detalle') || '';
   var esOk = estado !== 'error';
+  var dur = red === 'tiktok' ? '' : ' por 60 días más';
   document.getElementById('icono').className = 'icono ' + (esOk ? 'ok' : 'err');
   document.getElementById('icono').textContent = esOk ? '✓' : '!';
   document.getElementById('titulo').className = esOk ? 'ok' : 'err';
-  document.getElementById('titulo').textContent = esOk ? 'Token actualizado' : 'No se pudo renovar';
+  document.getElementById('titulo').textContent = esOk ? 'Conexión actualizada' : 'No se pudo conectar';
   document.getElementById('msg').textContent = esOk
-    ? ('El token de ' + (linea || 'Instagram') + ' quedó renovado por 60 días más.')
-    : 'Hubo un problema al renovar el token. Probá de nuevo desde el panel.';
+    ? ('La cuenta de ' + (linea || 'la red') + ' quedó conectada' + dur + '.')
+    : 'Hubo un problema al conectar la cuenta. Probá de nuevo desde el panel.';
   if (!esOk && detalle){
     var d = document.getElementById('detalle');
     d.hidden = false; d.textContent = detalle;

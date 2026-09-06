@@ -120,19 +120,35 @@ function carruselItem(d){
     <div class="slides">${imgs.map(u => `<img src="${esc(u)}" alt="" loading="lazy">`).join("")}</div>
     <div class="cap">${esc(cap)}${tags.length ? "\n\n#" + tags.map(esc).join(" #") : ""}</div>
     <div class="revitem__acts">
-      <button class="btn-solid btn-mini" data-pub="${esc(d.id)}">Aprobar y publicar ${ayuda("Sube el carrusel a Instagram tal cual lo ves. No se puede deshacer.", true)}</button>
+      <button class="btn-solid btn-mini" data-pub="${esc(d.id)}">Publicar en Instagram ${ayuda("Sube el carrusel a Instagram tal cual lo ves. No se puede deshacer.", true)}</button>
+      <button class="btn-ghost btn-mini" data-tt="${esc(d.id)}">Enviar a TikTok ${ayuda("Manda el carrusel a los borradores de TikTok. Después entrás a la app, le ponés el sonido y lo posteás.", true)}</button>
       <button class="btn-danger btn-mini" data-rej="${esc(d.id)}">Rechazar ${ayuda("Descarta el borrador. No se publica y sale de la lista.", true)}</button>
     </div>
   </div>`;
 }
 
+function ttConnHtml(){
+  const toks = {}; (DATA.tiktok_tokens || []).forEach(t => toks[t.category] = t.updated_at);
+  const OAUTH = Panel.SUPABASE_URL + "/functions/v1/tiktok-oauth?category=";
+  const fila = (cat, label) => {
+    const est = toks[cat] ? '<span style="color:var(--ok)">conectada</span>' : '<span style="color:var(--texto-mute)">sin conectar</span>';
+    return `<span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--texto-2)">
+      ${label}: ${est}
+      <a class="btn btn-ghost btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener" style="text-decoration:none">Conectar / renovar</a></span>`;
+  };
+  return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+    <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Cuentas de TikTok</span>
+    ${fila("luthier","Luthería")} ${fila("guitartech","Guitar Tech")}
+  </div>`;
+}
+
 function renderCarrusel(){
   $("#hTitle").textContent = "Carruseles por aprobar";
-  $("#hDesc").textContent = "Cada borrador con sus 7 slides a tamaño real. Aprobá para publicar en Instagram o rechazá.";
+  $("#hDesc").textContent = "Cada borrador con sus 7 slides a tamaño real. Publicá en Instagram, enviá a TikTok, o rechazá.";
   const drafts = DATA.carrusel_drafts || [];
-  $("#revList").innerHTML = drafts.length
+  $("#revList").innerHTML = ttConnHtml() + (drafts.length
     ? drafts.map(carruselItem).join("")
-    : '<div class="vacio">No hay carruseles esperando aprobación.</div>';
+    : '<div class="vacio">No hay carruseles esperando aprobación.</div>');
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -228,6 +244,16 @@ $("#revList").addEventListener("click", async (ev) => {
       alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
       await reload(); route();
     } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(pub); }
+  }
+  const tt = ev.target.closest("[data-tt]");
+  if (tt){
+    if (!confirm("¿Enviar este carrusel a los borradores de TikTok?\n\nDespués entrás a la app de TikTok, le ponés el sonido y lo posteás.")) return;
+    busy(tt, "Enviando");
+    try {
+      const r = await edgeFn("tiktok-publish", { item_id: tt.dataset.tt, modo: "borrador" });
+      alert("Enviado a TikTok. Abrí la app (bandeja / borradores) para terminarlo y postearlo." + (r.sandbox ? "\n\n(modo prueba / sandbox)" : ""));
+      unbusy(tt);
+    } catch(e){ alert("No se pudo enviar a TikTok: " + e.message); unbusy(tt); }
   }
   if (rej){
     if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
