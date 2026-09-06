@@ -59,6 +59,11 @@
     </div>
   </div>
 
+  <div class="card" id="consumoCard" style="margin-bottom:32px" hidden>
+    <h3>Consumo en vivo ${ayuda("Lo que llevás gastado / usado este mes en los servicios que se cobran por consumo. Se actualiza solo.")}</h3>
+    <div id="consumoBody" style="display:flex;flex-wrap:wrap;gap:26px"></div>
+  </div>
+
   <div class="card" style="margin-bottom:32px">
     <h3>Gasto histórico ${ayuda("Cómo evolucionó el gasto total mes a mes, para ver en qué meses gastamos más o menos. Necesita que el sistema guarde una foto del total cada mes.")}</h3>
     <svg class="chart" id="chartHist" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
@@ -152,6 +157,31 @@ function render(){
     porFam[k] = (porFam[k] || 0) + u;
   });
   barChart("chartFam", Object.entries(porFam).map(([k,v]) => ({ k, v })));
+
+  // consumo en vivo (Gemini + ElevenLabs)
+  const g = DATA.gemini_uso, el = DATA.elevenlabs_uso;
+  const bloques = [];
+  if (g && (g.mes_tokens || 0) > 0){
+    bloques.push(`<div style="min-width:160px">
+      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cobre)">Gemini · este mes</div>
+      <div style="font-family:var(--serif);font-size:26px;color:var(--texto);margin:4px 0">USD $${(g.mes_usd||0).toFixed(4)}</div>
+      <div style="font-size:11.5px;color:var(--texto-mute)">${(g.mes_tokens||0).toLocaleString()} tokens · MXN ${(g.mes_mxn||0).toFixed(2)}</div>
+    </div>`);
+  }
+  if (el && el.limite){
+    const pct = el.pct || 0;
+    const col = pct >= 90 ? "var(--down)" : pct >= 80 ? "var(--aviso)" : "var(--ok)";
+    const dReset = el.reset ? Math.max(0, Math.round((new Date(el.reset) - Date.now())/86400000)) : null;
+    bloques.push(`<div style="min-width:220px;flex:1">
+      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cobre)">ElevenLabs · créditos</div>
+      <div style="font-family:var(--serif);font-size:26px;color:var(--texto);margin:4px 0">${el.usados.toLocaleString()} <span style="font-size:15px;color:var(--texto-mute)">/ ${el.limite.toLocaleString()} (${pct}%)</span></div>
+      <div style="height:6px;background:rgba(245,240,230,.08);border-radius:3px;overflow:hidden;margin:6px 0">
+        <div style="height:100%;width:${Math.min(100,pct)}%;background:${col}"></div></div>
+      <div style="font-size:11.5px;color:var(--texto-mute)">${dReset!=null ? `renueva en ${dReset} día${dReset===1?"":"s"}` : ""}${el.permite_excedente ? " · permite excedente" : " · se frena al 100%"}</div>
+    </div>`);
+  }
+  $("#consumoBody").innerHTML = bloques.join("");
+  $("#consumoCard").hidden = bloques.length === 0;
 
   // gasto histórico
   const hist = DATA.cost_history || [];
