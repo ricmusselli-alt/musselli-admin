@@ -133,21 +133,23 @@ function barChart(svgId, pairs, opts){
   }).join("");
 }
 
+const costoUsdDe = (v) => typeof v.monthly_cost_usd === "number" ? v.monthly_cost_usd
+  : (typeof v.monthly_cost === "number" ? v.monthly_cost : null);
+
 function render(){
   const provs = DATA.providers || [];
-  const cost = DATA.cost_by_currency || {};
-  const totalStr = Object.entries(cost).map(([c,v]) => c + " $" + v.toFixed(2)).join("  +  ") || "—";
-  $("#totalN").textContent = (cost.USD != null) ? ("USD $" + cost.USD.toFixed(2)) : totalStr;
-  $("#totalS").textContent = Object.keys(cost).length > 1
-    ? "Monedas sin convertir: " + totalStr
-    : provs.filter(v => typeof v.monthly_cost === "number").length + " proveedores con costo cargado";
+  const totalUsd = typeof DATA.total_usd === "number" ? DATA.total_usd
+    : provs.reduce((a,v) => a + (costoUsdDe(v) || 0), 0);
+  const conCosto = provs.filter(v => costoUsdDe(v) != null).length;
+  $("#totalN").textContent = "USD $" + totalUsd.toFixed(2);
+  $("#totalS").textContent = conCosto + " proveedor" + (conCosto===1?"":"es") + " con costo · todo convertido a dólares";
 
-  // gasto por familia (este mes)
+  // gasto por familia (este mes), en USD
   const porFam = {};
   provs.forEach(v => {
-    if (typeof v.monthly_cost !== "number") return;
+    const u = costoUsdDe(v); if (u == null) return;
     const k = v.property_key ? famName(v.property_key) : "Compartido";
-    porFam[k] = (porFam[k] || 0) + v.monthly_cost;
+    porFam[k] = (porFam[k] || 0) + u;
   });
   barChart("chartFam", Object.entries(porFam).map(([k,v]) => ({ k, v })));
 
@@ -165,7 +167,10 @@ function render(){
   $("#provCount").textContent = "· " + provs.length;
   $("#provBody").innerHTML = provs.map(v => {
     const fam = v.property_key ? esc(famName(v.property_key)) : '<span style="color:var(--texto-mute)">Compartido</span>';
-    const costo = (typeof v.monthly_cost === "number") ? `${esc(v.currency||"USD")} $${v.monthly_cost.toFixed(2)}` : "—";
+    const u = costoUsdDe(v);
+    const nativo = (typeof v.monthly_cost === "number" && (v.currency||"USD") !== "USD")
+      ? ` <span style="color:var(--texto-mute);font-size:11px">(${esc(v.currency)} ${v.monthly_cost.toFixed(0)})</span>` : "";
+    const costo = (u != null) ? `USD $${u.toFixed(2)}${nativo}` : "—";
     let ren = "—";
     if (v.renewal_date){
       const d = new Date(v.renewal_date + "T00:00:00");

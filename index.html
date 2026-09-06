@@ -120,8 +120,9 @@ function pendientesResumen(DATA){
 
 function render(DATA){
   const props = DATA.properties || [];
-  const cost = DATA.cost_by_currency || {};
-  const totalStr = Object.entries(cost).map(([c,v]) => c + " $" + v.toFixed(2)).join("  +  ") || "—";
+  const totalUsd = typeof DATA.total_usd === "number" ? DATA.total_usd
+    : Object.values(DATA.cost_by_currency || {}).reduce((a,v)=>a+v,0);
+  const nProv = (DATA.providers||[]).filter(v => typeof v.monthly_cost === "number").length;
   const enVivo = props.filter(p => p.status === "activo").length;
   const genOn = props.filter(p => p.has_generator && p.enabled).map(p => p.name);
   const { total: pendTotal, detalle: pendDet } = pendientesResumen(DATA);
@@ -136,9 +137,9 @@ function render(DATA){
 
   $("#resumen").innerHTML = `
     <div class="resumen__item">
-      <span class="resumen__label">Gasto del mes ${ayuda("Suma de todos los proveedores con costo cargado, expresado por moneda. El detalle está en la sección Costos.", true)}</span>
-      <span class="resumen__value">${esc(totalStr)}</span>
-      <span class="resumen__sub">${Object.keys(cost).length} moneda${Object.keys(cost).length===1?"":"s"}</span>
+      <span class="resumen__label">Gasto del mes ${ayuda("Suma de todos los proveedores con costo, convertido a dólares. El detalle está en la sección Costos.", true)}</span>
+      <span class="resumen__value">USD $${totalUsd.toFixed(2)}</span>
+      <span class="resumen__sub">${nProv} proveedor${nProv===1?"":"es"} con costo</span>
     </div>
     <div class="resumen__item ${pendTotal ? "alerta" : ""}">
       <span class="resumen__label">Por aprobar ${ayuda("Publicaciones generadas por el sistema que están esperando tu OK. Entrá a Contenido para revisarlas.", true)}</span>
