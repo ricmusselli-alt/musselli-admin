@@ -166,8 +166,8 @@ $("#btnEnvio").addEventListener("click", async () => {
   if (link && !/^https?:\/\//i.test(link)) { m.className = "msg err"; m.textContent = "El link tiene que empezar con http."; return; }
   const n = cuenta(audEnvio);
   if (!confirm(`Vas a enviar "${asunto}" a ~${n} contacto${n===1?"":"s"} de ${nombreSeg[audEnvio]}.\n\nSale AHORA por MailerLite y no se puede deshacer. ¿Confirmás?`)) return;
-  $("#btnEnvio").disabled = true; $("#btnEnvio").textContent = "Enviando…";
-  m.className = "msg"; m.textContent = "Creando y enviando la campaña…";
+  $("#btnEnvio").disabled = true; $("#btnEnvio").innerHTML = '<span class="spin"></span>Enviando…';
+  m.className = "msg"; m.innerHTML = '<span class="spin" style="border-color:rgba(200,155,108,.35);border-top-color:var(--cobre)"></span> Creando y enviando la campaña… no cierres esta pantalla.';
   try {
     const r = await edgeFn("enviar-campana", { segmento: audEnvio, asunto, cuerpo, link, link_texto });
     m.className = "msg ok";
@@ -177,7 +177,7 @@ $("#btnEnvio").addEventListener("click", async () => {
     m.className = "msg err";
     m.textContent = "No se pudo enviar: " + e.message;
   } finally {
-    $("#btnEnvio").disabled = false; $("#btnEnvio").textContent = "Enviar ahora";
+    $("#btnEnvio").disabled = false; $("#btnEnvio").innerHTML = "Enviar ahora";
   }
 });
 

@@ -14,7 +14,9 @@
     border-radius:16px;padding:22px;box-shadow:var(--sombra-card);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
   .tipo:hover{transform:translateY(-4px);border-color:rgba(204,163,83,.5);box-shadow:var(--sombra-hover)}
   .tipo[aria-disabled=true]{opacity:.5;pointer-events:none}
-  .tipo .ico{font-size:22px}
+  .tipo .ico{font-size:22px;display:flex;align-items:center;justify-content:center;
+    width:46px;height:46px;border-radius:12px;background:rgba(245,240,230,.05);margin-bottom:4px}
+  .tipo .ico img{width:30px;height:30px;object-fit:contain;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
   .tipo h3{font-family:var(--serif);font-weight:600;font-size:19px;margin:2px 0 0}
   .tipo p{font-size:12px;color:var(--texto-2);margin:0;line-height:1.5}
   .tipo .badge{margin-top:10px;font-size:11px;color:var(--texto-mute)}
@@ -31,7 +33,14 @@
     border:1px solid rgba(200,155,108,.2);background:#0e0d0c}
   .cap{font-size:13px;color:var(--texto-2);white-space:pre-wrap;margin:12px 0;line-height:1.6;
     max-height:9em;overflow:auto;border-left:2px solid var(--linea-fuerte);padding-left:12px}
-  .revitem__acts{display:flex;gap:9px;flex-wrap:wrap}
+  .revitem__acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  /* botón "pensando" */
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(245,240,230,.35);
+    border-top-color:var(--hueso);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  .btn-danger .spin{border-color:rgba(198,91,91,.35);border-top-color:#e79a9c}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .procesando{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--cobre);margin-top:4px}
+  .procesando .spin{margin:0}
 </style>
 </head>
 <body>
@@ -65,10 +74,10 @@ const { $, esc, ayuda, api, edgeFn } = Panel;
 let DATA = null;
 
 const TIPOS = [
-  { key:"carrusel",   ico:"▤", nom:"Carruseles",  desc:"Guitar Tech y Luthería. Previsualizás las 7 slides y aprobás o rechazás.", listo:true },
-  { key:"blog",       ico:"✒", nom:"Blog",        desc:"Artículos largos. Revisás el borrador antes de publicar.", listo:true },
-  { key:"tendencias", ico:"◷", nom:"Tendencias",  desc:"Notas cortas verificadas. Revisás antes de publicar.", listo:true },
-  { key:"tiktok",     ico:"♪", nom:"TikTok",      desc:"Próximamente: carruseles en formato 9:16 para TikTok.", listo:false },
+  { key:"carrusel",   logo:"carruseles", nom:"Carruseles",  desc:"Guitar Tech y Luthería. Previsualizás las 7 slides y aprobás o rechazás.", listo:true },
+  { key:"blog",       logo:"blog",       nom:"Blog",        desc:"Artículos largos. Revisás el borrador antes de publicar.", listo:true },
+  { key:"tendencias", logo:"tendencias", nom:"Tendencias",  desc:"Notas cortas verificadas. Revisás antes de publicar.", listo:true },
+  { key:"tiktok",     ico:"♪",           nom:"TikTok",      desc:"Próximamente: carruseles en formato 9:16 para TikTok.", listo:false },
 ];
 
 function pendDe(key){
@@ -84,8 +93,9 @@ function renderHub(){
   $("#tipos").innerHTML = TIPOS.map(t => {
     const n = pendDe(t.key);
     const dis = !t.listo;
+    const icoHtml = t.logo ? `<img src="logos/${t.logo}.png" alt="">` : (t.ico || "");
     return `<a class="tipo" ${dis ? 'aria-disabled="true"' : `href="#${t.key}"`}>
-      <span class="ico">${t.ico}</span>
+      <span class="ico">${icoHtml}</span>
       <h3>${t.nom}</h3>
       <p>${esc(t.desc)}</p>
       <span class="badge">${t.listo ? (n ? `<b>${n}</b> por aprobar` : "sin pendientes") : "en preparación"}</span>
@@ -186,17 +196,38 @@ function route(){
 $("#btnBack").addEventListener("click", () => { location.hash = ""; });
 window.addEventListener("hashchange", route);
 
+// Botón "pensando": muestra un círculo girando mientras el sistema procesa.
+function busy(btn, texto){
+  btn._orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>${texto}`;
+  // línea de aviso bajo la fila de botones
+  const acts = btn.closest(".revitem__acts");
+  if (acts && !acts.querySelector(".procesando")){
+    const p = document.createElement("div");
+    p.className = "procesando";
+    p.innerHTML = `<span class="spin"></span>Procesando… no cierres esta pantalla.`;
+    acts.appendChild(p);
+  }
+}
+function unbusy(btn){
+  if (btn._orig != null) btn.innerHTML = btn._orig;
+  btn.disabled = false;
+  const p = btn.closest(".revitem__acts")?.querySelector(".procesando");
+  if (p) p.remove();
+}
+
 $("#revList").addEventListener("click", async (ev) => {
   const pub = ev.target.closest("[data-pub]");
   const rej = ev.target.closest("[data-rej]");
   if (pub){
     if (!confirm("¿Aprobar y publicar este carrusel en Instagram ahora? No se puede deshacer.")) return;
-    pub.disabled = true; pub.textContent = "Publicando…";
+    busy(pub, "Publicando");
     try {
       const r = await api("POST", { action:"carrusel_publish", item_id: pub.dataset.pub });
       alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
       await reload(); route();
-    } catch(e){ alert("No se pudo publicar: " + e.message); pub.disabled = false; pub.textContent = "Aprobar y publicar"; }
+    } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(pub); }
   }
   if (rej){
     if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
@@ -216,13 +247,13 @@ $("#revList").addEventListener("click", async (ev) => {
                   redo:"¿Mandar a rehacer este borrador?",
                   reject:"¿Rechazar este borrador? No se publica." }[decision];
     if (!confirm(msg)) return;
-    const orig = tx.textContent; tx.disabled = true; tx.textContent = "…";
+    busy(tx, decision === "approve" ? "Publicando" : decision === "redo" ? "Rehaciendo" : "Rechazando");
     try {
       const r = await edgeFn("review-item", { item_id: id, decision });
       if (decision === "approve") alert("Publicado. " + (r.published_url || ""));
       else if (decision === "redo") alert("Mandado a rehacer. Va a aparecer un borrador nuevo cuando termine.");
       await reload(); route();
-    } catch(e){ alert("Error: " + e.message); tx.disabled = false; tx.textContent = orig; }
+    } catch(e){ alert("Error: " + e.message); unbusy(tx); }
   }
 });
 
