@@ -74,7 +74,7 @@
     <div style="overflow-x:auto">
       <table class="prov-table">
         <thead><tr>
-          <th>Proveedor</th><th>Familia</th><th>Plan</th><th>Costo / mes</th><th>Renueva</th><th>Origen</th><th></th>
+          <th>Proveedor</th><th>Familia</th><th>Plan</th><th>Costo / mes</th><th>Renueva</th><th>Medio de pago</th><th>Origen</th><th></th>
         </tr></thead>
         <tbody id="provBody"></tbody>
       </table>
@@ -100,6 +100,7 @@
       </div>
     </div>
     <label class="campo"><span>Próxima fecha de renovación / cobro</span><input id="p_renew" type="date"></label>
+    <label class="campo"><span>Medio de pago (dónde cae el cargo)</span><input id="p_medio" placeholder='ej: "Visa ...4321", "PayPal", "Débito Santander"'></label>
     <label class="campo"><span>Notas</span><input id="p_notes"></label>
     <div class="foot">
       <button type="button" class="btn-danger btn-mini" id="pDelete" hidden>Eliminar</button>
@@ -173,6 +174,8 @@ function render(){
     }
     const src = v.usage_source === "api"
       ? '<span class="src-api">● API</span>'
+      : v.usage_source === "contador"
+      ? '<span class="src-api">● en vivo</span>'
       : '<span class="src-man">manual</span>';
     return `<tr>
       <td class="nom">${esc(v.name)}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ""}</td>
@@ -180,10 +183,11 @@ function render(){
       <td>${v.plan_name ? esc(v.plan_name) : "—"}</td>
       <td>${costo}</td>
       <td>${ren}</td>
+      <td>${v.medio_pago ? esc(v.medio_pago) : "—"}</td>
       <td>${src}</td>
       <td><button class="btn-ghost btn-mini" data-edit="${esc(v.key)}">Editar</button></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--texto-mute)">Sin proveedores cargados.</td></tr>`;
+  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--texto-mute)">Sin proveedores cargados.</td></tr>`;
 }
 
 /* ---- diálogo ---- */
@@ -202,6 +206,7 @@ function openProv(v){
   $("#p_cur").value = v?.currency || "USD";
   $("#p_cycle").value = v?.billing_cycle || "mensual";
   $("#p_renew").value = v?.renewal_date || "";
+  $("#p_medio").value = v?.medio_pago || "";
   $("#p_notes").value = v?.notes || "";
   $("#pDelete").hidden = isNew;
   $("#pDelete").onclick = async () => {
@@ -227,6 +232,7 @@ $("#provForm").addEventListener("submit", async (ev) => {
     plan_name: $("#p_plan").value.trim(), plan_price: priceRaw === "" ? null : Number(priceRaw),
     currency: $("#p_cur").value, billing_cycle: $("#p_cycle").value,
     renewal_date: $("#p_renew").value || null, usage_source: existing?.usage_source || "manual",
+    medio_pago: $("#p_medio").value.trim(),
     notes: $("#p_notes").value.trim(),
   };
   try { await api("POST", { action:"upsert_provider", provider }); dlg.close(); await reload(); render(); }
