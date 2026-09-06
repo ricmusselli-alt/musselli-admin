@@ -79,7 +79,7 @@
     <div style="overflow-x:auto">
       <table class="prov-table">
         <thead><tr>
-          <th>Proveedor</th><th>Familia</th><th>Plan</th><th>Costo / mes</th><th>Renueva</th><th>Medio de pago</th><th>Origen</th><th></th>
+          <th>Proveedor</th><th>Familia</th><th>Plan</th><th>Costo / mes</th><th>Renueva</th><th>Aviso renov.</th><th>Medio de pago</th><th>Origen</th><th></th>
         </tr></thead>
         <tbody id="provBody"></tbody>
       </table>
@@ -106,6 +106,8 @@
     </div>
     <label class="campo"><span>Próxima fecha de renovación / cobro</span><input id="p_renew" type="date"></label>
     <label class="campo"><span>Medio de pago (dónde cae el cargo)</span><input id="p_medio" placeholder='ej: "Visa ...4321", "PayPal", "Débito Santander"'></label>
+    <label class="campo campo--check"><input type="checkbox" id="p_avisoRen"><span>Avisarme antes de que se renueve</span></label>
+    <label class="campo" id="p_avisoDiasWrap"><span>¿Cuántos días antes te aviso?</span><input id="p_avisoDias" type="number" min="1" max="30" value="3"></label>
     <label class="campo"><span>Notas</span><input id="p_notes"></label>
     <div class="foot">
       <button type="button" class="btn-danger btn-mini" id="pDelete" hidden>Eliminar</button>
@@ -212,17 +214,21 @@ function render(){
       : v.usage_source === "contador"
       ? '<span class="src-api">● en vivo</span>'
       : '<span class="src-man">manual</span>';
+    const avisoRen = v.aviso_renovacion
+      ? `<span class="src-api" title="Centinela te avisa ${v.aviso_dias_antes || 3} día(s) antes de la renovación">● ON · ${v.aviso_dias_antes || 3}d</span>`
+      : '<span class="src-man">off</span>';
     return `<tr>
       <td class="nom">${esc(v.name)}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ""}</td>
       <td>${fam}</td>
       <td>${v.plan_name ? esc(v.plan_name) : "—"}</td>
       <td>${costo}</td>
       <td>${ren}</td>
+      <td>${avisoRen}</td>
       <td>${v.medio_pago ? esc(v.medio_pago) : "—"}</td>
       <td>${src}</td>
       <td><button class="btn-ghost btn-mini" data-edit="${esc(v.key)}">Editar</button></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="8" style="text-align:center;color:var(--texto-mute)">Sin proveedores cargados.</td></tr>`;
+  }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--texto-mute)">Sin proveedores cargados.</td></tr>`;
 }
 
 /* ---- diálogo ---- */
@@ -242,6 +248,9 @@ function openProv(v){
   $("#p_cycle").value = v?.billing_cycle || "mensual";
   $("#p_renew").value = v?.renewal_date || "";
   $("#p_medio").value = v?.medio_pago || "";
+  $("#p_avisoRen").checked = !!v?.aviso_renovacion;
+  $("#p_avisoDias").value = (typeof v?.aviso_dias_antes === "number") ? v.aviso_dias_antes : 3;
+  $("#p_avisoDiasWrap").style.opacity = $("#p_avisoRen").checked ? "1" : ".4";
   $("#p_notes").value = v?.notes || "";
   $("#pDelete").hidden = isNew;
   $("#pDelete").onclick = async () => {
@@ -252,6 +261,9 @@ function openProv(v){
   dlg.showModal();
 }
 $("#pCancel").addEventListener("click", () => dlg.close());
+$("#p_avisoRen").addEventListener("change", (e) => {
+  $("#p_avisoDiasWrap").style.opacity = e.target.checked ? "1" : ".4";
+});
 $("#addProv").addEventListener("click", () => openProv(null));
 $("#provBody").addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-edit]");
@@ -268,6 +280,8 @@ $("#provForm").addEventListener("submit", async (ev) => {
     currency: $("#p_cur").value, billing_cycle: $("#p_cycle").value,
     renewal_date: $("#p_renew").value || null, usage_source: existing?.usage_source || "manual",
     medio_pago: $("#p_medio").value.trim(),
+    aviso_renovacion: $("#p_avisoRen").checked,
+    aviso_dias_antes: Math.min(30, Math.max(1, Number($("#p_avisoDias").value) || 3)),
     notes: $("#p_notes").value.trim(),
   };
   try { await api("POST", { action:"upsert_provider", provider }); dlg.close(); await reload(); render(); }
