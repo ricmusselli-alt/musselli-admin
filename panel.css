@@ -116,8 +116,9 @@ button:disabled,.btn:disabled{opacity:.5;cursor:default}
 .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:var(--idle)}
 .dot.up{background:var(--ok);box-shadow:0 0 8px rgba(63,174,107,.65)}
 .dot.down{background:var(--down);box-shadow:0 0 8px rgba(198,91,91,.55)}
+.dot.warn{background:var(--aviso);box-shadow:0 0 8px rgba(217,164,65,.6)}
 .familia__statuslabel{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--texto-mute)}
-.familia__statuslabel.up{color:var(--ok)} .familia__statuslabel.down{color:var(--down)}
+.familia__statuslabel.up{color:var(--ok)} .familia__statuslabel.down{color:var(--down)} .familia__statuslabel.warn{color:var(--aviso)}
 .familia__top{display:flex;align-items:center;gap:14px;margin-bottom:10px}
 .familia__logo-wrap{flex:0 0 auto;width:54px;height:54px;border-radius:14px;background:rgba(245,240,230,.04);
   display:flex;align-items:center;justify-content:center;transition:transform .28s ease}

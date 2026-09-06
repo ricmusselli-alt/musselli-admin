@@ -62,16 +62,33 @@ function pendientesDe(key, DATA){
   return 0;
 }
 
+// Salud de una familia a partir de los chequeos del centinela.
+// Si no hay chequeos para esa familia, cae al ping simple del sitio.
+function saludFamilia(key, DATA){
+  const checks = (DATA.health_checks || []).filter(c => c.familia === key);
+  if (checks.length){
+    const fallas = checks.filter(c => c.estado === "falla");
+    const avisos = checks.filter(c => c.estado === "aviso");
+    if (fallas.length) return { clase:"down", label:"Problema", tip: fallas.map(c=>c.nombre+": "+(c.detalle||"falla")).join(" · ") };
+    if (avisos.length) return { clase:"warn", label:"Atención", tip: avisos.map(c=>c.nombre+": "+(c.detalle||"aviso")).join(" · ") };
+    return { clase:"up", label:"OK", tip: checks.map(c=>c.nombre).join(" · ") };
+  }
+  const st = (DATA.status || {})[key] || "unknown";
+  return st === "up" ? { clase:"up", label:"Live", tip:"el sitio responde" }
+       : st === "down" ? { clase:"down", label:"Caído", tip:"el sitio no responde" }
+       : { clase:"", label:"—", tip:"sin datos" };
+}
+
 function familiaCard(p, DATA){
-  const st = (DATA.status || {})[p.key] || "unknown";
+  const salud = saludFamilia(p.key, DATA);
   const enVivo = p.status === "activo";
   const pend = pendientesDe(p.key, DATA);
   const desc = p.description || DESC_FAMILIA[p.key] || "";
   const ini = ICONO_FAMILIA[p.key] || (p.name || "?").charAt(0).toUpperCase();
   return `<a class="familia" href="familia.html?f=${encodeURIComponent(p.key)}">
-    ${enVivo ? `<div class="familia__status">
-        <span class="dot ${st==='up'?'up':st==='down'?'down':''}"></span>
-        <span class="familia__statuslabel ${st==='up'?'up':st==='down'?'down':''}">${st==='up'?'Live':st==='down'?'Caído':'—'}</span>
+    ${enVivo ? `<div class="familia__status" title="${esc(salud.tip)}">
+        <span class="dot ${salud.clase}"></span>
+        <span class="familia__statuslabel ${salud.clase}">${salud.label}</span>
       </div>` : ``}
     <div class="familia__top">
       <div class="familia__logo-wrap">
@@ -109,6 +126,14 @@ function render(DATA){
   const genOn = props.filter(p => p.has_generator && p.enabled).map(p => p.name);
   const { total: pendTotal, detalle: pendDet } = pendientesResumen(DATA);
 
+  const hc = DATA.health_checks || [];
+  const hcFalla = hc.filter(c => c.estado === "falla");
+  const hcAviso = hc.filter(c => c.estado === "aviso");
+  const salud = hcFalla.length ? { v: hcFalla.length + " problema" + (hcFalla.length>1?"s":""), sub: hcFalla.map(c=>c.nombre).join(", "), cls:"alerta" }
+    : hcAviso.length ? { v: hcAviso.length + " alerta" + (hcAviso.length>1?"s":""), sub: hcAviso.map(c=>c.nombre).join(", "), cls:"alerta" }
+    : hc.length ? { v:"Todo OK", sub: hc.length + " chequeos", cls:"" }
+    : { v:"—", sub:"sin datos aún", cls:"" };
+
   $("#resumen").innerHTML = `
     <div class="resumen__item">
       <span class="resumen__label">Gasto del mes ${ayuda("Suma de todos los proveedores con costo cargado, expresado por moneda. El detalle está en la sección Costos.", true)}</span>
@@ -120,10 +145,10 @@ function render(DATA){
       <span class="resumen__value">${pendTotal}</span>
       <span class="resumen__sub">${esc(pendDet)}</span>
     </div>
-    <div class="resumen__item">
-      <span class="resumen__label">Sitios en vivo</span>
-      <span class="resumen__value">${enVivo}</span>
-      <span class="resumen__sub">de ${props.length} familias</span>
+    <div class="resumen__item ${salud.cls}">
+      <span class="resumen__label">Estado del sistema ${ayuda("El centinela revisa cada 30 min que los motores funcionen: sitios online, permisos de GitHub, tokens vigentes, render andando. Si algo falla te llega un WhatsApp.", true)}</span>
+      <span class="resumen__value">${esc(salud.v)}</span>
+      <span class="resumen__sub">${esc(salud.sub)}</span>
     </div>
     <div class="resumen__item">
       <span class="resumen__label">Generando solas ${ayuda("Familias con la generación automática encendida. El resto solo genera cuando apretás el botón.", true)}</span>
