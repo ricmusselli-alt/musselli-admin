@@ -39,19 +39,28 @@
   <div class="db-stats" id="stats"></div>
 
   <div class="card" style="margin-bottom:26px">
-    <h3>Enviar un mail ${ayuda("Elegís a qué segmento le querés escribir (Guitar Tech, Luthería o ambos) y el envío sale por el proveedor de email. La conexión real con el proveedor se integra más adelante.")}</h3>
-    <div class="filtros" style="margin-bottom:10px">
+    <h3>Enviar un mail <span class="ayuda" data-ayuda="Elegís a quién (Todos, Guitar Tech o Luthería), escribís asunto y texto, y al confirmar el mail sale YA por MailerLite. Un mail enviado no se puede deshacer.">?</span></h3>
+    <div class="filtros" style="margin-bottom:12px">
       <div class="seg" id="segEnvio">
         <button data-aud="todos" class="on">Todos</button>
         <button data-aud="guitartech">Guitar Tech</button>
         <button data-aud="luthier">Luthería</button>
-        <button data-aud="ambos">Ambos</button>
       </div>
-      <button class="btn-solid btn-mini" id="btnEnvio" disabled>Preparar envío</button>
     </div>
-    <p class="mini-note" style="font-size:11px;color:var(--texto-mute)">
-      Pendiente de conectar con MailerLite / ManyChat. Por ahora este botón solo muestra a cuántas personas alcanzaría.
-    </p>
+    <label class="campo"><span>Asunto</span><input type="text" id="envAsunto" placeholder="Asunto del mail" maxlength="150"></label>
+    <label class="campo"><span>Texto <span class="ayuda" data-ayuda="Texto plano. Se le pone solo el encabezado con el logo, el pie con el link para desuscribirse, y el diseño Musselli.">?</span></span>
+      <textarea id="envCuerpo" rows="7" placeholder="Escribí el mensaje. Dejá una línea en blanco entre párrafos."></textarea></label>
+    <div class="row2" style="display:flex;gap:8px">
+      <label class="campo" style="flex:2"><span>Link a un archivo (opcional) <span class="ayuda" data-ayuda="Pegá acá el link de un PDF en Google Drive, Dropbox, etc. Aparece como un botón al final del mail. En Drive: compartir → 'Cualquiera con el enlace'.">?</span></span>
+        <input type="url" id="envLink" placeholder="https://drive.google.com/..."></label>
+      <label class="campo" style="flex:1"><span>Texto del botón</span>
+        <input type="text" id="envLinkTexto" placeholder="Descargar" maxlength="40"></label>
+    </div>
+    <div class="filtros">
+      <button class="btn-solid btn-mini" id="btnEnvio">Enviar ahora</button>
+      <span class="mini-note" id="envAlcance" style="font-size:11px;color:var(--texto-mute)"></span>
+    </div>
+    <p class="msg" id="envMsg"></p>
   </div>
 
   <div class="seccion">
@@ -80,8 +89,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="panel.js"></script>
 <script>
-const { $, $$, esc, ayuda, api } = Panel;
+const { $, $$, esc, ayuda, api, edgeFn } = Panel;
 let LEADS = [], filtroCat = "todos", audEnvio = "todos";
+const nombreSeg = { todos: "Todos", guitartech: "Guitar Tech", luthier: "Luthería" };
 
 const catPill = (c) => {
   if (c === "ambos") return '<span class="cat-pill cat-ambos">Ambos</span>';
@@ -133,15 +143,42 @@ $("#segFiltro").addEventListener("click", (e) => {
   $$("#segFiltro button").forEach(x => x.classList.toggle("on", x === b));
   filtroCat = b.dataset.cat; renderTabla();
 });
+function pintarAlcance(){
+  $("#envAlcance").textContent = `Le llega a ~${cuenta(audEnvio)} contacto${cuenta(audEnvio)===1?"":"s"} (${nombreSeg[audEnvio]}).`;
+}
 $("#segEnvio").addEventListener("click", (e) => {
   const b = e.target.closest("[data-aud]"); if (!b) return;
   $$("#segEnvio button").forEach(x => x.classList.toggle("on", x === b));
   audEnvio = b.dataset.aud;
-  $("#btnEnvio").disabled = LEADS.length === 0;
+  pintarAlcance();
 });
 $("#buscar").addEventListener("input", renderTabla);
-$("#btnEnvio").addEventListener("click", () => {
-  alert(`El envío a "${audEnvio}" alcanzaría a ${cuenta(audEnvio)} contactos.\n\nLa conexión con el proveedor de email todavía no está integrada.`);
+
+$("#btnEnvio").addEventListener("click", async () => {
+  const asunto = $("#envAsunto").value.trim();
+  const cuerpo = $("#envCuerpo").value.trim();
+  const link = $("#envLink").value.trim();
+  const link_texto = $("#envLinkTexto").value.trim();
+  const m = $("#envMsg");
+  m.className = "msg";
+  if (asunto.length < 3) { m.className = "msg err"; m.textContent = "Falta el asunto."; return; }
+  if (cuerpo.length < 10) { m.className = "msg err"; m.textContent = "El texto es muy corto."; return; }
+  if (link && !/^https?:\/\//i.test(link)) { m.className = "msg err"; m.textContent = "El link tiene que empezar con http."; return; }
+  const n = cuenta(audEnvio);
+  if (!confirm(`Vas a enviar "${asunto}" a ~${n} contacto${n===1?"":"s"} de ${nombreSeg[audEnvio]}.\n\nSale AHORA por MailerLite y no se puede deshacer. ¿Confirmás?`)) return;
+  $("#btnEnvio").disabled = true; $("#btnEnvio").textContent = "Enviando…";
+  m.className = "msg"; m.textContent = "Creando y enviando la campaña…";
+  try {
+    const r = await edgeFn("enviar-campana", { segmento: audEnvio, asunto, cuerpo, link, link_texto });
+    m.className = "msg ok";
+    m.textContent = `Enviado. Campaña ${r.campaign_id} (${r.status}).`;
+    $("#envAsunto").value = ""; $("#envCuerpo").value = ""; $("#envLink").value = ""; $("#envLinkTexto").value = "";
+  } catch (e) {
+    m.className = "msg err";
+    m.textContent = "No se pudo enviar: " + e.message;
+  } finally {
+    $("#btnEnvio").disabled = false; $("#btnEnvio").textContent = "Enviar ahora";
+  }
 });
 
 Panel.init({
@@ -152,9 +189,8 @@ Panel.init({
     try {
       const DATA = await api("GET");
       LEADS = DATA.leads || [];
-      renderStats(); renderTabla();
-      $("#btnEnvio").disabled = LEADS.length === 0;
-      $("#topMsg").textContent = LEADS.length ? "" : "";
+      renderStats(); renderTabla(); pintarAlcance();
+      $("#topMsg").textContent = "";
     } catch(e){
       $("#topMsg").className = "msg err";
       $("#topMsg").textContent = "No se pudo cargar: " + e.message;
