@@ -145,18 +145,19 @@ button:disabled,.btn:disabled{opacity:.5;cursor:default}
 .familia__statuslabel.up{color:var(--ok)} .familia__statuslabel.down{color:var(--down)}
 .familia__statuslabel.warn{color:var(--aviso)} .familia__statuslabel.idle{color:var(--texto-mute)}
 
-/* ícono grande y protagónico, centrado arriba */
-.familia__logo-wrap{flex:0 0 auto;width:92px;height:92px;border-radius:24px;background:rgba(245,240,230,.06);
-  display:flex;align-items:center;justify-content:center;margin:8px 0 18px;
-  box-shadow:0 6px 18px rgba(0,0,0,.30), 0 0 0 1px rgba(245,240,230,.04) inset;
+/* ícono GRANDE y protagónico: el elemento con más peso de toda la tarjeta */
+.familia__logo-wrap{flex:0 0 auto;width:clamp(120px,46%,152px);aspect-ratio:1;border-radius:26px;
+  background:rgba(245,240,230,.06);display:flex;align-items:center;justify-content:center;margin:4px 0 18px;
+  box-shadow:0 8px 22px rgba(0,0,0,.32), 0 0 0 1px rgba(245,240,230,.04) inset;
   transition:transform .28s ease}
-.familia:hover .familia__logo-wrap{transform:scale(1.06)}
-.familia__logo{width:62px;height:62px;object-fit:contain;display:block;filter:drop-shadow(0 3px 10px rgba(0,0,0,.42))}
+.familia:hover .familia__logo-wrap{transform:scale(1.05)}
+.familia__logo{width:100%;height:100%;object-fit:contain;display:block;padding:8px;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,.42))}
 .familia__logo--fallback{display:flex;align-items:center;justify-content:center;background:var(--panel-3);
-  border:1px solid rgba(200,155,108,.28);border-radius:24px;font-family:var(--serif);font-weight:600;
-  font-size:var(--fs-h1);color:var(--dorado);width:100%;height:100%}
+  border:1px solid rgba(200,155,108,.28);border-radius:26px;font-family:var(--serif);font-weight:600;
+  font-size:var(--fs-h1);color:var(--dorado);width:100%;height:100%;padding:0}
 
-.familia__name{font-family:var(--serif);font-weight:600;font-size:var(--fs-h2);line-height:1.15;margin-bottom:18px}
+.familia__name{font-family:var(--serif);font-weight:600;font-size:var(--fs-h2);line-height:1.15;margin-bottom:16px}
 
 .familia__foot{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
   border-top:1px solid rgba(245,240,230,.09);padding-top:14px}

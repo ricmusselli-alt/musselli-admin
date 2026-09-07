@@ -55,6 +55,8 @@ const NOMBRE_FAMILIA = {
   portfolio:  "Musselli Portfolio",
 };
 const ICONO_FAMILIA = { blog:"✒", tendencias:"◷", carrusel:"▤", web:"◉", portfolio:"❖" };
+/* nombre del archivo del logo cuando no coincide con la clave */
+const LOGO_ARCHIVO = { carrusel:"carruseles" };
 
 function pendientesDe(key, DATA){
   if (key === "carrusel") return (DATA.carrusel_drafts || []).length;
@@ -96,7 +98,7 @@ function familiaCard(p, DATA){
       <span class="familia__statuslabel ${estadoCls}">${esc(estadoTxt)}</span>
     </div>
     <div class="familia__logo-wrap">
-      <img class="familia__logo" src="logos/${esc(p.key)}.png" alt=""
+      <img class="familia__logo" src="logos/${esc(LOGO_ARCHIVO[p.key] || p.key)}.png" alt=""
         onerror="var s=document.createElement('span');s.className='familia__logo familia__logo--fallback';s.textContent='${esc(String(ini).slice(0,1))}';this.replaceWith(s);">
     </div>
     <div class="familia__name">${esc(nombre)}</div>
