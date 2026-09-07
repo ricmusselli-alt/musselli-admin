@@ -28,6 +28,18 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .procesando{display:flex;align-items:center;gap:9px;font-size:var(--fs-micro);color:var(--cobre);margin-top:4px}
   .procesando .spin{margin:0}
+
+  /* historial de blog / tendencias */
+  .histtable{width:100%;border-collapse:collapse;font-size:var(--fs-small)}
+  .histtable th{text-align:left;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--cobre);
+    padding:10px 12px;border-bottom:1px solid var(--linea-fuerte)}
+  .histtable td{padding:11px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2);vertical-align:top}
+  .histtable tr:hover td{background:rgba(245,240,230,.02)}
+  .h-tit{color:var(--texto)}
+  .h-linea{display:block;font-size:var(--fs-micro);color:var(--texto-mute)}
+  .h-est{font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .h-est.ok{color:var(--ok)} .h-est.down{color:#e79a9c} .h-est.warn{color:var(--aviso)} .h-est.idle{color:var(--texto-mute)}
+  .h-fecha{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -159,9 +171,9 @@ function renderCarrusel(){
   $("#hTitle").textContent = "Carruseles por aprobar";
   $("#hDesc").textContent = "Cada borrador con sus 7 slides a tamaño real. Publicá en Instagram, enviá a TikTok, o rechazá.";
   const drafts = DATA.carrusel_drafts || [];
-  $("#revList").innerHTML = ttConnHtml() + (drafts.length
+  $("#revList").innerHTML = drafts.length
     ? drafts.map(carruselItem).join("")
-    : '<div class="vacio">No hay carruseles esperando aprobación.</div>');
+    : '<div class="vacio">No hay carruseles esperando aprobación.</div>';
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -191,24 +203,65 @@ function textoItem(d, product){
   </div>`;
 }
 
+const H_FECHA = (iso) => iso
+  ? new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "2-digit" })
+  : "—";
+const H_ESTADO = {
+  pending_review: { txt: "Pendiente", cls: "warn" },
+  approved:       { txt: "Aprobado",  cls: "idle" },
+  published:      { txt: "Publicado", cls: "ok" },
+  rejected:       { txt: "Rechazado", cls: "down" },
+};
+
+function historialTexto(hist){
+  if (!hist || !hist.length) return "";
+  const rows = hist.map(d => {
+    const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
+    const e = H_ESTADO[d.status] || { txt: d.status || "—", cls: "idle" };
+    return `<tr>
+      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}</span></td>
+      <td><span class="h-est ${e.cls}">${e.txt}</span></td>
+      <td class="h-fecha">${H_FECHA(d.created_at)}</td>
+      <td class="h-fecha">${H_FECHA(d.published_at)}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="seccion" style="margin-top:36px">
+    <div class="seccion__head">
+      <span class="kicker">Historial</span>
+      <h2>Todo lo generado</h2>
+      <span class="count">· ${hist.length}</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="histtable">
+        <thead><tr><th>Título</th><th>Estado</th><th>Generado</th><th>Publicado</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
 function renderTexto(t){
   const product = t.key === "tendencias" ? "trend" : "blog";
   const drafts = product === "trend" ? (DATA.trend_drafts || []) : (DATA.blog_drafts || []);
+  const hist = product === "trend" ? (DATA.trend_historial || []) : (DATA.blog_historial || []);
   $("#hTitle").textContent = t.nom + " por aprobar";
   $("#hDesc").textContent = product === "trend"
-    ? "Notas cortas verificadas. Revisá el texto y aprobá, rehacé o rechazá."
-    : "Artículos largos. Revisá el borrador y aprobá, rehacé o rechazá.";
-  $("#revList").innerHTML = drafts.length
+    ? "Notas cortas verificadas. Revisá lo pendiente y, más abajo, el historial completo de todo lo generado."
+    : "Artículos largos. Revisá lo pendiente y, más abajo, el historial completo de todo lo generado.";
+  const pendHtml = drafts.length
     ? drafts.map(d => textoItem(d, product)).join("")
     : `<div class="vacio">No hay ${esc(t.nom.toLowerCase())} esperando aprobación.</div>`;
+  $("#revList").innerHTML = pendHtml + historialTexto(hist);
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
 
 function renderPlaceholder(t){
   $("#hTitle").textContent = t.nom;
-  $("#hDesc").textContent = "En preparación: carruseles en formato 9:16 para TikTok.";
-  $("#revList").innerHTML = `<div class="vacio">Se habilita cuando TikTok apruebe la app.</div>`;
+  $("#hDesc").textContent = "Carruseles publicados en TikTok. Conectá o renová las cuentas acá.";
+  $("#revList").innerHTML = ttConnHtml() +
+    `<div class="vacio">La publicación directa se habilita cuando TikTok apruebe la app.
+     Por ahora, cada carrusel se manda a los borradores de TikTok con el botón "Enviar a TikTok" de <b>Carruseles Instagram</b>.</div>`;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
