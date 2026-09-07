@@ -33,6 +33,10 @@
   .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
   .row2{display:flex;gap:8px}
   .row2 > *{flex:1}
+  .catTabs{display:inline-flex;gap:2px;background:var(--panel);border:1px solid var(--linea-fuerte);border-radius:8px;padding:3px;margin-bottom:22px}
+  .catTabs button{background:none;border:0;color:var(--texto-mute);font-family:var(--sans);font-size:12px;letter-spacing:.05em;
+    padding:7px 16px;border-radius:6px;cursor:pointer}
+  .catTabs button.on{background:var(--cobre);color:#1a1410}
 </style>
 </head>
 <body>
@@ -42,10 +46,17 @@
     <span class="crumb"><a href="index.html">← Portada</a> · Costos</span>
     <h1>Costos</h1>
     <p>Cuánto cuesta sostener todo el ecosistema por mes. Lo que tiene API se actualiza solo;
-       el resto lo cargás a mano con su plan y fecha de renovación.</p>
+       el resto lo cargás a mano con su plan y fecha de renovación.
+       Con las pestañas separás los costos del <b>sistema</b> de tus <b>gastos personales</b> (Apple, celular, etc.).</p>
   </div>
 
   <div class="msg" id="topMsg"></div>
+
+  <div class="catTabs" id="catTabs">
+    <button data-cat="sistema" class="on">Sistema</button>
+    <button data-cat="personal">Personal</button>
+    <button data-cat="todo">Todo</button>
+  </div>
 
   <div class="cost-top">
     <div class="card big-total">
@@ -94,6 +105,7 @@
     <h3 id="pTitle">Nuevo proveedor</h3>
     <label class="campo"><span>Clave · sin espacios (ej. r2-academia)</span><input id="p_key" required pattern="[a-z0-9\-]+"></label>
     <label class="campo"><span>Nombre</span><input id="p_name" required></label>
+    <label class="campo"><span>Categoría</span><select id="p_cat"><option value="sistema">Sistema (ecosistema Musselli)</option><option value="personal">Personal (Apple, celular, etc.)</option></select></label>
     <label class="campo"><span>¿Para qué sirve? · qué se rompe si lo damos de baja</span><textarea id="p_paraque" rows="3" placeholder="ej: Base de datos y funciones de automatización. Si se cae, se cae todo el sistema."></textarea></label>
     <label class="campo"><span>Familia a la que pertenece</span><select id="p_prop"><option value="">— Compartido —</option></select></label>
     <label class="campo"><span>Link a su consola</span><input id="p_console" placeholder="https://…"></label>
@@ -123,6 +135,7 @@
 <script>
 const { $, esc, ayuda, api } = Panel;
 let DATA = null;
+let filtro = (()=>{ try { return localStorage.getItem("costos_filtro") || "sistema"; } catch { return "sistema"; } })();
 
 const famName = (k) => (DATA.properties.find(p => p.key === k) || {}).name || k;
 
@@ -145,12 +158,14 @@ const costoUsdDe = (v) => typeof v.monthly_cost_usd === "number" ? v.monthly_cos
   : (typeof v.monthly_cost === "number" ? v.monthly_cost : null);
 
 function render(){
-  const provs = DATA.providers || [];
-  const totalUsd = typeof DATA.total_usd === "number" ? DATA.total_usd
-    : provs.reduce((a,v) => a + (costoUsdDe(v) || 0), 0);
+  document.querySelectorAll("#catTabs button").forEach(b => b.classList.toggle("on", b.dataset.cat === filtro));
+  const catDe = (v) => v.categoria || "sistema";
+  const provs = (DATA.providers || []).filter(v => filtro === "todo" || catDe(v) === filtro);
+  const totalUsd = provs.reduce((a,v) => a + (costoUsdDe(v) || 0), 0);
   const conCosto = provs.filter(v => costoUsdDe(v) != null).length;
+  const etq = filtro === "personal" ? "gastos personales" : filtro === "todo" ? "todo (sistema + personal)" : "ecosistema Musselli";
   $("#totalN").textContent = "USD $" + totalUsd.toFixed(2);
-  $("#totalS").textContent = conCosto + " proveedor" + (conCosto===1?"":"es") + " con costo · todo convertido a dólares";
+  $("#totalS").textContent = `${conCosto} ítem${conCosto===1?"":"s"} con costo · ${etq} · todo en dólares`;
 
   // gasto por familia (este mes), en USD
   const porFam = {};
@@ -184,7 +199,7 @@ function render(){
     </div>`);
   }
   $("#consumoBody").innerHTML = bloques.join("");
-  $("#consumoCard").hidden = bloques.length === 0;
+  $("#consumoCard").hidden = bloques.length === 0 || filtro === "personal";
 
   // gasto histórico
   const hist = DATA.cost_history || [];
@@ -197,6 +212,7 @@ function render(){
   }
 
   // tabla
+  $("#addProv").textContent = filtro === "personal" ? "＋ Agregar gasto personal" : "＋ Agregar proveedor";
   $("#provCount").textContent = "· " + provs.length;
   $("#provBody").innerHTML = provs.map(v => {
     const fam = v.property_key ? esc(famName(v.property_key)) : '<span style="color:var(--texto-mute)">Compartido</span>';
@@ -241,6 +257,7 @@ function openProv(v){
     DATA.properties.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join("");
   $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
   $("#p_name").value = v?.name || "";
+  $("#p_cat").value = v?.categoria || (filtro === "personal" ? "personal" : "sistema");
   $("#p_paraque").value = v?.para_que || "";
   $("#p_prop").value = v?.property_key || "";
   $("#p_console").value = v?.console_url || "";
@@ -262,6 +279,13 @@ function openProv(v){
   };
   dlg.showModal();
 }
+$("#catTabs").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-cat]");
+  if (!b) return;
+  filtro = b.dataset.cat;
+  try { localStorage.setItem("costos_filtro", filtro); } catch {}
+  render();
+});
 $("#pCancel").addEventListener("click", () => dlg.close());
 $("#p_avisoRen").addEventListener("change", (e) => {
   $("#p_avisoDiasWrap").style.opacity = e.target.checked ? "1" : ".4";
@@ -277,6 +301,7 @@ $("#provForm").addEventListener("submit", async (ev) => {
   const existing = DATA.providers.find(x => x.key === $("#p_key").value.trim());
   const provider = {
     key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
+    categoria: $("#p_cat").value,
     para_que: $("#p_paraque").value.trim(),
     property_key: $("#p_prop").value || null, console_url: $("#p_console").value.trim(),
     plan_name: $("#p_plan").value.trim(), plan_price: priceRaw === "" ? null : Number(priceRaw),
