@@ -14,24 +14,24 @@
     border-radius:16px;padding:22px;box-shadow:var(--sombra-card);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
   .tipo:hover{transform:translateY(-4px);border-color:rgba(204,163,83,.5);box-shadow:var(--sombra-hover)}
   .tipo[aria-disabled=true]{opacity:.5;pointer-events:none}
-  .tipo .ico{font-size:var(--fs-value);display:flex;align-items:center;justify-content:center;
+  .tipo .ico{font-size:22px;display:flex;align-items:center;justify-content:center;
     width:46px;height:46px;border-radius:12px;background:rgba(245,240,230,.05);margin-bottom:4px}
   .tipo .ico img{width:30px;height:30px;object-fit:contain;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
-  .tipo h3{font-family:var(--serif);font-weight:600;font-size:var(--fs-h3);margin:2px 0 0}
-  .tipo p{font-size:var(--fs-small);color:var(--texto-2);margin:0;line-height:1.5}
-  .tipo .badge{margin-top:10px;font-size:var(--fs-micro);color:var(--texto-mute)}
+  .tipo h3{font-family:var(--serif);font-weight:600;font-size:19px;margin:2px 0 0}
+  .tipo p{font-size:12px;color:var(--texto-2);margin:0;line-height:1.5}
+  .tipo .badge{margin-top:10px;font-size:11px;color:var(--texto-mute)}
   .tipo .badge b{color:var(--aviso)}
 
-  .back{display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;
+  .back{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--cobre);cursor:pointer;background:none;border:0;padding:0;margin-bottom:16px}
 
   .revitem{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:20px}
   .revitem__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .revitem__head .t{font-family:var(--serif);font-weight:600;font-size:var(--fs-h3);flex:1;min-width:200px}
+  .revitem__head .t{font-family:var(--serif);font-weight:600;font-size:18px;flex:1;min-width:200px}
   .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
   .slides img{height:360px;width:auto;border-radius:6px;flex:0 0 auto;scroll-snap-align:center;
     border:1px solid rgba(200,155,108,.2);background:#0e0d0c}
-  .cap{font-size:var(--fs-small);color:var(--texto-2);white-space:pre-wrap;margin:12px 0;line-height:1.6;
+  .cap{font-size:13px;color:var(--texto-2);white-space:pre-wrap;margin:12px 0;line-height:1.6;
     max-height:9em;overflow:auto;border-left:2px solid var(--linea-fuerte);padding-left:12px}
   .revitem__acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
   /* botón "pensando" */
@@ -39,7 +39,7 @@
     border-top-color:var(--hueso);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
   .btn-danger .spin{border-color:rgba(198,91,91,.35);border-top-color:#e79a9c}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .procesando{display:flex;align-items:center;gap:9px;font-size:var(--fs-micro);color:var(--cobre);margin-top:4px}
+  .procesando{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--cobre);margin-top:4px}
   .procesando .spin{margin:0}
 </style>
 </head>
@@ -132,17 +132,13 @@ function ttConnHtml(){
   const OAUTH = Panel.SUPABASE_URL + "/functions/v1/tiktok-oauth?category=";
   const fila = (cat, label) => {
     const est = toks[cat] ? '<span style="color:var(--ok)">conectada</span>' : '<span style="color:var(--texto-mute)">sin conectar</span>';
-    return `<span style="display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-micro);color:var(--texto-2)">
+    return `<span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--texto-2)">
       ${label}: ${est}
       <a class="btn btn-ghost btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener" style="text-decoration:none">Conectar / renovar</a></span>`;
   };
   return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
-    <span style="font-size:var(--fs-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Cuentas de TikTok</span>
+    <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Cuentas de TikTok</span>
     ${fila("luthier","Luthería")} ${fila("guitartech","Guitar Tech")}
-    <label style="display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-micro);color:var(--texto-2);cursor:pointer">
-      <input type="checkbox" id="tt_directo" style="width:auto">
-      Publicar directo ${ayuda("Postea el carrusel en el perfil de TikTok en el momento (solo funciona si la cuenta está en privado, hasta que TikTok apruebe la app). Sin tildar: va a borradores.", true)}
-    </label>
   </div>`;
 }
 
@@ -164,7 +160,7 @@ function textoItem(d, product){
   const preview = cuerpo.length > 1400 ? cuerpo.slice(0, 1400) + "…" : cuerpo;
   const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
   const extra = product === "trend" && (c.price_usd || c.source)
-    ? `<div class="mini-note" style="font-size:var(--fs-micro);color:var(--texto-mute);margin:6px 0">
+    ? `<div class="mini-note" style="font-size:11px;color:var(--texto-mute);margin:6px 0">
          ${c.price_usd ? `Precio: USD $${esc(String(c.price_usd))}` : ""}${c.price_usd && c.source ? " · " : ""}${c.source ? `Fuente: ${esc(c.source)}` : ""}
        </div>` : "";
   return `<div class="revitem" data-id="${esc(d.id)}">
@@ -251,17 +247,13 @@ $("#revList").addEventListener("click", async (ev) => {
   }
   const tt = ev.target.closest("[data-tt]");
   if (tt){
-    const directo = !!(document.getElementById("tt_directo") && document.getElementById("tt_directo").checked);
-    const msg = directo
-      ? "¿Publicar este carrusel DIRECTO en el perfil de TikTok ahora? (la cuenta tiene que estar en privado)"
-      : "¿Enviar este carrusel a los borradores de TikTok? Después entrás a la app, le ponés el sonido y lo posteás.";
-    if (!confirm(msg)) return;
-    busy(tt, directo ? "Publicando" : "Enviando");
+    if (!confirm("¿Enviar este carrusel a los borradores de TikTok?\n\nDespués entrás a la app de TikTok, le ponés el sonido y lo posteás.")) return;
+    busy(tt, "Enviando");
     try {
-      const r = await edgeFn("tiktok-publish", { item_id: tt.dataset.tt, modo: directo ? "directo" : "borrador" });
-      alert((directo ? "Publicado en TikTok. Revisá el perfil." : "Enviado a los borradores de TikTok. Abrí la app para terminarlo.") + (r.sandbox ? "\n\n(modo prueba / sandbox)" : ""));
+      const r = await edgeFn("tiktok-publish", { item_id: tt.dataset.tt, modo: "borrador" });
+      alert("Enviado a TikTok. Abrí la app (bandeja / borradores) para terminarlo y postearlo." + (r.sandbox ? "\n\n(modo prueba / sandbox)" : ""));
       unbusy(tt);
-    } catch(e){ alert("No se pudo: " + e.message); unbusy(tt); }
+    } catch(e){ alert("No se pudo enviar a TikTok: " + e.message); unbusy(tt); }
   }
   if (rej){
     if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
