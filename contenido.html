@@ -80,7 +80,7 @@ const TIPOS = [
 ];
 
 function pendDe(key){
-  if (key === "carrusel") return (DATA.carrusel_drafts || []).length;
+  if (key === "carrusel" || key === "tiktok") return (DATA.carrusel_drafts || []).length;
   if (key === "blog")     return (DATA.blog_drafts || []).length;
   if (key === "tendencias")return (DATA.trend_drafts || []).length;
   return 0;
@@ -127,12 +127,16 @@ function renderHub(){
 }
 
 /* ---------- revisión de carruseles ---------- */
-function carruselItem(d){
+// canal = "instagram" | "tiktok" — define qué botón de publicación se muestra
+function carruselItem(d, canal){
   const imgs = (d.content && d.content.imagenes) || [];
   const cap = (d.content && (d.content.caption || d.content.descripcion)) || d.title || "";
   const tags = (d.content && d.content.hashtags) || [];
   const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
   const variante = d.content && d.content.variante ? ` · ${esc(d.content.variante)}` : "";
+  const btnPub = canal === "tiktok"
+    ? `<button class="btn-solid btn-mini" data-tt="${esc(d.id)}">Enviar a TikTok ${ayuda("Manda el carrusel a los borradores de TikTok. Después entrás a la app, le ponés el sonido y lo posteás.", true)}</button>`
+    : `<button class="btn-solid btn-mini" data-pub="${esc(d.id)}">Publicar en Instagram ${ayuda("Sube el carrusel a Instagram tal cual lo ves. No se puede deshacer.", true)}</button>`;
   return `<div class="revitem" data-id="${esc(d.id)}">
     <div class="revitem__head">
       <span class="t">${esc(d.title || "(sin título)")}</span>
@@ -141,9 +145,8 @@ function carruselItem(d){
     <div class="slides">${imgs.map(u => `<img src="${esc(u)}" alt="" loading="lazy">`).join("")}</div>
     <div class="cap">${esc(cap)}${tags.length ? "\n\n#" + tags.map(esc).join(" #") : ""}</div>
     <div class="revitem__acts">
-      <button class="btn-solid btn-mini" data-pub="${esc(d.id)}">Publicar en Instagram ${ayuda("Sube el carrusel a Instagram tal cual lo ves. No se puede deshacer.", true)}</button>
-      <button class="btn-ghost btn-mini" data-tt="${esc(d.id)}">Enviar a TikTok ${ayuda("Manda el carrusel a los borradores de TikTok. Después entrás a la app, le ponés el sonido y lo posteás.", true)}</button>
-      <button class="btn-danger btn-mini" data-rej="${esc(d.id)}">Rechazar ${ayuda("Descarta el borrador. No se publica y sale de la lista.", true)}</button>
+      ${btnPub}
+      <button class="btn-danger btn-mini" data-rej="${esc(d.id)}">Rechazar ${ayuda("Descarta el borrador. Te va a pedir el motivo, para entender qué corregir en el próximo.", true)}</button>
     </div>
   </div>`;
 }
@@ -168,13 +171,13 @@ function ttConnHtml(){
 }
 
 function renderCarrusel(){
-  $("#hTitle").textContent = "Carruseles por aprobar";
-  $("#hDesc").textContent = "Revisá lo pendiente y, más abajo, el historial de todos los carruseles generados (Instagram y TikTok).";
+  $("#hTitle").textContent = "Carruseles Instagram";
+  $("#hDesc").textContent = "Publicá o rechazá lo pendiente, y mirá el historial de lo que salió en Instagram.";
   const drafts = DATA.carrusel_drafts || [];
   const pendHtml = drafts.length
-    ? drafts.map(carruselItem).join("")
+    ? drafts.map(d => carruselItem(d, "instagram")).join("")
     : '<div class="vacio">No hay carruseles esperando aprobación.</div>';
-  $("#revList").innerHTML = pendHtml + historialTexto(DATA.carrusel_historial || []);
+  $("#revList").innerHTML = pendHtml + historialTexto(DATA.carrusel_historial || [], "instagram");
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -214,23 +217,40 @@ const H_ESTADO = {
   rejected:       { txt: "Rechazado", cls: "down" },
 };
 
-function historialTexto(hist){
+// canal: "instagram" | "tiktok" | undefined (blog/tendencias)
+function historialTexto(hist, canal){
   if (!hist || !hist.length) return "";
-  const rows = hist.map(d => {
+  const lista = hist.filter(d => {
+    if (canal === "instagram") return d.status === "rejected" || d.instagram_at;
+    if (canal === "tiktok")    return d.status === "rejected" || d.tiktok_at;
+    return true;
+  });
+  const colPub = (d) => canal === "instagram" ? d.instagram_at
+    : canal === "tiktok" ? d.tiktok_at
+    : d.published_at;
+  const titSec = canal === "instagram" ? "Lo que salió en Instagram"
+    : canal === "tiktok" ? "Lo que fue a TikTok"
+    : "Todo lo generado";
+  if (!lista.length) return `<div class="seccion" style="margin-top:36px">
+    <div class="seccion__head"><span class="kicker">Historial</span><h2>${titSec}</h2></div>
+    <div class="vacio">Todavía no hay nada acá.</div></div>`;
+  const rows = lista.map(d => {
     const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
     const e = H_ESTADO[d.status] || { txt: d.status || "—", cls: "idle" };
+    const motivo = (d.status === "rejected" && d.motivo_rechazo)
+      ? ` · <span style="color:#e79a9c">motivo: ${esc(d.motivo_rechazo)}</span>` : "";
     return `<tr>
-      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}</span></td>
+      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}${motivo}</span></td>
       <td><span class="h-est ${e.cls}">${e.txt}</span></td>
       <td class="h-fecha">${H_FECHA(d.created_at)}</td>
-      <td class="h-fecha">${H_FECHA(d.published_at)}</td>
+      <td class="h-fecha">${H_FECHA(colPub(d))}</td>
     </tr>`;
   }).join("");
   return `<div class="seccion" style="margin-top:36px">
     <div class="seccion__head">
       <span class="kicker">Historial</span>
-      <h2>Todo lo generado</h2>
-      <span class="count">· ${hist.length}</span>
+      <h2>${titSec}</h2>
+      <span class="count">· ${lista.length}</span>
     </div>
     <div style="overflow-x:auto">
       <table class="histtable">
@@ -258,12 +278,13 @@ function renderTexto(t){
 }
 
 function renderPlaceholder(t){
-  $("#hTitle").textContent = t.nom;
-  $("#hDesc").textContent = "Carruseles publicados en TikTok. Conectá o renová las cuentas acá.";
-  $("#revList").innerHTML = ttConnHtml() +
-    `<div class="vacio">La publicación directa se habilita cuando TikTok apruebe la app.
-     Por ahora, cada carrusel se manda a los borradores de TikTok con el botón "Enviar a TikTok" de <b>Carruseles Instagram</b>.</div>` +
-    historialTexto(DATA.carrusel_historial || []);
+  $("#hTitle").textContent = "Carruseles TikTok";
+  $("#hDesc").textContent = "Enviá lo pendiente a TikTok o rechazalo, y mirá el historial de lo que fue a TikTok.";
+  const drafts = DATA.carrusel_drafts || [];
+  const pendHtml = drafts.length
+    ? drafts.map(d => carruselItem(d, "tiktok")).join("")
+    : '<div class="vacio">No hay carruseles esperando aprobación.</div>';
+  $("#revList").innerHTML = ttConnHtml() + pendHtml + historialTexto(DATA.carrusel_historial || [], "tiktok");
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -328,8 +349,9 @@ $("#revList").addEventListener("click", async (ev) => {
     } catch(e){ alert("No se pudo: " + e.message); unbusy(tt); }
   }
   if (rej){
-    if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
-    try { await api("POST", { action:"carrusel_reject", item_id: rej.dataset.rej }); await reload(); route(); }
+    const motivo = prompt("¿Por qué lo rechazás? (queda guardado en el historial para entender qué corregir)");
+    if (motivo === null) return; // canceló
+    try { await api("POST", { action:"carrusel_reject", item_id: rej.dataset.rej, motivo: motivo.trim() }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); }
   }
 
@@ -341,13 +363,19 @@ $("#revList").addEventListener("click", async (ev) => {
   if (tx){
     const id = tx.dataset.txapprove || tx.dataset.txredo || tx.dataset.txreject;
     const decision = txA ? "approve" : txR ? "redo" : "reject";
-    const msg = { approve:"¿Aprobar y publicar este artículo? No se puede deshacer.",
-                  redo:"¿Mandar a rehacer este borrador?",
-                  reject:"¿Rechazar este borrador? No se publica." }[decision];
-    if (!confirm(msg)) return;
+    let motivo = "";
+    if (decision === "reject"){
+      const m = prompt("¿Por qué lo rechazás? (queda guardado en el historial para entender qué corregir)");
+      if (m === null) return; // canceló
+      motivo = m.trim();
+    } else {
+      const msg = { approve:"¿Aprobar y publicar este artículo? No se puede deshacer.",
+                    redo:"¿Mandar a rehacer este borrador?" }[decision];
+      if (!confirm(msg)) return;
+    }
     busy(tx, decision === "approve" ? "Publicando" : decision === "redo" ? "Rehaciendo" : "Rechazando");
     try {
-      const r = await edgeFn("review-item", { item_id: id, decision });
+      const r = await edgeFn("review-item", { item_id: id, decision, motivo });
       if (decision === "approve") alert("Publicado. " + (r.published_url || ""));
       else if (decision === "redo") alert("Mandado a rehacer. Va a aparecer un borrador nuevo cuando termine.");
       await reload(); route();
