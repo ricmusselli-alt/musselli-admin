@@ -74,21 +74,27 @@
   .cx-provs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
   .cx-prov{position:relative;overflow:hidden;display:flex;flex-direction:column;
     background:linear-gradient(165deg,var(--panel-alto) 0%,var(--panel-2) 62%);
-    border:1px solid rgba(200,155,108,.24);border-radius:16px;padding:18px 18px 16px;box-shadow:var(--sombra-card);
+    border:1px solid rgba(200,155,108,.24);border-radius:16px;padding:24px 24px 20px;box-shadow:var(--sombra-card);
     transition:transform .22s ease,border-color .22s ease}
   .cx-prov:hover{transform:translateY(-3px);border-color:rgba(204,163,83,.42)}
-  .cx-prov__head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
-  .cx-prov__name{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--texto);line-height:1.2;
-    display:flex;align-items:center;flex-wrap:wrap}
-  .cx-prov__cost{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--dorado);white-space:nowrap}
-  .cx-prov__cost small{display:block;font-family:var(--sans);font-size:12px;color:var(--texto-mute);
+  .cx-prov__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .cx-prov__id{display:flex;align-items:center;gap:12px;min-width:0}
+  .cx-logo{width:34px;height:34px;flex:0 0 auto;border-radius:9px;overflow:hidden;
+    background:rgba(245,240,230,.92);display:flex;align-items:center;justify-content:center}
+  .cx-logo img{width:100%;height:100%;object-fit:contain;padding:5px}
+  .cx-logo--fb{background:var(--panel-3);border:1px solid var(--linea-fuerte)}
+  .cx-logo--fb::before{content:attr(data-ini);font-family:var(--serif);font-weight:600;font-size:16px;color:var(--dorado)}
+  .cx-prov__name{font-family:var(--serif);font-weight:600;font-size:21px;color:var(--texto);line-height:1.15;
+    display:flex;align-items:center;flex-wrap:wrap;min-width:0}
+  .cx-prov__cost{font-family:var(--serif);font-weight:600;font-size:24px;color:var(--dorado);white-space:nowrap}
+  .cx-prov__cost small{display:block;font-family:var(--sans);font-size:13px;color:var(--texto-mute);
     text-align:right;font-weight:400}
-  .cx-prov__rows{display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:12.5px;margin-bottom:12px}
-  .cx-prov__rows dt{color:var(--texto-mute);letter-spacing:.04em}
+  .cx-prov__rows{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;font-size:15px;margin-bottom:14px}
+  .cx-prov__rows dt{color:var(--texto-mute);letter-spacing:.03em}
   .cx-prov__rows dd{margin:0;color:var(--texto-2);text-align:right}
-  .cx-prov__rows dd .mini{color:var(--texto-mute);font-size:12px}
+  .cx-prov__rows dd .mini{color:var(--texto-mute);font-size:13px}
   .cx-prov__foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
-    border-top:1px solid rgba(245,240,230,.07);padding-top:12px}
+    border-top:1px solid rgba(245,240,230,.07);padding-top:14px}
   .cx-src{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
   .cx-src.api{color:var(--ok)} .cx-src.man{color:var(--texto-mute)}
   .cx-badge{display:inline-block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;
@@ -217,6 +223,35 @@ let filtro = (() => { try { return localStorage.getItem("costos_filtro") || "sis
 
 const famName = (k) => (DATA.properties.find(p => p.key === k) || {}).name || k;
 const catDe = (v) => v.categoria || "sistema";
+
+/* logo real de cada proveedor (favicon oficial vía Google, por dominio). Si no hay dominio o falla → círculo con la inicial. */
+const LOGO_DOMINIOS = {
+  claude: "anthropic.com", chatgpt: "openai.com", gemini: "google.com", groq: "groq.com",
+  elevenlabs: "elevenlabs.io", mux: "mux.com", supabase: "supabase.com", github: "github.com",
+  cloudflare: "cloudflare.com", r2: "cloudflare.com", drive: "google.com",
+  v0: "vercel.com", vercel: "vercel.com", mailerlite: "mailerlite.com",
+  hostinger: "hostinger.com", "hostinger-email": "hostinger.com", "dominio-com": "hostinger.com",
+  apple: "apple.com", icloud: "apple.com",
+};
+function logoDe(v){
+  const ini = esc((v.name || "?").trim().charAt(0).toUpperCase() || "?");
+  const dom = LOGO_DOMINIOS[v.key]
+    || (/anthropic|claude/i.test(v.name) ? "anthropic.com"
+      : /openai|chatgpt/i.test(v.name) ? "openai.com"
+      : /hostinger/i.test(v.name) ? "hostinger.com"
+      : /cloudflare/i.test(v.name) ? "cloudflare.com"
+      : /supabase/i.test(v.name) ? "supabase.com"
+      : /github/i.test(v.name) ? "github.com"
+      : /gemini|google\s*drive|google/i.test(v.name) ? "google.com"
+      : /elevenlabs/i.test(v.name) ? "elevenlabs.io"
+      : /vercel|v0/i.test(v.name) ? "vercel.com"
+      : /mailerlite/i.test(v.name) ? "mailerlite.com"
+      : /groq/i.test(v.name) ? "groq.com"
+      : /mux/i.test(v.name) ? "mux.com" : null);
+  if (!dom) return `<span class="cx-logo cx-logo--fb" data-ini="${ini}"></span>`;
+  const src = `https://www.google.com/s2/favicons?domain=${dom}&sz=128`;
+  return `<span class="cx-logo" data-ini="${ini}"><img src="${src}" alt="" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('cx-logo--fb');this.remove()"></span>`;
+}
 const costoUsdDe = (v) => typeof v.monthly_cost_usd === "number" ? v.monthly_cost_usd
   : (typeof v.monthly_cost === "number" ? v.monthly_cost : null);
 
@@ -385,7 +420,10 @@ function render(){
 
       return `<article class="cx-prov">
         <div class="cx-prov__head">
-          <div class="cx-prov__name">${esc(v.name)}${v.para_que ? " " + ayuda(v.para_que) : ""}</div>
+          <div class="cx-prov__id">
+            ${logoDe(v)}
+            <div class="cx-prov__name">${esc(v.name)}${v.para_que ? " " + ayuda(v.para_que) : ""}</div>
+          </div>
           <div class="cx-prov__cost">${costo}</div>
         </div>
         <dl class="cx-prov__rows">
