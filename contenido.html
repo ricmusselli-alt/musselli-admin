@@ -40,6 +40,9 @@
   .h-est{font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
   .h-est.ok{color:var(--ok)} .h-est.down{color:#e79a9c} .h-est.warn{color:var(--aviso)} .h-est.idle{color:var(--texto-mute)}
   .h-fecha{white-space:nowrap}
+  .h-acc{white-space:nowrap}
+  .pub-error{background:rgba(198,91,91,.12);border:1px solid rgba(198,91,91,.4);border-radius:8px;
+    padding:9px 12px;margin:0 0 12px;font-size:var(--fs-small);color:#e79a9c;line-height:1.5}
 </style>
 </head>
 <body>
@@ -137,11 +140,15 @@ function carruselItem(d, canal){
   const btnPub = canal === "tiktok"
     ? `<button class="btn-solid btn-mini" data-tt="${esc(d.id)}">Enviar a TikTok ${ayuda("Manda el carrusel a los borradores de TikTok. Después entrás a la app, le ponés el sonido y lo posteás.", true)}</button>`
     : `<button class="btn-solid btn-mini" data-pub="${esc(d.id)}">Publicar en Instagram ${ayuda("Sube el carrusel a Instagram tal cual lo ves. No se puede deshacer.", true)}</button>`;
+  const errHtml = d.error_publicacion
+    ? `<div class="pub-error">⚠ Último intento de publicación falló: ${esc(d.error_publicacion)}${d.error_publicacion_at ? ` <span style="opacity:.7">(${H_FECHA(d.error_publicacion_at)})</span>` : ""}</div>`
+    : "";
   return `<div class="revitem" data-id="${esc(d.id)}">
     <div class="revitem__head">
       <span class="t">${esc(d.title || "(sin título)")}</span>
       <span class="tag">${linea}${variante}</span>
     </div>
+    ${errHtml}
     <div class="slides">${imgs.map(u => `<img src="${esc(u)}" alt="" loading="lazy">`).join("")}</div>
     <div class="cap">${esc(cap)}${tags.length ? "\n\n#" + tags.map(esc).join(" #") : ""}</div>
     <div class="revitem__acts">
@@ -234,16 +241,23 @@ function historialTexto(hist, canal){
   if (!lista.length) return `<div class="seccion" style="margin-top:36px">
     <div class="seccion__head"><span class="kicker">Historial</span><h2>${titSec}</h2></div>
     <div class="vacio">Todavía no hay nada acá.</div></div>`;
+  const esCarrusel = canal === "instagram" || canal === "tiktok";
   const rows = lista.map(d => {
     const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
     const e = H_ESTADO[d.status] || { txt: d.status || "—", cls: "idle" };
     const motivo = (d.status === "rejected" && d.motivo_rechazo)
       ? ` · <span style="color:#e79a9c">motivo: ${esc(d.motivo_rechazo)}</span>` : "";
+    const errLine = d.error_publicacion
+      ? `<span class="h-linea" style="color:#e79a9c">⚠ falló: ${esc(d.error_publicacion.slice(0, 120))}</span>` : "";
+    const accion = esCarrusel
+      ? `<td class="h-acc"><button class="btn-ghost btn-mini" data-${canal === "tiktok" ? "tt" : "pub"}="${esc(d.id)}" title="Publica este carrusel de nuevo, ahora, a mano">${canal === "tiktok" ? "Enviar de nuevo" : "Republicar"}</button></td>`
+      : "";
     return `<tr>
-      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}${motivo}</span></td>
+      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}${motivo}</span>${errLine}</td>
       <td><span class="h-est ${e.cls}">${e.txt}</span></td>
       <td class="h-fecha">${H_FECHA(d.created_at)}</td>
       <td class="h-fecha">${H_FECHA(colPub(d))}</td>
+      ${accion}
     </tr>`;
   }).join("");
   return `<div class="seccion" style="margin-top:36px">
@@ -254,10 +268,11 @@ function historialTexto(hist, canal){
     </div>
     <div style="overflow-x:auto">
       <table class="histtable">
-        <thead><tr><th>Título</th><th>Estado</th><th>Generado</th><th>Publicado</th></tr></thead>
+        <thead><tr><th>Título</th><th>Estado</th><th>Generado</th><th>Publicado</th>${esCarrusel ? "<th>Acción</th>" : ""}</tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
+    ${esCarrusel ? `<p class="cx-hint" style="font-size:var(--fs-micro);color:var(--texto-mute);margin-top:10px">"Republicar" fuerza una publicación manual inmediata de ese mismo carrusel, aunque haya sido rechazado o ya publicado antes.</p>` : ""}
   </div>`;
 }
 
@@ -326,7 +341,7 @@ $("#revList").addEventListener("click", async (ev) => {
   const pub = ev.target.closest("[data-pub]");
   const rej = ev.target.closest("[data-rej]");
   if (pub){
-    if (!confirm("¿Aprobar y publicar este carrusel en Instagram ahora? No se puede deshacer.")) return;
+    if (!confirm("¿Publicar este carrusel en Instagram ahora, a mano? No se puede deshacer.")) return;
     busy(pub, "Publicando");
     try {
       const r = await api("POST", { action:"carrusel_publish", item_id: pub.dataset.pub });
