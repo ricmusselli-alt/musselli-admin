@@ -37,6 +37,8 @@
   .histtable tr:hover td{background:rgba(245,240,230,.02)}
   .h-tit{color:var(--texto)}
   .h-linea{display:block;font-size:var(--fs-micro);color:var(--texto-mute)}
+  .h-canales{display:inline-flex;gap:10px;margin-top:4px;font-size:var(--fs-micro);color:var(--texto-mute)}
+  .h-canales b.ok{color:var(--ok);font-weight:600}
   .h-est{font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
   .h-est.ok{color:var(--ok)} .h-est.down{color:#e79a9c} .h-est.warn{color:var(--aviso)} .h-est.idle{color:var(--texto-mute)}
   .h-fecha{white-space:nowrap}
@@ -227,21 +229,22 @@ const H_ESTADO = {
 // canal: "instagram" | "tiktok" | undefined (blog/tendencias)
 function historialTexto(hist, canal){
   if (!hist || !hist.length) return "";
-  const lista = hist.filter(d => {
-    if (canal === "instagram") return d.status === "rejected" || d.instagram_at;
-    if (canal === "tiktok")    return d.status === "rejected" || d.tiktok_at;
-    return true;
-  });
+  const esCarrusel = canal === "instagram" || canal === "tiktok";
+  // Para carruseles: el historial de CADA vista muestra TODOS los carruseles ya procesados
+  // (publicados en cualquier lado + rechazados), no solo los de ese canal, así siempre
+  // podés mandar uno al otro canal más adelante.
+  const lista = hist.filter(d => esCarrusel
+    ? d.status !== "pending_review"
+    : true);
   const colPub = (d) => canal === "instagram" ? d.instagram_at
     : canal === "tiktok" ? d.tiktok_at
     : d.published_at;
-  const titSec = canal === "instagram" ? "Lo que salió en Instagram"
-    : canal === "tiktok" ? "Lo que fue a TikTok"
+  const titSec = canal === "instagram" ? "Historial de carruseles"
+    : canal === "tiktok" ? "Historial de carruseles"
     : "Todo lo generado";
   if (!lista.length) return `<div class="seccion" style="margin-top:36px">
     <div class="seccion__head"><span class="kicker">Historial</span><h2>${titSec}</h2></div>
     <div class="vacio">Todavía no hay nada acá.</div></div>`;
-  const esCarrusel = canal === "instagram" || canal === "tiktok";
   const rows = lista.map(d => {
     const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
     const e = H_ESTADO[d.status] || { txt: d.status || "—", cls: "idle" };
@@ -249,17 +252,26 @@ function historialTexto(hist, canal){
       ? ` · <span style="color:#e79a9c">motivo: ${esc(d.motivo_rechazo)}</span>` : "";
     const errLine = d.error_publicacion
       ? `<span class="h-linea" style="color:#e79a9c">⚠ falló: ${esc(d.error_publicacion.slice(0, 120))}</span>` : "";
+    // ¿dónde salió ya?
+    const canales = esCarrusel
+      ? `<span class="h-canales">${d.instagram_at ? `<b class="ok">IG ✓</b>` : `<span>IG —</span>`} ${d.tiktok_at ? `<b class="ok">TikTok ✓</b>` : `<span>TikTok —</span>`}</span>`
+      : "";
+    // botón: si ya salió en ESTE canal → "Republicar"/"Enviar de nuevo"; si no → "Publicar en …"
+    const yaEnEsteCanal = canal === "instagram" ? !!d.instagram_at : canal === "tiktok" ? !!d.tiktok_at : false;
     const accion = esCarrusel
-      ? `<td class="h-acc"><button class="btn-ghost btn-mini" data-${canal === "tiktok" ? "tt" : "pub"}="${esc(d.id)}" title="Publica este carrusel de nuevo, ahora, a mano">${canal === "tiktok" ? "Enviar de nuevo" : "Republicar"}</button></td>`
+      ? `<td class="h-acc"><button class="btn-ghost btn-mini" data-${canal === "tiktok" ? "tt" : "pub"}="${esc(d.id)}" title="Publicación manual inmediata de este carrusel">${
+          canal === "tiktok" ? (yaEnEsteCanal ? "Enviar de nuevo" : "Enviar a TikTok")
+                             : (yaEnEsteCanal ? "Republicar" : "Publicar en IG")}</button></td>`
       : "";
     return `<tr>
-      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}${motivo}</span>${errLine}</td>
+      <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}${motivo}</span>${canales}${errLine}</td>
       <td><span class="h-est ${e.cls}">${e.txt}</span></td>
       <td class="h-fecha">${H_FECHA(d.created_at)}</td>
       <td class="h-fecha">${H_FECHA(colPub(d))}</td>
       ${accion}
     </tr>`;
   }).join("");
+  const colFecha = canal === "instagram" ? "En Instagram" : canal === "tiktok" ? "En TikTok" : "Publicado";
   return `<div class="seccion" style="margin-top:36px">
     <div class="seccion__head">
       <span class="kicker">Historial</span>
@@ -268,11 +280,11 @@ function historialTexto(hist, canal){
     </div>
     <div style="overflow-x:auto">
       <table class="histtable">
-        <thead><tr><th>Título</th><th>Estado</th><th>Generado</th><th>Publicado</th>${esCarrusel ? "<th>Acción</th>" : ""}</tr></thead>
+        <thead><tr><th>Título</th><th>Estado</th><th>Generado</th><th>${colFecha}</th>${esCarrusel ? "<th>Acción</th>" : ""}</tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    ${esCarrusel ? `<p class="cx-hint" style="font-size:var(--fs-micro);color:var(--texto-mute);margin-top:10px">"Republicar" fuerza una publicación manual inmediata de ese mismo carrusel, aunque haya sido rechazado o ya publicado antes.</p>` : ""}
+    ${esCarrusel ? `<p class="cx-hint" style="font-size:var(--fs-micro);color:var(--texto-mute);margin-top:10px">Este historial muestra TODOS los carruseles ya generados. El botón fuerza una publicación manual inmediata ${canal === "tiktok" ? "a TikTok" : "en Instagram"}, aunque haya salido antes en el otro canal o haya sido rechazado.</p>` : ""}
   </div>`;
 }
 
