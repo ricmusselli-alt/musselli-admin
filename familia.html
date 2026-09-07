@@ -299,7 +299,8 @@ async function generar(isHint){
   }
   if (!confirm(isHint ? `¿Buscar y generar sobre "${hint}"?` : `¿Generar una publicación nueva de ${FAM.name} ahora?`)) return;
   const btn = isHint ? $("#btnHint") : $("#btnCrear");
-  const orig = btn.textContent; btn.disabled = true; btn.textContent = isHint ? "Buscando…" : "Generando…";
+  const orig = btn.innerHTML; btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>${isHint ? "Buscando…" : "Generando…"}`;
   try {
     let out;
     if (FKEY === "tendencias"){
@@ -314,7 +315,7 @@ async function generar(isHint){
     if (out.status === "sin_hallazgos") alert("No encontró nada verificable esta vez. Probá de nuevo.");
     else { alert(`Generado: "${out.title || "listo"}". Revisalo en Contenido antes de aprobar.`); if (isHint) $("#hintInput").value = ""; }
   } catch(e){ alert("Error al generar: " + e.message); }
-  finally { btn.disabled = false; btn.textContent = orig; }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
 /* carrusel */
@@ -326,7 +327,8 @@ async function crearCarrusel(){
   if (useLead && (!hook || !cta)){ alert("Para Lead Magnet completá el hook y el CTA de cierre."); return; }
   if (!confirm(topic ? `¿Crear un carrusel de ${category==='luthier'?'Luthería':'Guitar Tech'} sobre "${topic}"${useLead?' (Lead Magnet)':''}?`
                      : `¿Crear un carrusel de ${category==='luthier'?'Luthería':'Guitar Tech'} con un tema del Radar?`)) return;
-  const btn = $("#carr_crear"); const orig = btn.textContent; btn.disabled = true; btn.textContent = "Generando…";
+  const btn = $("#carr_crear"); const orig = btn.innerHTML; btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span>Generando…`;
   try {
     const body = { category, manual: true };
     if (topic) body.topic = topic;
@@ -341,7 +343,7 @@ async function crearCarrusel(){
       $("#carr_lead").checked = false; $("#carr_leadFields").hidden = true;
     }
   } catch(e){ alert("Error: " + e.message); }
-  finally { btn.disabled = false; btn.textContent = orig; }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
 }
 
 /* editar familia */

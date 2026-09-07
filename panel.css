@@ -217,6 +217,8 @@ textarea{resize:vertical;min-height:70px}
 /* ---------- estados de carga / mensajes ---------- */
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(245,240,230,.3);
   border-top-color:var(--hueso);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+.btn-solid .spin{border-color:rgba(20,18,18,.35);border-top-color:var(--negro)}
+.btn-danger .spin{border-color:rgba(198,91,91,.35);border-top-color:#e79a9c}
 @keyframes spin{to{transform:rotate(360deg)}}
 .msg{font-size:var(--fs-small);margin:10px 0;min-height:1.2em}
 .msg.err{color:#e79a9c} .msg.ok{color:var(--ok)}
