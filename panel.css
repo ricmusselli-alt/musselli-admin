@@ -242,3 +242,10 @@ textarea{resize:vertical;min-height:70px}
   .site-nav a span.txt{display:none}
   .site-nav a{padding:8px 11px}
 }
+
+/* encabezado de sección: en pantallas chicas, que el título y su botón de acción
+   no se apretujen — se apilan y el botón baja a su propia línea. */
+@media (max-width:560px){
+  .seccion__head{flex-wrap:wrap;row-gap:8px}
+  .seccion__head > button,.seccion__head > .btn{margin-left:0!important;flex:0 0 100%;order:9}
+}
