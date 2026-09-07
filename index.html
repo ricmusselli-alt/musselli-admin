@@ -45,13 +45,14 @@
 <script>
 const { $, esc, ayuda, api } = Panel;
 
-/* Qué es cada familia, en una línea (por si en 6 meses no nos acordamos). */
-const DESC_FAMILIA = {
-  blog:       "Artículos largos del blog. El sistema propone temas, escribe el borrador y vos aprobás.",
-  tendencias: "Notas cortas de novedades del sector, verificadas antes de publicarse.",
-  carrusel:   "Carruseles de Instagram (Guitar Tech y Luthería), con diseño automático y aprobación humana.",
-  web:        "La web madre ricardomusselli.com. La desarrolla un tercero; acá solo vemos si está en vivo.",
-  portfolio:  "El portfolio de trabajos. Subcarpeta de la web.",
+/* Nombre completo con marca para la tarjeta (si no está acá, se usa el de la base). */
+const NOMBRE_FAMILIA = {
+  web:        "Musselli Web",
+  blog:       "Musselli Blog",
+  tendencias: "Musselli Tendencias",
+  academia:   "Musselli Academia",
+  carrusel:   "Musselli Carruseles",
+  portfolio:  "Musselli Portfolio",
 };
 const ICONO_FAMILIA = { blog:"✒", tendencias:"◷", carrusel:"▤", web:"◉", portfolio:"❖" };
 
@@ -83,24 +84,22 @@ function familiaCard(p, DATA){
   const salud = saludFamilia(p.key, DATA);
   const enVivo = p.status === "activo";
   const pend = pendientesDe(p.key, DATA);
-  const desc = p.description || DESC_FAMILIA[p.key] || "";
-  const ini = ICONO_FAMILIA[p.key] || (p.name || "?").charAt(0).toUpperCase();
+  const nombre = NOMBRE_FAMILIA[p.key] || p.name || "—";
+  const ini = ICONO_FAMILIA[p.key] || nombre.replace(/^Musselli\s+/i, "").charAt(0).toUpperCase() || "M";
+  const estadoTxt = enVivo ? salud.label.toUpperCase()
+    : (p.status === "planeado" ? "PLANEADO" : "EN DESARROLLO");
+  const estadoCls = enVivo ? (salud.clase || "idle") : "idle";
+  const tip = enVivo ? salud.tip : "todavía no está en vivo";
   return `<a class="familia" href="familia.html?f=${encodeURIComponent(p.key)}">
-    ${enVivo ? `<div class="familia__status" title="${esc(salud.tip)}">
-        <span class="dot ${salud.clase}"></span>
-        <span class="familia__statuslabel ${salud.clase}">${salud.label}</span>
-      </div>` : ``}
-    <div class="familia__top">
-      <div class="familia__logo-wrap">
-        <img class="familia__logo" src="logos/${esc(p.key)}.png" alt=""
-          onerror="var s=document.createElement('span');s.className='familia__logo familia__logo--fallback';s.textContent='${esc(String(ini).slice(0,1))}';this.replaceWith(s);">
-      </div>
-      <div>
-        <div class="familia__name">${esc(p.name)}</div>
-        ${!enVivo ? `<span class="tag">${p.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>` : ``}
-      </div>
+    <div class="familia__status ${estadoCls}" title="${esc(tip)}">
+      <span class="dot ${estadoCls}"></span>
+      <span class="familia__statuslabel ${estadoCls}">${esc(estadoTxt)}</span>
     </div>
-    <div class="familia__desc">${esc(desc)}</div>
+    <div class="familia__logo-wrap">
+      <img class="familia__logo" src="logos/${esc(p.key)}.png" alt=""
+        onerror="var s=document.createElement('span');s.className='familia__logo familia__logo--fallback';s.textContent='${esc(String(ini).slice(0,1))}';this.replaceWith(s);">
+    </div>
+    <div class="familia__name">${esc(nombre)}</div>
     <div class="familia__foot">
       <span class="familia__pend">${pend ? `<b>${pend}</b> por aprobar` : `Sin pendientes`}</span>
       <span class="familia__enter">Entrar →</span>
