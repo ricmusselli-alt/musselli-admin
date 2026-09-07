@@ -94,6 +94,7 @@
     <h3 id="pTitle">Nuevo proveedor</h3>
     <label class="campo"><span>Clave · sin espacios (ej. r2-academia)</span><input id="p_key" required pattern="[a-z0-9\-]+"></label>
     <label class="campo"><span>Nombre</span><input id="p_name" required></label>
+    <label class="campo"><span>¿Para qué sirve? · qué se rompe si lo damos de baja</span><textarea id="p_paraque" rows="3" placeholder="ej: Base de datos y funciones de automatización. Si se cae, se cae todo el sistema."></textarea></label>
     <label class="campo"><span>Familia a la que pertenece</span><select id="p_prop"><option value="">— Compartido —</option></select></label>
     <label class="campo"><span>Link a su consola</span><input id="p_console" placeholder="https://…"></label>
     <label class="campo"><span>Plan contratado</span><input id="p_plan" placeholder='ej: Pro, Free, Team 5 asientos'></label>
@@ -218,7 +219,7 @@ function render(){
       ? `<span class="src-api" title="Centinela te avisa ${v.aviso_dias_antes || 3} día(s) antes de la renovación">● ON · ${v.aviso_dias_antes || 3}d</span>`
       : '<span class="src-man">off</span>';
     return `<tr>
-      <td class="nom">${esc(v.name)}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ""}</td>
+      <td class="nom">${esc(v.name)}${v.para_que ? " " + ayuda(v.para_que) : ""}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ""}</td>
       <td>${fam}</td>
       <td>${v.plan_name ? esc(v.plan_name) : "—"}</td>
       <td>${costo}</td>
@@ -240,6 +241,7 @@ function openProv(v){
     DATA.properties.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join("");
   $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
   $("#p_name").value = v?.name || "";
+  $("#p_paraque").value = v?.para_que || "";
   $("#p_prop").value = v?.property_key || "";
   $("#p_console").value = v?.console_url || "";
   $("#p_plan").value = v?.plan_name || "";
@@ -275,6 +277,7 @@ $("#provForm").addEventListener("submit", async (ev) => {
   const existing = DATA.providers.find(x => x.key === $("#p_key").value.trim());
   const provider = {
     key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
+    para_que: $("#p_paraque").value.trim(),
     property_key: $("#p_prop").value || null, console_url: $("#p_console").value.trim(),
     plan_name: $("#p_plan").value.trim(), plan_price: priceRaw === "" ? null : Number(priceRaw),
     currency: $("#p_cur").value, billing_cycle: $("#p_cycle").value,
