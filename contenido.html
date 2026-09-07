@@ -169,11 +169,12 @@ function ttConnHtml(){
 
 function renderCarrusel(){
   $("#hTitle").textContent = "Carruseles por aprobar";
-  $("#hDesc").textContent = "Cada borrador con sus 7 slides a tamaño real. Publicá en Instagram, enviá a TikTok, o rechazá.";
+  $("#hDesc").textContent = "Revisá lo pendiente y, más abajo, el historial de todos los carruseles generados (Instagram y TikTok).";
   const drafts = DATA.carrusel_drafts || [];
-  $("#revList").innerHTML = drafts.length
+  const pendHtml = drafts.length
     ? drafts.map(carruselItem).join("")
     : '<div class="vacio">No hay carruseles esperando aprobación.</div>';
+  $("#revList").innerHTML = pendHtml + historialTexto(DATA.carrusel_historial || []);
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -261,7 +262,8 @@ function renderPlaceholder(t){
   $("#hDesc").textContent = "Carruseles publicados en TikTok. Conectá o renová las cuentas acá.";
   $("#revList").innerHTML = ttConnHtml() +
     `<div class="vacio">La publicación directa se habilita cuando TikTok apruebe la app.
-     Por ahora, cada carrusel se manda a los borradores de TikTok con el botón "Enviar a TikTok" de <b>Carruseles Instagram</b>.</div>`;
+     Por ahora, cada carrusel se manda a los borradores de TikTok con el botón "Enviar a TikTok" de <b>Carruseles Instagram</b>.</div>` +
+    historialTexto(DATA.carrusel_historial || []);
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
