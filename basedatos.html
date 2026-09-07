@@ -12,13 +12,13 @@
   .filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
   .filtros select,.filtros input{width:auto;min-width:150px}
   .seg{display:inline-flex;border:1px solid var(--linea-fuerte);border-radius:22px;overflow:hidden}
-  .seg button{border:0;border-radius:0;background:transparent;color:var(--texto-2);padding:8px 15px;font-size:10.5px}
+  .seg button{border:0;border-radius:0;background:transparent;color:var(--texto-2);padding:8px 15px;font-size:var(--fs-micro)}
   .seg button.on{background:var(--dorado);color:var(--negro)}
-  .lead-table{width:100%;border-collapse:collapse;font-size:13px}
-  .lead-table th{text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobre);
+  .lead-table{width:100%;border-collapse:collapse;font-size:var(--fs-small)}
+  .lead-table th{text-align:left;font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;color:var(--cobre);
     padding:10px 12px;border-bottom:1px solid var(--linea-fuerte)}
   .lead-table td{padding:11px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2)}
-  .cat-pill{font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid}
+  .cat-pill{font-size:var(--fs-micro);letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid}
   .cat-gt{color:var(--borgona-vivo);border-color:var(--borgona-vivo)}
   .cat-lu{color:var(--cobre);border-color:var(--cobre)}
   .cat-ambos{color:var(--dorado);border-color:var(--dorado)}
@@ -58,7 +58,7 @@
     </div>
     <div class="filtros">
       <button class="btn-solid btn-mini" id="btnEnvio">Enviar ahora</button>
-      <span class="mini-note" id="envAlcance" style="font-size:11px;color:var(--texto-mute)"></span>
+      <span class="mini-note" id="envAlcance" style="font-size:var(--fs-micro);color:var(--texto-mute)"></span>
     </div>
     <p class="msg" id="envMsg"></p>
   </div>
@@ -166,8 +166,8 @@ $("#btnEnvio").addEventListener("click", async () => {
   if (link && !/^https?:\/\//i.test(link)) { m.className = "msg err"; m.textContent = "El link tiene que empezar con http."; return; }
   const n = cuenta(audEnvio);
   if (!confirm(`Vas a enviar "${asunto}" a ~${n} contacto${n===1?"":"s"} de ${nombreSeg[audEnvio]}.\n\nSale AHORA por MailerLite y no se puede deshacer. ¿Confirmás?`)) return;
-  $("#btnEnvio").disabled = true; $("#btnEnvio").textContent = "Enviando…";
-  m.className = "msg"; m.textContent = "Creando y enviando la campaña…";
+  $("#btnEnvio").disabled = true; $("#btnEnvio").innerHTML = '<span class="spin"></span>Enviando…';
+  m.className = "msg"; m.innerHTML = '<span class="spin" style="border-color:rgba(200,155,108,.35);border-top-color:var(--cobre)"></span> Creando y enviando la campaña… no cierres esta pantalla.';
   try {
     const r = await edgeFn("enviar-campana", { segmento: audEnvio, asunto, cuerpo, link, link_texto });
     m.className = "msg ok";
@@ -177,7 +177,7 @@ $("#btnEnvio").addEventListener("click", async () => {
     m.className = "msg err";
     m.textContent = "No se pudo enviar: " + e.message;
   } finally {
-    $("#btnEnvio").disabled = false; $("#btnEnvio").textContent = "Enviar ahora";
+    $("#btnEnvio").disabled = false; $("#btnEnvio").innerHTML = "Enviar ahora";
   }
 });
 

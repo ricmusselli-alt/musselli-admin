@@ -11,7 +11,7 @@
   /* ===== Costos — layout propio, reconstruido ===== */
   .cx-tabs{display:inline-flex;gap:3px;background:var(--panel-2);border:1px solid var(--linea-fuerte);
     border-radius:24px;padding:4px;margin-bottom:26px}
-  .cx-tabs button{background:none;border:0;color:var(--texto-mute);font-family:var(--sans);font-size:12px;
+  .cx-tabs button{background:none;border:0;color:var(--texto-mute);font-family:var(--sans);font-size:var(--fs-micro);
     font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:9px 20px;border-radius:20px;cursor:pointer;
     transition:background .18s ease,color .18s ease}
   .cx-tabs button:hover{color:var(--texto-2)}
@@ -23,11 +23,11 @@
     border:1px solid var(--linea);border-radius:16px;padding:20px 22px;box-shadow:var(--sombra-card)}
   .cx-kpi::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;pointer-events:none;
     background:radial-gradient(closest-side,rgba(200,155,108,.28),transparent);opacity:.45}
-  .cx-kpi__l{display:flex;align-items:center;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  .cx-kpi__l{display:flex;align-items:center;font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;
     color:var(--cobre);margin-bottom:10px}
-  .cx-kpi__v{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1;color:var(--texto)}
+  .cx-kpi__v{font-family:var(--serif);font-weight:600;font-size:var(--fs-value-lg);line-height:1;color:var(--texto)}
   .cx-kpi__v.dorado{color:var(--dorado)}
-  .cx-kpi__s{font-size:12px;color:var(--texto-mute);margin-top:6px}
+  .cx-kpi__s{font-size:var(--fs-micro);color:var(--texto-mute);margin-top:6px}
 
   /* dos columnas: gasto por familia | próximas renovaciones */
   .cx-2col{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px}
@@ -38,15 +38,15 @@
   .cx-card::before{content:"";position:absolute;inset:0;pointer-events:none;
     background:repeating-linear-gradient(135deg,rgba(204,163,83,.02) 0 2px,transparent 2px 14px)}
   .cx-card > *{position:relative}
-  .cx-card h3{font-family:var(--serif);font-weight:600;font-size:18px;margin:0 0 4px;display:flex;align-items:center}
-  .cx-card .cx-hint{font-size:12px;color:var(--texto-mute);margin:0 0 16px}
+  .cx-card h3{font-family:var(--serif);font-weight:600;font-size:var(--fs-h3);margin:0 0 4px;display:flex;align-items:center}
+  .cx-card .cx-hint{font-size:var(--fs-small);color:var(--texto-mute);margin:0 0 16px}
 
   /* gráfico de barras */
   .cx-chart{width:100%;height:190px;display:block;overflow:visible}
   .cx-chart .bar{fill:var(--cobre)}
   .cx-chart .bar.cur{fill:var(--dorado)}
-  .cx-chart text{fill:var(--texto-mute);font-size:13px;font-family:var(--sans)}
-  .cx-empty{color:var(--texto-mute);font-size:12.5px;padding:24px;text-align:center;
+  .cx-chart text{fill:var(--texto-mute);font-size:var(--fs-micro);font-family:var(--sans)}
+  .cx-empty{color:var(--texto-mute);font-size:var(--fs-small);padding:24px;text-align:center;
     border:1px dashed var(--linea-fuerte);border-radius:12px}
 
   /* lista de próximas renovaciones */
@@ -56,17 +56,17 @@
   .cx-ren .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--cobre)}
   .cx-ren .dot.soon{background:var(--aviso)}
   .cx-ren .dot.now{background:var(--down)}
-  .cx-ren__name{flex:1;min-width:0;font-size:13px;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cx-ren__name .bell{color:var(--dorado);font-size:12px;margin-left:5px}
-  .cx-ren__when{font-size:12px;color:var(--texto-mute);flex:0 0 auto}
-  .cx-ren__amt{font-size:12px;color:var(--texto-2);flex:0 0 auto;min-width:74px;text-align:right}
+  .cx-ren__name{flex:1;min-width:0;font-size:var(--fs-small);color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cx-ren__name .bell{color:var(--dorado);font-size:var(--fs-micro);margin-left:5px}
+  .cx-ren__when{font-size:var(--fs-micro);color:var(--texto-mute);flex:0 0 auto}
+  .cx-ren__amt{font-size:var(--fs-small);color:var(--texto-2);flex:0 0 auto;min-width:74px;text-align:right}
 
   /* consumo en vivo */
   .cx-live-grid{display:flex;flex-wrap:wrap;gap:26px}
   .cx-live-block{min-width:180px;flex:1}
-  .cx-live-block .l{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--cobre)}
-  .cx-live-block .v{font-family:var(--serif);font-size:26px;color:var(--texto);margin:4px 0}
-  .cx-live-block .s{font-size:12px;color:var(--texto-mute)}
+  .cx-live-block .l{font-size:var(--fs-micro);letter-spacing:.13em;text-transform:uppercase;color:var(--cobre)}
+  .cx-live-block .v{font-family:var(--serif);font-size:var(--fs-value);color:var(--texto);margin:4px 0}
+  .cx-live-block .s{font-size:var(--fs-micro);color:var(--texto-mute)}
   .cx-bar{height:6px;background:rgba(245,240,230,.08);border-radius:3px;overflow:hidden;margin:7px 0}
   .cx-bar > i{display:block;height:100%}
 
@@ -77,31 +77,32 @@
     border:1px solid rgba(200,155,108,.24);border-radius:16px;padding:24px 24px 20px;box-shadow:var(--sombra-card);
     transition:transform .22s ease,border-color .22s ease}
   .cx-prov:hover{transform:translateY(-3px);border-color:rgba(204,163,83,.42)}
-  .cx-prov__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
-  .cx-prov__id{display:flex;align-items:center;gap:12px;min-width:0}
-  .cx-logo{width:34px;height:34px;flex:0 0 auto;border-radius:9px;overflow:hidden;
-    background:rgba(245,240,230,.92);display:flex;align-items:center;justify-content:center}
-  .cx-logo img{width:100%;height:100%;object-fit:contain;padding:5px}
+  .cx-prov__head{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+  .cx-logo{width:60px;height:60px;flex:0 0 auto;border-radius:14px;overflow:hidden;
+    background:rgba(245,240,230,.92);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.28)}
+  .cx-logo img{width:100%;height:100%;object-fit:contain;padding:9px}
   .cx-logo--fb{background:var(--panel-3);border:1px solid var(--linea-fuerte)}
-  .cx-logo--fb::before{content:attr(data-ini);font-family:var(--serif);font-weight:600;font-size:16px;color:var(--dorado)}
-  .cx-prov__name{font-family:var(--serif);font-weight:600;font-size:21px;color:var(--texto);line-height:1.15;
+  .cx-logo--fb::before{content:attr(data-ini);font-family:var(--serif);font-weight:600;font-size:var(--fs-h2);color:var(--dorado)}
+  .cx-prov__idcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .cx-prov__name{font-family:var(--serif);font-weight:600;font-size:var(--fs-h3);color:var(--texto);line-height:1.15;
     display:flex;align-items:center;flex-wrap:wrap;min-width:0}
-  .cx-prov__cost{font-family:var(--serif);font-weight:600;font-size:24px;color:var(--dorado);white-space:nowrap}
-  .cx-prov__cost small{display:block;font-family:var(--sans);font-size:13px;color:var(--texto-mute);
-    text-align:right;font-weight:400}
-  .cx-prov__rows{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;font-size:15px;margin-bottom:14px}
+  .cx-prov__cost{font-family:var(--serif);font-weight:600;font-size:var(--fs-value-lg);color:var(--dorado);line-height:1}
+  .cx-prov__cost small{font-family:var(--sans);font-size:var(--fs-micro);color:var(--texto-mute);font-weight:400;margin-left:7px}
+  .cx-prov__rows{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;font-size:var(--fs-small);margin-bottom:14px}
   .cx-prov__rows dt{color:var(--texto-mute);letter-spacing:.03em}
   .cx-prov__rows dd{margin:0;color:var(--texto-2);text-align:right}
-  .cx-prov__rows dd .mini{color:var(--texto-mute);font-size:13px}
+  .cx-prov__rows dd .mini{color:var(--texto-mute);font-size:var(--fs-micro)}
   .cx-prov__foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
     border-top:1px solid rgba(245,240,230,.07);padding-top:14px}
-  .cx-src{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+  .cx-src{font-size:var(--fs-micro);letter-spacing:.08em;text-transform:uppercase}
   .cx-src.api{color:var(--ok)} .cx-src.man{color:var(--texto-mute)}
-  .cx-badge{display:inline-block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;
+  .cx-badge{display:inline-block;font-size:var(--fs-micro);letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;
     border-radius:16px;border:1px solid;line-height:1.4}
   .cx-badge.on{border-color:rgba(204,163,83,.5);color:var(--dorado)}
   .cx-badge.off{border-color:var(--linea);color:var(--texto-mute)}
   .cx-badge.ren-soon{border-color:rgba(198,91,91,.6);color:#e79a9c}
+  .cx-badge.persona{border-color:rgba(200,155,108,.5);color:var(--cobre);background:rgba(200,155,108,.08)}
 
   .cx-addbar{margin-top:18px}
 
@@ -109,14 +110,14 @@
   dialog{background:var(--panel-2);color:var(--texto);border:1px solid var(--linea-fuerte);border-radius:12px;
     padding:24px;max-width:480px;width:92vw;max-height:90vh;overflow-y:auto}
   dialog::backdrop{background:rgba(0,0,0,.62)}
-  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 16px;font-size:20px}
+  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 16px;font-size:var(--fs-h3)}
   .dlg-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
   .row2{display:flex;gap:8px} .row2 > *{flex:1}
   .campo--check{display:flex;align-items:center;gap:9px}
-  .campo--check input{width:auto} .campo--check span{margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--texto-2)}
+  .campo--check input{width:auto} .campo--check span{margin:0;text-transform:none;letter-spacing:0;font-size:var(--fs-small);color:var(--texto-2)}
 
   @media(max-width:560px){
-    .cx-kpi__v{font-size:28px}
+    .cx-kpi__v{font-size:var(--fs-value)}
     .cx-prov__rows{grid-template-columns:1fr;gap:3px}
     .cx-prov__rows dd{text-align:left}
   }
@@ -190,6 +191,15 @@
       <option value="sistema">Sistema (ecosistema Musselli)</option>
       <option value="personal">Personal (Apple, celular, etc.)</option>
     </select></label>
+    <div id="p_personaWrap" hidden>
+      <label class="campo"><span>¿A quién corresponde?</span><select id="p_persona">
+        <option value="ricardo">Ricardo</option>
+        <option value="esposa">Esposa</option>
+        <option value="hija">Hija</option>
+        <option value="otro">Otro…</option>
+      </select></label>
+      <label class="campo" id="p_personaOtroWrap" hidden><span>Nombre de la persona</span><input id="p_personaOtro" placeholder="ej: Mamá, Hermano, socio…"></label>
+    </div>
     <label class="campo"><span>¿Para qué sirve? · qué se rompe si lo damos de baja</span><textarea id="p_paraque" rows="3" placeholder="ej: Base de datos y funciones de automatización. Si se cae, se cae todo."></textarea></label>
     <label class="campo"><span>Familia a la que pertenece</span><select id="p_prop"><option value="">— Compartido —</option></select></label>
     <label class="campo"><span>Link a su consola</span><input id="p_console" placeholder="https://…"></label>
@@ -337,7 +347,7 @@ function render(){
   $("#renTitle").innerHTML = "Próximas renovaciones " + ayuda("Todas las renovaciones futuras ordenadas por cercanía. Rojo = 7 días o menos. Amarillo = 30 días o menos. La campana = tiene el aviso encendido.");
   const rl = $("#renList");
   if (!proximas.length){
-    rl.innerHTML = `<li style="color:var(--texto-mute);font-size:12.5px">Ningún proveedor tiene fecha de renovación cargada.</li>`;
+    rl.innerHTML = `<li style="color:var(--texto-mute);font-size:var(--fs-small)">Ningún proveedor tiene fecha de renovación cargada.</li>`;
   } else {
     rl.innerHTML = proximas.slice(0, 8).map(({ v, d }) => {
       const cls = d <= 7 ? "now" : d <= 30 ? "soon" : "";
@@ -367,7 +377,7 @@ function render(){
     const dReset = el.reset ? Math.max(0, Math.round((new Date(el.reset) - Date.now())/86400000)) : null;
     bloques.push(`<div class="cx-live-block">
       <div class="l">ElevenLabs · créditos</div>
-      <div class="v">${el.usados.toLocaleString()} <span style="font-size:14px;color:var(--texto-mute)">/ ${el.limite.toLocaleString()} (${pct}%)</span></div>
+      <div class="v">${el.usados.toLocaleString()} <span style="font-size:var(--fs-micro);color:var(--texto-mute)">/ ${el.limite.toLocaleString()} (${pct}%)</span></div>
       <div class="cx-bar"><i style="width:${Math.min(100,pct)}%;background:${col}"></i></div>
       <div class="s">${dReset!=null ? `renueva en ${dReset} día${dReset===1?"":"s"}` : ""}${el.permite_excedente ? " · permite excedente" : " · se frena al 100%"}</div>
     </div>`);
@@ -414,17 +424,20 @@ function render(){
         ? `<span class="cx-badge on">🔔 ${v.aviso_dias_antes || 3}d antes</span>`
         : `<span class="cx-badge off">sin aviso</span>`;
 
+      const personaHtml = (esPersonal && v.persona)
+        ? `<span class="cx-badge persona">👤 ${esc(v.persona.charAt(0).toUpperCase() + v.persona.slice(1))}</span>` : "";
+
       const src = v.usage_source === "api" ? `<span class="cx-src api">● API</span>`
         : v.usage_source === "contador" ? `<span class="cx-src api">● en vivo</span>`
         : `<span class="cx-src man">manual</span>`;
 
       return `<article class="cx-prov">
         <div class="cx-prov__head">
-          <div class="cx-prov__id">
-            ${logoDe(v)}
+          ${logoDe(v)}
+          <div class="cx-prov__idcol">
             <div class="cx-prov__name">${esc(v.name)}${v.para_que ? " " + ayuda(v.para_que) : ""}</div>
+            <div class="cx-prov__cost">${costo}</div>
           </div>
-          <div class="cx-prov__cost">${costo}</div>
         </div>
         <dl class="cx-prov__rows">
           ${esPersonal ? "" : `<dt>Familia</dt><dd>${fam}</dd>`}
@@ -432,11 +445,11 @@ function render(){
           <dt>Renueva</dt><dd>${renHtml}</dd>
           <dt>Medio de pago</dt><dd>${v.medio_pago ? esc(v.medio_pago) : "—"}</dd>
         </dl>
-        <div style="margin-bottom:12px">${avisoHtml}</div>
+        <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">${personaHtml}${avisoHtml}</div>
         <div class="cx-prov__foot">
           ${src}
           <span style="display:flex;gap:8px;align-items:center">
-            ${v.console_url ? `<a href="${esc(v.console_url)}" target="_blank" rel="noopener" style="font-size:12px">consola ↗</a>` : ""}
+            ${v.console_url ? `<a href="${esc(v.console_url)}" target="_blank" rel="noopener" style="font-size:var(--fs-micro)">consola ↗</a>` : ""}
             <button class="btn-ghost btn-mini" data-edit="${esc(v.key)}">Editar</button>
           </span>
         </div>
@@ -455,6 +468,12 @@ function openProv(v){
   $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
   $("#p_name").value = v?.name || "";
   $("#p_cat").value = v?.categoria || (filtro === "personal" ? "personal" : "sistema");
+  // ¿a quién corresponde? (sólo gastos personales)
+  const PERSONAS_FIJAS = ["ricardo", "esposa", "hija"];
+  const per = (v?.persona || "").trim();
+  if (per && !PERSONAS_FIJAS.includes(per)) { $("#p_persona").value = "otro"; $("#p_personaOtro").value = per; }
+  else { $("#p_persona").value = per || "ricardo"; $("#p_personaOtro").value = ""; }
+  syncPersona();
   $("#p_paraque").value = v?.para_que || "";
   $("#p_prop").value = v?.property_key || "";
   $("#p_console").value = v?.console_url || "";
@@ -484,6 +503,13 @@ $("#cxTabs").addEventListener("click", (ev) => {
   render();
 });
 $("#pCancel").addEventListener("click", () => dlg.close());
+function syncPersona(){
+  const esPersonal = $("#p_cat").value === "personal";
+  $("#p_personaWrap").hidden = !esPersonal;
+  $("#p_personaOtroWrap").hidden = !esPersonal || $("#p_persona").value !== "otro";
+}
+$("#p_cat").addEventListener("change", syncPersona);
+$("#p_persona").addEventListener("change", syncPersona);
 $("#p_avisoRen").addEventListener("change", (e) => { $("#p_avisoDiasWrap").style.opacity = e.target.checked ? "1" : ".4"; });
 $("#addProv").addEventListener("click", () => openProv(null));
 $("#cxProvs").addEventListener("click", (ev) => {
@@ -497,6 +523,9 @@ $("#provForm").addEventListener("submit", async (ev) => {
   const provider = {
     key: $("#p_key").value.trim(), name: $("#p_name").value.trim(),
     categoria: $("#p_cat").value,
+    persona: $("#p_cat").value === "personal"
+      ? ($("#p_persona").value === "otro" ? $("#p_personaOtro").value.trim() : $("#p_persona").value)
+      : null,
     para_que: $("#p_paraque").value.trim(),
     property_key: $("#p_prop").value || null, console_url: $("#p_console").value.trim(),
     plan_name: $("#p_plan").value.trim(), plan_price: priceRaw === "" ? null : Number(priceRaw),
