@@ -8,30 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
 <style>
-  .tipos{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:18px}
-  .tipo{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;text-align:left;color:inherit;
-    background:linear-gradient(165deg,var(--panel-2),var(--panel) 60%);border:1px solid rgba(200,155,108,.18);
-    border-radius:16px;padding:22px;box-shadow:var(--sombra-card);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
-  .tipo:hover{transform:translateY(-4px);border-color:rgba(204,163,83,.5);box-shadow:var(--sombra-hover)}
-  .tipo[aria-disabled=true]{opacity:.5;pointer-events:none}
-  .tipo .ico{font-size:22px;display:flex;align-items:center;justify-content:center;
-    width:46px;height:46px;border-radius:12px;background:rgba(245,240,230,.05);margin-bottom:4px}
-  .tipo .ico img{width:30px;height:30px;object-fit:contain;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
-  .tipo h3{font-family:var(--serif);font-weight:600;font-size:19px;margin:2px 0 0}
-  .tipo p{font-size:12px;color:var(--texto-2);margin:0;line-height:1.5}
-  .tipo .badge{margin-top:10px;font-size:11px;color:var(--texto-mute)}
-  .tipo .badge b{color:var(--aviso)}
-
-  .back{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  /* el hub reutiliza .familias / .familia de panel.css (mismo patrón que Portada) */
+  .back{display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-micro);letter-spacing:.14em;text-transform:uppercase;
     color:var(--cobre);cursor:pointer;background:none;border:0;padding:0;margin-bottom:16px}
 
   .revitem{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:20px}
   .revitem__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .revitem__head .t{font-family:var(--serif);font-weight:600;font-size:18px;flex:1;min-width:200px}
+  .revitem__head .t{font-family:var(--serif);font-weight:600;font-size:var(--fs-h3);flex:1;min-width:200px}
   .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
   .slides img{height:360px;width:auto;border-radius:6px;flex:0 0 auto;scroll-snap-align:center;
     border:1px solid rgba(200,155,108,.2);background:#0e0d0c}
-  .cap{font-size:13px;color:var(--texto-2);white-space:pre-wrap;margin:12px 0;line-height:1.6;
+  .cap{font-size:var(--fs-small);color:var(--texto-2);white-space:pre-wrap;margin:12px 0;line-height:1.6;
     max-height:9em;overflow:auto;border-left:2px solid var(--linea-fuerte);padding-left:12px}
   .revitem__acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
   /* botón "pensando" */
@@ -39,7 +26,7 @@
     border-top-color:var(--hueso);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
   .btn-danger .spin{border-color:rgba(198,91,91,.35);border-top-color:#e79a9c}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .procesando{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--cobre);margin-top:4px}
+  .procesando{display:flex;align-items:center;gap:9px;font-size:var(--fs-micro);color:var(--cobre);margin-top:4px}
   .procesando .spin{margin:0}
 </style>
 </head>
@@ -56,7 +43,7 @@
 
   <!-- vista de cards -->
   <div id="viewHub">
-    <div class="tipos" id="tipos"></div>
+    <div class="familias" id="tipos"></div>
   </div>
 
   <!-- vista de revisión de un tipo -->
@@ -74,10 +61,10 @@ const { $, esc, ayuda, api, edgeFn } = Panel;
 let DATA = null;
 
 const TIPOS = [
-  { key:"carrusel",   logo:"carruseles", nom:"Carruseles",  desc:"Guitar Tech y Luthería. Previsualizás las 7 slides y aprobás o rechazás.", listo:true },
-  { key:"blog",       logo:"blog",       nom:"Blog",        desc:"Artículos largos. Revisás el borrador antes de publicar.", listo:true },
-  { key:"tendencias", logo:"tendencias", nom:"Tendencias",  desc:"Notas cortas verificadas. Revisás antes de publicar.", listo:true },
-  { key:"tiktok",     ico:"♪",           nom:"TikTok",      desc:"Próximamente: carruseles en formato 9:16 para TikTok.", listo:false },
+  { key:"carrusel",   logo:"instagram",  nom:"Musselli Carruseles",  listo:true, famKey:"carrusel" },
+  { key:"blog",       logo:"blog",       nom:"Musselli Blog",        listo:true, famKey:"blog" },
+  { key:"tendencias", logo:"tendencias", nom:"Musselli Tendencias",  listo:true, famKey:"tendencias" },
+  { key:"tiktok",     logo:"tiktok", ico:"♪", nom:"Musselli TikTok",  listo:false },
 ];
 
 function pendDe(key){
@@ -87,18 +74,40 @@ function pendDe(key){
   return 0;
 }
 
+// Luz de estado a partir de los chequeos del centinela (mismo criterio que Portada).
+function saludContenido(fam){
+  const checks = (DATA.health_checks || []).filter(c => c.familia === fam);
+  const fallas = checks.filter(c => c.estado === "falla");
+  const avisos = checks.filter(c => c.estado === "aviso");
+  if (fallas.length) return { cls:"down", txt:"PROBLEMA", tip: fallas.map(c=>c.nombre+": "+(c.detalle||"falla")).join(" · ") };
+  if (avisos.length) return { cls:"warn", txt:"ATENCIÓN", tip: avisos.map(c=>c.nombre+": "+(c.detalle||"aviso")).join(" · ") };
+  if (checks.length) return { cls:"up", txt:"OK", tip: checks.map(c=>c.nombre).join(" · ") };
+  return { cls:"up", txt:"OK", tip:"funcionando" };
+}
+
 function renderHub(){
   $("#hTitle").textContent = "Contenido";
   $("#hDesc").textContent = "Todo lo que Blog, Tendencias y Carruseles generan, esperando tu OK. Elegí qué querés revisar.";
   $("#tipos").innerHTML = TIPOS.map(t => {
     const n = pendDe(t.key);
-    const dis = !t.listo;
-    const icoHtml = t.logo ? `<img src="logos/${t.logo}.png" alt="">` : (t.ico || "");
-    return `<a class="tipo" ${dis ? 'aria-disabled="true"' : `href="#${t.key}"`}>
-      <span class="ico">${icoHtml}</span>
-      <h3>${t.nom}</h3>
-      <p>${esc(t.desc)}</p>
-      <span class="badge">${t.listo ? (n ? `<b>${n}</b> por aprobar` : "sin pendientes") : "en preparación"}</span>
+    const s = t.listo ? saludContenido(t.famKey || t.key)
+      : { cls:"idle", txt:"EN DESARROLLO", tip:"todavía en preparación" };
+    const ini = t.ico || t.nom.replace(/^Musselli\s+/i, "").charAt(0).toUpperCase() || "M";
+    const icoBody = t.logo
+      ? `<img class="familia__logo" src="logos/${esc(t.logo)}.png" alt=""
+          onerror="var s=document.createElement('span');s.className='familia__logo familia__logo--fallback';s.textContent='${esc(String(ini).slice(0,1))}';this.replaceWith(s);">`
+      : `<span class="familia__logo familia__logo--fallback">${esc(String(ini).slice(0,1))}</span>`;
+    return `<a class="familia" href="#${t.key}">
+      <div class="familia__status ${s.cls}" title="${esc(s.tip)}">
+        <span class="dot ${s.cls}"></span>
+        <span class="familia__statuslabel ${s.cls}">${s.txt}</span>
+      </div>
+      <div class="familia__logo-wrap">${icoBody}</div>
+      <div class="familia__name">${esc(t.nom)}</div>
+      <div class="familia__foot">
+        <span class="familia__pend">${n ? `<b>${n}</b> por aprobar` : "Sin pendientes"}</span>
+        <span class="familia__enter">Entrar →</span>
+      </div>
     </a>`;
   }).join("");
   $("#viewHub").hidden = false;
@@ -132,13 +141,17 @@ function ttConnHtml(){
   const OAUTH = Panel.SUPABASE_URL + "/functions/v1/tiktok-oauth?category=";
   const fila = (cat, label) => {
     const est = toks[cat] ? '<span style="color:var(--ok)">conectada</span>' : '<span style="color:var(--texto-mute)">sin conectar</span>';
-    return `<span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--texto-2)">
+    return `<span style="display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-micro);color:var(--texto-2)">
       ${label}: ${est}
       <a class="btn btn-ghost btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener" style="text-decoration:none">Conectar / renovar</a></span>`;
   };
   return `<div class="card" style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
-    <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Cuentas de TikTok</span>
+    <span style="font-size:var(--fs-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--cobre)">Cuentas de TikTok</span>
     ${fila("luthier","Luthería")} ${fila("guitartech","Guitar Tech")}
+    <label style="display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-micro);color:var(--texto-2);cursor:pointer">
+      <input type="checkbox" id="tt_directo" style="width:auto">
+      Publicar directo ${ayuda("Postea el carrusel en el perfil de TikTok en el momento (solo funciona si la cuenta está en privado, hasta que TikTok apruebe la app). Sin tildar: va a borradores.", true)}
+    </label>
   </div>`;
 }
 
@@ -160,7 +173,7 @@ function textoItem(d, product){
   const preview = cuerpo.length > 1400 ? cuerpo.slice(0, 1400) + "…" : cuerpo;
   const linea = d.category === "luthier" ? "Luthería" : "Guitar Tech";
   const extra = product === "trend" && (c.price_usd || c.source)
-    ? `<div class="mini-note" style="font-size:11px;color:var(--texto-mute);margin:6px 0">
+    ? `<div class="mini-note" style="font-size:var(--fs-micro);color:var(--texto-mute);margin:6px 0">
          ${c.price_usd ? `Precio: USD $${esc(String(c.price_usd))}` : ""}${c.price_usd && c.source ? " · " : ""}${c.source ? `Fuente: ${esc(c.source)}` : ""}
        </div>` : "";
   return `<div class="revitem" data-id="${esc(d.id)}">
@@ -194,8 +207,8 @@ function renderTexto(t){
 
 function renderPlaceholder(t){
   $("#hTitle").textContent = t.nom;
-  $("#hDesc").textContent = t.desc;
-  $("#revList").innerHTML = `<div class="vacio">Se habilita cuando integremos TikTok.</div>`;
+  $("#hDesc").textContent = "En preparación: carruseles en formato 9:16 para TikTok.";
+  $("#revList").innerHTML = `<div class="vacio">Se habilita cuando TikTok apruebe la app.</div>`;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -247,13 +260,17 @@ $("#revList").addEventListener("click", async (ev) => {
   }
   const tt = ev.target.closest("[data-tt]");
   if (tt){
-    if (!confirm("¿Enviar este carrusel a los borradores de TikTok?\n\nDespués entrás a la app de TikTok, le ponés el sonido y lo posteás.")) return;
-    busy(tt, "Enviando");
+    const directo = !!(document.getElementById("tt_directo") && document.getElementById("tt_directo").checked);
+    const msg = directo
+      ? "¿Publicar este carrusel DIRECTO en el perfil de TikTok ahora? (la cuenta tiene que estar en privado)"
+      : "¿Enviar este carrusel a los borradores de TikTok? Después entrás a la app, le ponés el sonido y lo posteás.";
+    if (!confirm(msg)) return;
+    busy(tt, directo ? "Publicando" : "Enviando");
     try {
-      const r = await edgeFn("tiktok-publish", { item_id: tt.dataset.tt, modo: "borrador" });
-      alert("Enviado a TikTok. Abrí la app (bandeja / borradores) para terminarlo y postearlo." + (r.sandbox ? "\n\n(modo prueba / sandbox)" : ""));
+      const r = await edgeFn("tiktok-publish", { item_id: tt.dataset.tt, modo: directo ? "directo" : "borrador" });
+      alert((directo ? "Publicado en TikTok. Revisá el perfil." : "Enviado a los borradores de TikTok. Abrí la app para terminarlo.") + (r.sandbox ? "\n\n(modo prueba / sandbox)" : ""));
       unbusy(tt);
-    } catch(e){ alert("No se pudo enviar a TikTok: " + e.message); unbusy(tt); }
+    } catch(e){ alert("No se pudo: " + e.message); unbusy(tt); }
   }
   if (rej){
     if (!confirm("¿Rechazar este borrador? No se va a publicar.")) return;
