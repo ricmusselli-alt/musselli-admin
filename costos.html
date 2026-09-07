@@ -8,35 +8,112 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="panel.css">
 <style>
-  .cost-top{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:32px}
-  @media(min-width:820px){ .cost-top{grid-template-columns:280px 1fr} }
-  .big-total{display:flex;flex-direction:column;justify-content:center;gap:6px}
-  .big-total .n{font-family:var(--serif);font-weight:600;font-size:46px;line-height:1;color:var(--dorado)}
-  .big-total .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cobre)}
-  .big-total .s{font-size:12px;color:var(--texto-mute)}
-  .chart{width:100%;height:180px;display:block}
-  .chart .bar{fill:var(--cobre)}
-  .chart .bar.cur{fill:var(--dorado)}
-  .chart text{fill:var(--texto-mute);font-size:9px;font-family:var(--sans)}
-  .prov-table{width:100%;border-collapse:collapse;font-size:13px}
-  .prov-table th{text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobre);
-    padding:10px 12px;border-bottom:1px solid var(--linea-fuerte)}
-  .prov-table td{padding:11px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2)}
-  .prov-table tr:hover td{background:rgba(245,240,230,.02)}
-  .prov-table .nom{color:var(--texto);font-weight:400}
-  .src-api{color:var(--ok);font-size:11px}
-  .src-man{color:var(--texto-mute);font-size:11px}
-  .ren-soon{color:var(--down)}
-  dialog{background:var(--panel);color:var(--texto);border:1px solid var(--linea-fuerte);border-radius:8px;padding:22px;max-width:460px;width:92vw}
-  dialog::backdrop{background:rgba(0,0,0,.6)}
-  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 14px;font-size:19px}
-  .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-  .row2{display:flex;gap:8px}
-  .row2 > *{flex:1}
-  .catTabs{display:inline-flex;gap:2px;background:var(--panel);border:1px solid var(--linea-fuerte);border-radius:8px;padding:3px;margin-bottom:22px}
-  .catTabs button{background:none;border:0;color:var(--texto-mute);font-family:var(--sans);font-size:12px;letter-spacing:.05em;
-    padding:7px 16px;border-radius:6px;cursor:pointer}
-  .catTabs button.on{background:var(--cobre);color:#1a1410}
+  /* ===== Costos — layout propio, reconstruido ===== */
+  .cx-tabs{display:inline-flex;gap:3px;background:var(--panel);border:1px solid var(--linea-fuerte);
+    border-radius:24px;padding:4px;margin-bottom:26px}
+  .cx-tabs button{background:none;border:0;color:var(--texto-mute);font-family:var(--sans);font-size:11px;
+    font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:9px 20px;border-radius:20px;cursor:pointer;
+    transition:background .18s ease,color .18s ease}
+  .cx-tabs button:hover{color:var(--texto-2)}
+  .cx-tabs button.on{background:var(--dorado);color:var(--negro)}
+
+  /* tarjetas de resumen arriba */
+  .cx-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+  .cx-kpi{position:relative;overflow:hidden;background:linear-gradient(165deg,var(--panel-2) 0%,var(--panel) 60%);
+    border:1px solid var(--linea);border-radius:16px;padding:20px 22px;box-shadow:var(--sombra-card)}
+  .cx-kpi::after{content:"";position:absolute;top:-40px;right:-40px;width:120px;height:120px;pointer-events:none;
+    background:radial-gradient(closest-side,rgba(200,155,108,.28),transparent);opacity:.45}
+  .cx-kpi__l{display:flex;align-items:center;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--cobre);margin-bottom:10px}
+  .cx-kpi__v{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1;color:var(--texto)}
+  .cx-kpi__v.dorado{color:var(--dorado)}
+  .cx-kpi__s{font-size:11.5px;color:var(--texto-mute);margin-top:6px}
+
+  /* dos columnas: gasto por familia | próximas renovaciones */
+  .cx-2col{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px}
+  @media(min-width:860px){ .cx-2col{grid-template-columns:1.25fr 1fr} }
+
+  .cx-card{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--linea);
+    border-radius:16px;padding:22px}
+  .cx-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(135deg,rgba(204,163,83,.02) 0 2px,transparent 2px 14px)}
+  .cx-card > *{position:relative}
+  .cx-card h3{font-family:var(--serif);font-weight:600;font-size:17px;margin:0 0 4px;display:flex;align-items:center}
+  .cx-card .cx-hint{font-size:11.5px;color:var(--texto-mute);margin:0 0 16px}
+
+  /* gráfico de barras */
+  .cx-chart{width:100%;height:190px;display:block;overflow:visible}
+  .cx-chart .bar{fill:var(--cobre)}
+  .cx-chart .bar.cur{fill:var(--dorado)}
+  .cx-chart text{fill:var(--texto-mute);font-size:9px;font-family:var(--sans)}
+  .cx-empty{color:var(--texto-mute);font-size:12.5px;padding:24px;text-align:center;
+    border:1px dashed var(--linea-fuerte);border-radius:12px}
+
+  /* lista de próximas renovaciones */
+  .cx-ren{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .cx-ren li{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--linea)}
+  .cx-ren li:last-child{border-bottom:0}
+  .cx-ren .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--cobre)}
+  .cx-ren .dot.soon{background:var(--aviso)}
+  .cx-ren .dot.now{background:var(--down)}
+  .cx-ren__name{flex:1;min-width:0;font-size:13px;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cx-ren__name .bell{color:var(--dorado);font-size:11px;margin-left:5px}
+  .cx-ren__when{font-size:11.5px;color:var(--texto-mute);flex:0 0 auto}
+  .cx-ren__amt{font-size:12px;color:var(--texto-2);flex:0 0 auto;min-width:74px;text-align:right}
+
+  /* consumo en vivo */
+  .cx-live-grid{display:flex;flex-wrap:wrap;gap:26px}
+  .cx-live-block{min-width:180px;flex:1}
+  .cx-live-block .l{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cobre)}
+  .cx-live-block .v{font-family:var(--serif);font-size:26px;color:var(--texto);margin:4px 0}
+  .cx-live-block .s{font-size:11.5px;color:var(--texto-mute)}
+  .cx-bar{height:6px;background:rgba(245,240,230,.08);border-radius:3px;overflow:hidden;margin:7px 0}
+  .cx-bar > i{display:block;height:100%}
+
+  /* grilla de proveedores — SIEMPRE tarjetas (en mobile se apila solo) */
+  .cx-provs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
+  .cx-prov{position:relative;overflow:hidden;display:flex;flex-direction:column;
+    background:linear-gradient(165deg,var(--panel-2) 0%,var(--panel) 62%);
+    border:1px solid rgba(200,155,108,.18);border-radius:16px;padding:18px 18px 16px;box-shadow:var(--sombra-card);
+    transition:transform .22s ease,border-color .22s ease}
+  .cx-prov:hover{transform:translateY(-3px);border-color:rgba(204,163,83,.42)}
+  .cx-prov__head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .cx-prov__name{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--texto);line-height:1.2;
+    display:flex;align-items:center;flex-wrap:wrap}
+  .cx-prov__cost{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--dorado);white-space:nowrap}
+  .cx-prov__cost small{display:block;font-family:var(--sans);font-size:10.5px;color:var(--texto-mute);
+    text-align:right;font-weight:400}
+  .cx-prov__rows{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;margin-bottom:12px}
+  .cx-prov__rows dt{color:var(--texto-mute);letter-spacing:.04em}
+  .cx-prov__rows dd{margin:0;color:var(--texto-2);text-align:right}
+  .cx-prov__rows dd .mini{color:var(--texto-mute);font-size:11px}
+  .cx-prov__foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border-top:1px solid rgba(245,240,230,.07);padding-top:12px}
+  .cx-src{font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .cx-src.api{color:var(--ok)} .cx-src.man{color:var(--texto-mute)}
+  .cx-badge{display:inline-block;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;
+    border-radius:16px;border:1px solid;line-height:1.4}
+  .cx-badge.on{border-color:rgba(204,163,83,.5);color:var(--dorado)}
+  .cx-badge.off{border-color:var(--linea);color:var(--texto-mute)}
+  .cx-badge.ren-soon{border-color:rgba(198,91,91,.6);color:#e79a9c}
+
+  .cx-addbar{margin-top:18px}
+
+  /* diálogo (usa estilos de panel.css) */
+  dialog{background:var(--panel);color:var(--texto);border:1px solid var(--linea-fuerte);border-radius:12px;
+    padding:24px;max-width:480px;width:92vw;max-height:90vh;overflow-y:auto}
+  dialog::backdrop{background:rgba(0,0,0,.62)}
+  dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 16px;font-size:20px}
+  .dlg-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+  .row2{display:flex;gap:8px} .row2 > *{flex:1}
+  .campo--check{display:flex;align-items:center;gap:9px}
+  .campo--check input{width:auto} .campo--check span{margin:0;text-transform:none;letter-spacing:0;font-size:12.5px;color:var(--texto-2)}
+
+  @media(max-width:560px){
+    .cx-kpi__v{font-size:28px}
+    .cx-prov__rows{grid-template-columns:1fr;gap:3px}
+    .cx-prov__rows dd{text-align:left}
+  }
 </style>
 </head>
 <body>
@@ -45,59 +122,57 @@
   <div class="page-head">
     <span class="crumb"><a href="index.html">← Portada</a> · Costos</span>
     <h1>Costos</h1>
-    <p>Cuánto cuesta sostener todo el ecosistema por mes. Lo que tiene API se actualiza solo;
-       el resto lo cargás a mano con su plan y fecha de renovación.
-       Con las pestañas separás los costos del <b>sistema</b> de tus <b>gastos personales</b> (Apple, celular, etc.).</p>
+    <p>Lo que cuesta sostener el ecosistema por mes. Lo que tiene API se actualiza solo; el resto se carga a mano.
+       Con las pestañas separás los costos del <b>sistema</b> de tus <b>gastos personales</b>.</p>
   </div>
 
   <div class="msg" id="topMsg"></div>
 
-  <div class="catTabs" id="catTabs">
+  <div class="cx-tabs" id="cxTabs">
     <button data-cat="sistema" class="on">Sistema</button>
     <button data-cat="personal">Personal</button>
     <button data-cat="todo">Todo</button>
   </div>
 
-  <div class="cost-top">
-    <div class="card big-total">
-      <span class="l">Gasto del mes</span>
-      <span class="n" id="totalN">—</span>
-      <span class="s" id="totalS"></span>
+  <div class="cx-summary" id="cxSummary"></div>
+
+  <div class="cx-2col">
+    <div class="cx-card">
+      <h3 id="famTitle">Gasto por familia</h3>
+      <p class="cx-hint" id="famHint"></p>
+      <svg class="cx-chart" id="chartFam" viewBox="0 0 600 190" preserveAspectRatio="none"></svg>
     </div>
-    <div class="card">
-      <h3>Gasto por familia · este mes ${ayuda("Suma del costo mensual de los proveedores, agrupado por la familia a la que pertenecen. Los compartidos van aparte.")}</h3>
-      <svg class="chart" id="chartFam" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
+    <div class="cx-card">
+      <h3 id="renTitle">Próximas renovaciones</h3>
+      <p class="cx-hint">Ordenadas por la más cercana. La campana marca las que tienen aviso activado.</p>
+      <ul class="cx-ren" id="renList"></ul>
     </div>
   </div>
 
-  <div class="card" id="consumoCard" style="margin-bottom:32px" hidden>
-    <h3>Consumo en vivo ${ayuda("Lo que llevás gastado / usado este mes en los servicios que se cobran por consumo. Se actualiza solo.")}</h3>
-    <div id="consumoBody" style="display:flex;flex-wrap:wrap;gap:26px"></div>
+  <div class="cx-card" id="liveCard" hidden style="margin-bottom:24px">
+    <h3 id="liveTitle">Consumo en vivo</h3>
+    <p class="cx-hint">Lo que llevás gastado / usado este mes en los servicios que cobran por consumo. Se actualiza solo.</p>
+    <div class="cx-live-grid" id="liveBody"></div>
   </div>
 
-  <div class="card" style="margin-bottom:32px">
-    <h3>Gasto histórico ${ayuda("Cómo evolucionó el gasto total mes a mes, para ver en qué meses gastamos más o menos. Necesita que el sistema guarde una foto del total cada mes.")}</h3>
-    <svg class="chart" id="chartHist" viewBox="0 0 600 180" preserveAspectRatio="none"></svg>
-    <p class="mini-note" id="histNote" style="font-size:11px;color:var(--texto-mute);margin-top:8px"></p>
+  <div class="cx-card" style="margin-bottom:32px">
+    <h3 id="histTitle">Gasto histórico</h3>
+    <p class="cx-hint">Cómo evolucionó el gasto total mes a mes. Se llena cuando el sistema guarda la foto del total cada mes.</p>
+    <svg class="cx-chart" id="chartHist" viewBox="0 0 600 190" preserveAspectRatio="none"></svg>
+    <p class="cx-empty" id="histEmpty" hidden>Todavía no hay historial guardado.</p>
   </div>
 
   <div class="seccion">
     <div class="seccion__head">
       <span class="kicker">Detalle</span>
-      <h2>Todos los proveedores</h2>
+      <h2 id="provTitle">Proveedores</h2>
       <span class="count" id="provCount"></span>
     </div>
-    <div style="overflow-x:auto">
-      <table class="prov-table">
-        <thead><tr>
-          <th>Proveedor</th><th>Familia</th><th>Plan</th><th>Costo / mes</th><th>Renueva</th><th>Aviso renov.</th><th>Medio de pago</th><th>Origen</th><th></th>
-        </tr></thead>
-        <tbody id="provBody"></tbody>
-      </table>
+    <div class="cx-provs" id="cxProvs"></div>
+    <div class="cx-addbar">
+      <button class="btn-ghost btn-mini" id="addProv">＋ Agregar</button>
     </div>
-    <button class="btn-ghost btn-mini" id="addProv" style="margin-top:14px">＋ Agregar proveedor</button>
   </div>
-
 </div>
 
 <dialog id="provDlg">
@@ -105,8 +180,11 @@
     <h3 id="pTitle">Nuevo proveedor</h3>
     <label class="campo"><span>Clave · sin espacios (ej. r2-academia)</span><input id="p_key" required pattern="[a-z0-9\-]+"></label>
     <label class="campo"><span>Nombre</span><input id="p_name" required></label>
-    <label class="campo"><span>Categoría</span><select id="p_cat"><option value="sistema">Sistema (ecosistema Musselli)</option><option value="personal">Personal (Apple, celular, etc.)</option></select></label>
-    <label class="campo"><span>¿Para qué sirve? · qué se rompe si lo damos de baja</span><textarea id="p_paraque" rows="3" placeholder="ej: Base de datos y funciones de automatización. Si se cae, se cae todo el sistema."></textarea></label>
+    <label class="campo"><span>Categoría</span><select id="p_cat">
+      <option value="sistema">Sistema (ecosistema Musselli)</option>
+      <option value="personal">Personal (Apple, celular, etc.)</option>
+    </select></label>
+    <label class="campo"><span>¿Para qué sirve? · qué se rompe si lo damos de baja</span><textarea id="p_paraque" rows="3" placeholder="ej: Base de datos y funciones de automatización. Si se cae, se cae todo."></textarea></label>
     <label class="campo"><span>Familia a la que pertenece</span><select id="p_prop"><option value="">— Compartido —</option></select></label>
     <label class="campo"><span>Link a su consola</span><input id="p_console" placeholder="https://…"></label>
     <label class="campo"><span>Plan contratado</span><input id="p_plan" placeholder='ej: Pro, Free, Team 5 asientos'></label>
@@ -118,11 +196,11 @@
       </div>
     </div>
     <label class="campo"><span>Próxima fecha de renovación / cobro</span><input id="p_renew" type="date"></label>
-    <label class="campo"><span>Medio de pago (dónde cae el cargo)</span><input id="p_medio" placeholder='ej: "Visa ...4321", "PayPal", "Débito Santander"'></label>
+    <label class="campo"><span>Medio de pago (dónde cae el cargo)</span><input id="p_medio" placeholder='ej: "Visa ...4321", "PayPal"'></label>
     <label class="campo campo--check"><input type="checkbox" id="p_avisoRen"><span>Avisarme antes de que se renueve</span></label>
     <label class="campo" id="p_avisoDiasWrap"><span>¿Cuántos días antes te aviso?</span><input id="p_avisoDias" type="number" min="1" max="30" value="3"></label>
     <label class="campo"><span>Notas</span><input id="p_notes"></label>
-    <div class="foot">
+    <div class="dlg-foot">
       <button type="button" class="btn-danger btn-mini" id="pDelete" hidden>Eliminar</button>
       <button type="button" class="btn-ghost btn-mini" id="pCancel">Cancelar</button>
       <button type="submit" class="btn-primary btn-mini">Guardar</button>
@@ -133,126 +211,207 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="panel.js"></script>
 <script>
-const { $, esc, ayuda, api } = Panel;
+const { $, $$, esc, ayuda, api } = Panel;
 let DATA = null;
-let filtro = (()=>{ try { return localStorage.getItem("costos_filtro") || "sistema"; } catch { return "sistema"; } })();
+let filtro = (() => { try { return localStorage.getItem("costos_filtro") || "sistema"; } catch { return "sistema"; } })();
 
 const famName = (k) => (DATA.properties.find(p => p.key === k) || {}).name || k;
-
-function barChart(svgId, pairs, opts){
-  opts = opts || {};
-  const svg = $("#" + svgId);
-  if (!pairs.length){ svg.innerHTML = `<text x="12" y="90">Sin datos todavía.</text>`; return; }
-  const max = Math.max(...pairs.map(p => p.v), 1);
-  const W = 600, H = 180, pad = 24, bw = (W - pad*2) / pairs.length;
-  svg.innerHTML = pairs.map((p, i) => {
-    const h = Math.max(2, (p.v / max) * (H - 46));
-    const x = pad + i*bw, y = H - 26 - h;
-    return `<rect class="bar ${opts.lastCur && i === pairs.length-1 ? 'cur' : ''}" x="${x+4}" y="${y}" width="${bw-8}" height="${h}" rx="2"></rect>
-      <text x="${x + bw/2}" y="${H - 12}" text-anchor="middle">${esc(p.k)}</text>
-      <text x="${x + bw/2}" y="${y - 5}" text-anchor="middle">${esc(p.t || ('$'+p.v.toFixed(0)))}</text>`;
-  }).join("");
-}
-
+const catDe = (v) => v.categoria || "sistema";
 const costoUsdDe = (v) => typeof v.monthly_cost_usd === "number" ? v.monthly_cost_usd
   : (typeof v.monthly_cost === "number" ? v.monthly_cost : null);
 
-function render(){
-  document.querySelectorAll("#catTabs button").forEach(b => b.classList.toggle("on", b.dataset.cat === filtro));
-  const catDe = (v) => v.categoria || "sistema";
-  const provs = (DATA.providers || []).filter(v => filtro === "todo" || catDe(v) === filtro);
-  const totalUsd = provs.reduce((a,v) => a + (costoUsdDe(v) || 0), 0);
-  const conCosto = provs.filter(v => costoUsdDe(v) != null).length;
-  const etq = filtro === "personal" ? "gastos personales" : filtro === "todo" ? "todo (sistema + personal)" : "ecosistema Musselli";
-  $("#totalN").textContent = "USD $" + totalUsd.toFixed(2);
-  $("#totalS").textContent = `${conCosto} ítem${conCosto===1?"":"s"} con costo · ${etq} · todo en dólares`;
+function diasHasta(fecha){
+  if (!fecha) return null;
+  const d = new Date(fecha + "T00:00:00");
+  return Math.ceil((d - new Date()) / 86400000);
+}
+function textoDias(n){
+  if (n == null) return "";
+  if (n < 0) return "vencida";
+  if (n === 0) return "hoy";
+  if (n === 1) return "mañana";
+  return "en " + n + " días";
+}
+function fechaCorta(fecha){
+  return new Date(fecha + "T00:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "2-digit" });
+}
 
-  // gasto por familia (este mes), en USD
+/* ---------- gráfico de barras simple ---------- */
+function barChart(svgId, pairs, opts){
+  opts = opts || {};
+  const svg = $("#" + svgId);
+  if (!pairs.length){ svg.innerHTML = `<text x="12" y="96">Sin datos todavía.</text>`; return; }
+  const max = Math.max(...pairs.map(p => p.v), 1);
+  const W = 600, H = 190, pad = 26, bw = (W - pad*2) / pairs.length;
+  svg.innerHTML = pairs.map((p, i) => {
+    const h = Math.max(2, (p.v / max) * (H - 52));
+    const x = pad + i*bw, y = H - 30 - h;
+    return `<rect class="bar ${opts.lastCur && i === pairs.length-1 ? 'cur' : ''}" x="${x+5}" y="${y}" width="${Math.max(2,bw-10)}" height="${h}" rx="2"></rect>
+      <text x="${x + bw/2}" y="${H - 14}" text-anchor="middle">${esc(p.k)}</text>
+      <text x="${x + bw/2}" y="${y - 5}" text-anchor="middle">${esc(p.t || ('$' + p.v.toFixed(0)))}</text>`;
+  }).join("");
+}
+
+/* ---------- render ---------- */
+function render(){
+  $$("#cxTabs button").forEach(b => b.classList.toggle("on", b.dataset.cat === filtro));
+
+  const todos = DATA.providers || [];
+  const provs = todos.filter(v => filtro === "todo" || catDe(v) === filtro);
+  const etq = filtro === "personal" ? "gastos personales" : filtro === "todo" ? "sistema + personal" : "ecosistema Musselli";
+  const esPersonal = filtro === "personal";
+
+  /* --- resumen (3 tarjetas) --- */
+  const totalUsd = provs.reduce((a,v) => a + (costoUsdDe(v) || 0), 0);
+  const conCosto = provs.filter(v => (costoUsdDe(v) || 0) > 0).length;
+  const proximas = provs
+    .filter(v => v.renewal_date && diasHasta(v.renewal_date) != null)
+    .map(v => ({ v, d: diasHasta(v.renewal_date) }))
+    .sort((a,b) => a.d - b.d);
+  const prox = proximas[0];
+
+  $("#cxSummary").innerHTML = `
+    <div class="cx-kpi">
+      <span class="cx-kpi__l">Gasto del mes</span>
+      <div class="cx-kpi__v dorado">USD $${totalUsd.toFixed(2)}</div>
+      <div class="cx-kpi__s">${provs.length} ítem${provs.length===1?"":"s"} · ${esc(etq)} · todo en dólares</div>
+    </div>
+    <div class="cx-kpi">
+      <span class="cx-kpi__l">${esPersonal ? "Gastos activos" : "Proveedores con costo"}</span>
+      <div class="cx-kpi__v">${conCosto}</div>
+      <div class="cx-kpi__s">de ${provs.length} cargado${provs.length===1?"":"s"} en total</div>
+    </div>
+    <div class="cx-kpi">
+      <span class="cx-kpi__l">Próxima renovación</span>
+      <div class="cx-kpi__v">${prox ? esc(textoDias(prox.d).replace(/^en /,"")) : "—"}</div>
+      <div class="cx-kpi__s">${prox ? esc(prox.v.name) + " · " + fechaCorta(prox.v.renewal_date) : "sin fechas cargadas"}</div>
+    </div>`;
+
+  /* --- gasto por familia --- */
+  $("#famTitle").innerHTML = "Gasto por familia · este mes " + ayuda("Suma del costo mensual (en USD) de los proveedores, agrupada por la familia a la que pertenecen. Los compartidos van aparte.");
+  $("#famHint").textContent = esPersonal ? "En personal no hay familias; se agrupa todo junto." : "";
   const porFam = {};
   provs.forEach(v => {
-    const u = costoUsdDe(v); if (u == null) return;
-    const k = v.property_key ? famName(v.property_key) : "Compartido";
+    const u = costoUsdDe(v); if (!u) return;
+    const k = esPersonal ? "Personal" : (v.property_key ? famName(v.property_key) : "Compartido");
     porFam[k] = (porFam[k] || 0) + u;
   });
   barChart("chartFam", Object.entries(porFam).map(([k,v]) => ({ k, v })));
 
-  // consumo en vivo (Gemini + ElevenLabs)
+  /* --- próximas renovaciones --- */
+  $("#renTitle").innerHTML = "Próximas renovaciones " + ayuda("Todas las renovaciones futuras ordenadas por cercanía. Rojo = 7 días o menos. Amarillo = 30 días o menos. La campana = tiene el aviso encendido.");
+  const rl = $("#renList");
+  if (!proximas.length){
+    rl.innerHTML = `<li style="color:var(--texto-mute);font-size:12.5px">Ningún proveedor tiene fecha de renovación cargada.</li>`;
+  } else {
+    rl.innerHTML = proximas.slice(0, 8).map(({ v, d }) => {
+      const cls = d <= 7 ? "now" : d <= 30 ? "soon" : "";
+      const u = costoUsdDe(v);
+      return `<li>
+        <span class="dot ${cls}"></span>
+        <span class="cx-ren__name">${esc(v.name)}${v.aviso_renovacion ? '<span class="bell">🔔</span>' : ''}</span>
+        <span class="cx-ren__when">${esc(textoDias(d))}</span>
+        <span class="cx-ren__amt">${u != null ? "USD $" + u.toFixed(2) : "—"}</span>
+      </li>`;
+    }).join("");
+  }
+
+  /* --- consumo en vivo (solo sistema / todo) --- */
   const g = DATA.gemini_uso, el = DATA.elevenlabs_uso;
   const bloques = [];
   if (g && (g.mes_tokens || 0) > 0){
-    bloques.push(`<div style="min-width:160px">
-      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cobre)">Gemini · este mes</div>
-      <div style="font-family:var(--serif);font-size:26px;color:var(--texto);margin:4px 0">USD $${(g.mes_usd||0).toFixed(4)}</div>
-      <div style="font-size:11.5px;color:var(--texto-mute)">${(g.mes_tokens||0).toLocaleString()} tokens · MXN ${(g.mes_mxn||0).toFixed(2)}</div>
+    bloques.push(`<div class="cx-live-block">
+      <div class="l">Gemini · este mes</div>
+      <div class="v">USD $${(g.mes_usd||0).toFixed(4)}</div>
+      <div class="s">${(g.mes_tokens||0).toLocaleString()} tokens · MXN ${(g.mes_mxn||0).toFixed(2)}</div>
     </div>`);
   }
   if (el && el.limite){
     const pct = el.pct || 0;
     const col = pct >= 90 ? "var(--down)" : pct >= 80 ? "var(--aviso)" : "var(--ok)";
     const dReset = el.reset ? Math.max(0, Math.round((new Date(el.reset) - Date.now())/86400000)) : null;
-    bloques.push(`<div style="min-width:220px;flex:1">
-      <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--cobre)">ElevenLabs · créditos</div>
-      <div style="font-family:var(--serif);font-size:26px;color:var(--texto);margin:4px 0">${el.usados.toLocaleString()} <span style="font-size:15px;color:var(--texto-mute)">/ ${el.limite.toLocaleString()} (${pct}%)</span></div>
-      <div style="height:6px;background:rgba(245,240,230,.08);border-radius:3px;overflow:hidden;margin:6px 0">
-        <div style="height:100%;width:${Math.min(100,pct)}%;background:${col}"></div></div>
-      <div style="font-size:11.5px;color:var(--texto-mute)">${dReset!=null ? `renueva en ${dReset} día${dReset===1?"":"s"}` : ""}${el.permite_excedente ? " · permite excedente" : " · se frena al 100%"}</div>
+    bloques.push(`<div class="cx-live-block">
+      <div class="l">ElevenLabs · créditos</div>
+      <div class="v">${el.usados.toLocaleString()} <span style="font-size:14px;color:var(--texto-mute)">/ ${el.limite.toLocaleString()} (${pct}%)</span></div>
+      <div class="cx-bar"><i style="width:${Math.min(100,pct)}%;background:${col}"></i></div>
+      <div class="s">${dReset!=null ? `renueva en ${dReset} día${dReset===1?"":"s"}` : ""}${el.permite_excedente ? " · permite excedente" : " · se frena al 100%"}</div>
     </div>`);
   }
-  $("#consumoBody").innerHTML = bloques.join("");
-  $("#consumoCard").hidden = bloques.length === 0 || filtro === "personal";
+  $("#liveBody").innerHTML = bloques.join("");
+  $("#liveCard").hidden = bloques.length === 0 || esPersonal;
 
-  // gasto histórico
+  /* --- histórico --- */
   const hist = DATA.cost_history || [];
   if (hist.length){
-    barChart("chartHist", hist.map(h => { const v = Number(h.total_usd) || 0; return { k: h.month.slice(5), v, t: "$"+Math.round(v) }; }), { lastCur: true });
-    $("#histNote").textContent = "";
+    $("#chartHist").hidden = false; $("#histEmpty").hidden = true;
+    barChart("chartHist", hist.map(h => { const v = Number(h.total_usd) || 0; return { k: h.month.slice(5), v, t: "$" + Math.round(v) }; }), { lastCur: true });
   } else {
-    barChart("chartHist", []);
-    $("#histNote").textContent = "Todavía no hay historial. Se empieza a llenar cuando el sistema guarde el total cada mes (falta esa parte del backend).";
+    $("#chartHist").hidden = true; $("#histEmpty").hidden = false;
   }
 
-  // tabla
-  $("#addProv").textContent = filtro === "personal" ? "＋ Agregar gasto personal" : "＋ Agregar proveedor";
+  /* --- tarjetas de proveedores --- */
+  $("#provTitle").textContent = esPersonal ? "Gastos personales" : "Proveedores";
   $("#provCount").textContent = "· " + provs.length;
-  $("#provBody").innerHTML = provs.map(v => {
-    const fam = v.property_key ? esc(famName(v.property_key)) : '<span style="color:var(--texto-mute)">Compartido</span>';
-    const u = costoUsdDe(v);
-    const nativo = (typeof v.monthly_cost === "number" && (v.currency||"USD") !== "USD")
-      ? ` <span style="color:var(--texto-mute);font-size:11px">(${esc(v.currency)} ${v.monthly_cost.toFixed(0)})</span>` : "";
-    const costo = (u != null) ? `USD $${u.toFixed(2)}${nativo}` : "—";
-    let ren = "—";
-    if (v.renewal_date){
-      const d = new Date(v.renewal_date + "T00:00:00");
-      const soon = (d - new Date()) < 1000*60*60*24*7;
-      ren = `<span class="${soon ? 'ren-soon' : ''}">${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'2-digit'})}</span>`;
-    }
-    const src = v.usage_source === "api"
-      ? '<span class="src-api">● API</span>'
-      : v.usage_source === "contador"
-      ? '<span class="src-api">● en vivo</span>'
-      : '<span class="src-man">manual</span>';
-    const avisoRen = v.aviso_renovacion
-      ? `<span class="src-api" title="Centinela te avisa ${v.aviso_dias_antes || 3} día(s) antes de la renovación">● ON · ${v.aviso_dias_antes || 3}d</span>`
-      : '<span class="src-man">off</span>';
-    return `<tr>
-      <td class="nom">${esc(v.name)}${v.para_que ? " " + ayuda(v.para_que) : ""}${v.console_url ? ` · <a href="${esc(v.console_url)}" target="_blank" rel="noopener">consola ↗</a>` : ""}</td>
-      <td>${fam}</td>
-      <td>${v.plan_name ? esc(v.plan_name) : "—"}</td>
-      <td>${costo}</td>
-      <td>${ren}</td>
-      <td>${avisoRen}</td>
-      <td>${v.medio_pago ? esc(v.medio_pago) : "—"}</td>
-      <td>${src}</td>
-      <td><button class="btn-ghost btn-mini" data-edit="${esc(v.key)}">Editar</button></td>
-    </tr>`;
-  }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--texto-mute)">Sin proveedores cargados.</td></tr>`;
+  $("#addProv").textContent = esPersonal ? "＋ Agregar gasto personal" : "＋ Agregar proveedor";
+
+  const cont = $("#cxProvs");
+  if (!provs.length){
+    cont.innerHTML = `<p class="cx-empty" style="grid-column:1/-1">${esPersonal
+      ? "Todavía no cargaste ningún gasto personal. Usá el botón de abajo."
+      : "Sin proveedores en esta categoría."}</p>`;
+  } else {
+    cont.innerHTML = provs.slice().sort((a,b) => (costoUsdDe(b)||0) - (costoUsdDe(a)||0)).map(v => {
+      const u = costoUsdDe(v);
+      const nativo = (typeof v.monthly_cost === "number" && (v.currency || "USD") !== "USD")
+        ? `<small>${esc(v.currency)} ${v.monthly_cost.toFixed(0)}</small>` : "";
+      const costo = (u != null) ? `USD $${u.toFixed(2)}${nativo}` : "—";
+      const fam = esPersonal ? "—" : (v.property_key ? esc(famName(v.property_key)) : "Compartido");
+
+      let renHtml = "—";
+      if (v.renewal_date){
+        const d = diasHasta(v.renewal_date);
+        const soon = d != null && d <= 7;
+        renHtml = `${fechaCorta(v.renewal_date)} <span class="mini">· ${esc(textoDias(d))}</span>`;
+        if (soon) renHtml = `<span style="color:#e79a9c">${renHtml}</span>`;
+      }
+
+      const avisoHtml = v.aviso_renovacion
+        ? `<span class="cx-badge on">🔔 ${v.aviso_dias_antes || 3}d antes</span>`
+        : `<span class="cx-badge off">sin aviso</span>`;
+
+      const src = v.usage_source === "api" ? `<span class="cx-src api">● API</span>`
+        : v.usage_source === "contador" ? `<span class="cx-src api">● en vivo</span>`
+        : `<span class="cx-src man">manual</span>`;
+
+      return `<article class="cx-prov">
+        <div class="cx-prov__head">
+          <div class="cx-prov__name">${esc(v.name)}${v.para_que ? " " + ayuda(v.para_que) : ""}</div>
+          <div class="cx-prov__cost">${costo}</div>
+        </div>
+        <dl class="cx-prov__rows">
+          ${esPersonal ? "" : `<dt>Familia</dt><dd>${fam}</dd>`}
+          <dt>Plan</dt><dd>${v.plan_name ? esc(v.plan_name) : "—"}</dd>
+          <dt>Renueva</dt><dd>${renHtml}</dd>
+          <dt>Medio de pago</dt><dd>${v.medio_pago ? esc(v.medio_pago) : "—"}</dd>
+        </dl>
+        <div style="margin-bottom:12px">${avisoHtml}</div>
+        <div class="cx-prov__foot">
+          ${src}
+          <span style="display:flex;gap:8px;align-items:center">
+            ${v.console_url ? `<a href="${esc(v.console_url)}" target="_blank" rel="noopener" style="font-size:11px">consola ↗</a>` : ""}
+            <button class="btn-ghost btn-mini" data-edit="${esc(v.key)}">Editar</button>
+          </span>
+        </div>
+      </article>`;
+    }).join("");
+  }
 }
 
-/* ---- diálogo ---- */
+/* ---------- diálogo ---------- */
 const dlg = $("#provDlg");
 function openProv(v){
   const isNew = !v;
-  $("#pTitle").textContent = isNew ? "Nuevo proveedor" : "Editar " + v.name;
+  $("#pTitle").textContent = isNew ? (filtro === "personal" ? "Nuevo gasto personal" : "Nuevo proveedor") : "Editar " + v.name;
   $("#p_prop").innerHTML = '<option value="">— Compartido —</option>' +
     DATA.properties.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join("");
   $("#p_key").value = v?.key || ""; $("#p_key").disabled = !isNew;
@@ -273,13 +432,13 @@ function openProv(v){
   $("#p_notes").value = v?.notes || "";
   $("#pDelete").hidden = isNew;
   $("#pDelete").onclick = async () => {
-    if (!confirm(`¿Eliminar el proveedor "${v.name}"?`)) return;
-    try { await api("POST", { action:"delete_provider", key: v.key }); dlg.close(); await reload(); render(); }
+    if (!confirm(`¿Eliminar "${v.name}"?`)) return;
+    try { await api("POST", { action: "delete_provider", key: v.key }); dlg.close(); await reload(); render(); }
     catch(e){ alert("Error: " + e.message); }
   };
   dlg.showModal();
 }
-$("#catTabs").addEventListener("click", (ev) => {
+$("#cxTabs").addEventListener("click", (ev) => {
   const b = ev.target.closest("button[data-cat]");
   if (!b) return;
   filtro = b.dataset.cat;
@@ -287,11 +446,9 @@ $("#catTabs").addEventListener("click", (ev) => {
   render();
 });
 $("#pCancel").addEventListener("click", () => dlg.close());
-$("#p_avisoRen").addEventListener("change", (e) => {
-  $("#p_avisoDiasWrap").style.opacity = e.target.checked ? "1" : ".4";
-});
+$("#p_avisoRen").addEventListener("change", (e) => { $("#p_avisoDiasWrap").style.opacity = e.target.checked ? "1" : ".4"; });
 $("#addProv").addEventListener("click", () => openProv(null));
-$("#provBody").addEventListener("click", (ev) => {
+$("#cxProvs").addEventListener("click", (ev) => {
   const b = ev.target.closest("[data-edit]");
   if (b) openProv(DATA.providers.find(x => x.key === b.dataset.edit));
 });
@@ -312,7 +469,7 @@ $("#provForm").addEventListener("submit", async (ev) => {
     aviso_dias_antes: Math.min(30, Math.max(1, Number($("#p_avisoDias").value) || 3)),
     notes: $("#p_notes").value.trim(),
   };
-  try { await api("POST", { action:"upsert_provider", provider }); dlg.close(); await reload(); render(); }
+  try { await api("POST", { action: "upsert_provider", provider }); dlg.close(); await reload(); render(); }
   catch(e){ alert("Error: " + e.message); }
 });
 
