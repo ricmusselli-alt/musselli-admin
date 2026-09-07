@@ -16,18 +16,41 @@
   .fam-hero h1{margin:0}
   .fam-hero .estado{display:inline-flex;align-items:center;gap:7px;font-size:var(--fs-micro);letter-spacing:.12em;
     text-transform:uppercase;color:var(--texto-mute);margin-top:4px}
-  .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
-  .card .fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+
+  /* grilla de tarjetas: 1 col en mobile, 2 en escritorio; la tarjeta principal puede ocupar el ancho */
+  .ctrl-grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:start}
+  @media(min-width:860px){ .ctrl-grid{grid-template-columns:1fr 1fr} .card--wide{grid-column:1/-1} }
+
+  .card > h3{display:flex;align-items:center;gap:6px;margin-bottom:14px;
+    padding-bottom:12px;border-bottom:1px solid var(--linea)}
+  .card__hint{font-size:var(--fs-small);color:var(--texto-mute);margin:0 0 4px;line-height:1.55}
+  .card__sub{font-size:var(--fs-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--cobre);
+    margin:18px 0 10px}
+  .card__sub:first-child{margin-top:0}
+
+  .card .fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .card .fila a.lnk{font-size:var(--fs-micro);letter-spacing:.08em;text-transform:uppercase;font-weight:600;
     border:1px solid rgba(200,155,108,.35);color:var(--cobre);padding:8px 13px;border-radius:20px}
   .card .fila a.lnk:hover{border-color:var(--cobre);color:var(--negro);background:var(--cobre)}
-  .mini-note{font-size:var(--fs-small);color:var(--texto-mute);margin-top:8px;line-height:1.55}
-  .linea-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(200,155,108,.1)}
-  .linea-row:last-child{border-bottom:0}
-  .linea-row .nom{font-size:var(--fs-small);color:var(--texto-2);flex:0 0 90px}
+  .mini-note{font-size:var(--fs-small);color:var(--texto-mute);margin-top:12px;line-height:1.55}
+
+  /* fila "por línea" (Guitar Tech / Luthería) — nombre a la izquierda, controles agrupados a la derecha */
+  .linea-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    padding:13px 0;border-bottom:1px solid var(--linea)}
+  .linea-row:last-of-type{border-bottom:0}
+  .linea-row .nom{font-family:var(--serif);font-weight:600;font-size:var(--fs-value);color:var(--texto)}
+  .linea-row__ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+  .linea-row__ctrl select{width:auto;padding:6px 9px}
+  .linea-row__vence{font-size:var(--fs-small)}
+
+  .chk-inline{display:flex;align-items:center;gap:9px;font-size:var(--fs-small);color:var(--texto-2);
+    cursor:pointer;margin:14px 0 4px}
+  .chk-inline input{width:auto}
+
   .alert-box{background:rgba(217,164,65,.1);border:1px solid rgba(217,164,65,.4);border-radius:10px;
-    padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
   .alert-box a{font-weight:700;text-transform:uppercase;font-size:var(--fs-micro);letter-spacing:.1em;color:var(--dorado)}
+
   dialog{background:var(--panel);color:var(--texto);border:1px solid var(--linea-fuerte);border-radius:8px;
     padding:22px;max-width:440px;width:92vw}
   dialog::backdrop{background:rgba(0,0,0,.6)}
@@ -109,15 +132,17 @@ function cardEnlaces(){
   return `<div class="card">
     <h3>Estado y enlaces ${ayuda("Los links de esta familia y su estado. El botón Editar abre el formulario para cambiar nombre, descripción, URLs y estado.")}</h3>
     <div class="fila">${links || '<span class="mini-note">Todavía no hay links cargados.</span>'}</div>
-    <button class="btn-ghost btn-mini" id="btnEdit" style="margin-top:6px">Editar familia</button>
+    <button class="btn-ghost btn-mini" id="btnEdit" style="margin-top:16px">Editar familia</button>
   </div>`;
 }
 
 /* ---------------- tarjeta: generación (blog / tendencias) ---------------- */
 function cardGenSimple(){
   const p = FAM;
-  return `<div class="card">
-    <h3>Generación automática ${ayuda("Si está encendido, el sistema genera contenido nuevo solo, en el horario del cron. Si está apagado, solo se genera cuando apretás Crear ahora.")}</h3>
+  return `<div class="card card--wide">
+    <h3>Generación de ${esc(FAM.name)} ${ayuda("Si el interruptor está encendido, el sistema genera contenido nuevo solo en el horario del cron. Si no, solo se genera cuando apretás un botón acá.")}</h3>
+
+    <div class="card__sub">Generación automática</div>
     <div class="switch-row">
       <span class="lbl">El cron respeta este interruptor
         <small>${p.enabled ? "Encendido: genera solo" : "Apagado: solo manual"}</small></span>
@@ -126,53 +151,63 @@ function cardGenSimple(){
         <button class="toggle ${p.enabled?'on':''}" id="btnToggle" aria-label="on/off"></button>
       </span>
     </div>
+
+    <div class="card__sub">Crear una publicación ahora</div>
+    <p class="card__hint">Arma un borrador y lo deja esperando tu aprobación en Contenido. No publica nada.</p>
+    <label class="campo"><span>Tema (opcional)</span>
+      <input type="text" id="hintInput" placeholder="Vacío = lo elige el sistema. Ej: humedad y la madera"></label>
     <div class="fila" style="margin-top:12px">
-      <button class="btn-solid btn-mini" id="btnCrear">Crear ahora</button>
+      <button class="btn-solid btn-mini" id="btnCrear">Crear con tema del sistema</button>
+      <button class="btn-solid btn-mini" id="btnHint">Crear con mi tema</button>
       <a class="btn btn-ghost btn-mini" href="contenido.html#${esc(FKEY)}" style="text-decoration:none">Ver / aprobar</a>
     </div>
-    <div style="display:flex;gap:6px;margin-top:8px">
-      <input type="text" id="hintInput" placeholder="Proponer un tema (ej. humedad y la madera)">
-      <button class="btn-solid btn-mini" id="btnHint" style="flex:0 0 auto">Proponer y crear</button>
-    </div>
-    <p class="mini-note">"Crear ahora" arma un borrador y lo deja esperando tu aprobación en la sección Contenido. No publica nada.</p>
   </div>`;
 }
 
-/* ---------------- tarjeta: generación de carruseles ---------------- */
+/* ---------------- carruseles: configuración de la automatización ---------------- */
 function cfgOf(cat){ return (DATA.carrusel_config || []).find(c => c.category === cat) || {}; }
-function cardGenCarrusel(){
+function cardCarruselConfig(){
   const row = (cat, label) => {
     const c = cfgOf(cat), activo = c.activo !== false, freq = c.frecuencia_mensual ?? 1;
     const opt = [1,2,4].map(n => `<option value="${n}"${n===freq?' selected':''}>${n} por mes</option>`).join("");
     return `<div class="linea-row">
       <span class="nom">${label}</span>
-      <span class="state ${activo?'on':'off'}">${activo?'on':'off'}</span>
-      <button class="toggle ${activo?'on':''}" data-carractivo="${cat}" aria-label="on/off"></button>
-      <select data-carrfreq="${cat}" style="margin-left:auto;width:auto;padding:5px 7px">${opt}</select>
+      <span class="linea-row__ctrl">
+        <span class="state ${activo?'on':'off'}">${activo?'on':'off'}</span>
+        <button class="toggle ${activo?'on':''}" data-carractivo="${cat}" aria-label="on/off"></button>
+        <select data-carrfreq="${cat}">${opt}</select>
+      </span>
     </div>`;
   };
   return `<div class="card">
-    <h3>Carruseles · generación ${ayuda("Guitar Tech y Luthería se manejan por separado: podés apagar una y dejar la otra andando. La frecuencia es cuántos carruseles por mes genera esa línea como máximo.")}</h3>
+    <h3>Generación automática ${ayuda("Guitar Tech y Luthería se manejan por separado: podés apagar una y dejar la otra andando. La frecuencia es cuántos carruseles por mes genera esa línea como máximo.")}</h3>
+    <p class="card__hint">Cada línea corre su propio cron. La frecuencia es el tope de carruseles por mes.</p>
     ${row('guitar-tech','Guitar Tech')}
     ${row('luthier','Luthería')}
-    <div style="height:1px;background:var(--linea);margin:12px 0"></div>
-    <label class="campo"><span>Línea del carrusel a crear</span>
+  </div>`;
+}
+
+/* ---------------- carruseles: crear uno ahora ---------------- */
+function cardCarruselCrear(){
+  return `<div class="card card--wide">
+    <h3>Crear un carrusel ahora ${ayuda("Genera un borrador con sus 7 slides y lo deja en Contenido para que lo apruebes. Nunca publica solo.")}</h3>
+    <p class="card__hint">Arma el borrador y lo deja esperando tu aprobación en Contenido.</p>
+    <label class="campo"><span>Línea</span>
       <select id="carr_cat"><option value="guitar-tech">Guitar Tech</option><option value="luthier">Luthería</option></select></label>
     <label class="campo"><span>Tema ${ayuda("Si lo dejás vacío, el tema lo elige el Radar de Carruseles.")}</span>
       <input type="text" id="carr_topic" placeholder="Vacío = lo elige el Radar"></label>
-    <label style="display:flex;align-items:center;gap:8px;font-size:var(--fs-small);color:var(--texto-2);cursor:pointer;margin-bottom:10px">
-      <input type="checkbox" id="carr_lead" style="width:auto">
+    <label class="chk-inline">
+      <input type="checkbox" id="carr_lead">
       Lead Magnet ${ayuda("Carrusel de captación: vos escribís el gancho de la primera slide y el llamado a la acción del cierre; el sistema arma el resto y el epígrafe retoma ambos.")}
     </label>
-    <div id="carr_leadFields" hidden style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
+    <div id="carr_leadFields" hidden style="display:flex;flex-direction:column;gap:8px;margin:6px 0 4px">
       <input type="text" id="carr_hook" placeholder="Hook (frase de la slide 1)">
       <input type="text" id="carr_cta" placeholder='CTA de cierre (ej: "Escribí CUERDA y te envío todo.")'>
     </div>
-    <div class="fila">
+    <div class="fila" style="margin-top:14px">
       <button class="btn-solid btn-mini" id="carr_crear">Crear carrusel</button>
       <a class="btn btn-ghost btn-mini" href="contenido.html#carrusel" style="text-decoration:none">Ver / aprobar</a>
     </div>
-    <p class="mini-note">Genera un borrador con sus 7 slides y lo deja en Contenido para que lo apruebes. Nunca publica solo.</p>
   </div>`;
 }
 
@@ -182,20 +217,23 @@ function cardTokens(){
   const OAUTH = Panel.SUPABASE_URL + "/functions/v1/ig-oauth?category=";
   const linea = (cat, label) => {
     const upd = toks[cat];
-    let estado = '<span style="color:var(--texto-mute)">sin token</span>';
+    let estado = '<span class="linea-row__vence" style="color:var(--texto-mute)">sin token</span>';
     if (upd){
       const dias = 60 - Math.floor((Date.now() - new Date(upd).getTime())/86400000);
       const col = dias <= 7 ? 'var(--down)' : dias <= 20 ? 'var(--dorado)' : 'var(--ok)';
-      estado = `<span style="color:${col}">vence en ${dias} día${dias===1?'':'s'}</span>`;
+      estado = `<span class="linea-row__vence" style="color:${col}">vence en ${dias} día${dias===1?'':'s'}</span>`;
     }
     return `<div class="linea-row">
-      <span class="nom">${label}</span>${estado}
-      <a class="btn btn-solid btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener"
-         style="margin-left:auto;text-decoration:none">Renovar</a>
+      <span class="nom">${label}</span>
+      <span class="linea-row__ctrl">
+        ${estado}
+        <a class="btn btn-solid btn-mini" href="${OAUTH}${cat}" target="_blank" rel="noopener" style="text-decoration:none">Renovar</a>
+      </span>
     </div>`;
   };
   return `<div class="card">
     <h3>Tokens de Instagram ${ayuda("El permiso para publicar en cada cuenta. Dura 60 días. El botón Renovar abre el login de Instagram; al aprobar, el token se guarda solo por 60 días más.")}</h3>
+    <p class="card__hint">El permiso para publicar en cada cuenta. Dura 60 días.</p>
     ${linea('guitar-tech','Guitar Tech')}
     ${linea('luthier','Luthería')}
   </div>`;
@@ -211,7 +249,7 @@ function cardProveedores(){
   return `<div class="card">
     <h3>Proveedores de esta familia ${ayuda("Servicios que usa solo esta familia (hosting, base de datos, etc.). Para editar el plan, el costo o la fecha de renovación, entrá a la sección Costos.")}</h3>
     <div class="fila">${chips || '<span class="mini-note">Ninguno asignado a esta familia.</span>'}</div>
-    <a class="btn btn-ghost btn-mini" href="costos.html" style="margin-top:6px;text-decoration:none">Ir a Costos</a>
+    <a class="btn btn-ghost btn-mini" href="costos.html" style="margin-top:16px;text-decoration:none">Ir a Costos</a>
   </div>`;
 }
 
@@ -235,10 +273,14 @@ function render(){
     ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pend===1?'publicación':'publicaciones'} esperando tu aprobación</span>
         <a href="contenido.html#${esc(FKEY)}">Revisar ahora →</a></div>` : "";
 
-  const cards = [ cardEnlaces() ];
-  if (FAM.has_generator && FKEY === "carrusel"){ cards.push(cardGenCarrusel(), cardTokens()); }
-  else if (FAM.has_generator && GEN[FKEY]){ cards.push(cardGenSimple()); }
-  cards.push(cardProveedores());
+  let cards;
+  if (FAM.has_generator && FKEY === "carrusel"){
+    cards = [ cardCarruselCrear(), cardCarruselConfig(), cardTokens(), cardProveedores(), cardEnlaces() ];
+  } else if (FAM.has_generator && GEN[FKEY]){
+    cards = [ cardGenSimple(), cardProveedores(), cardEnlaces() ];
+  } else {
+    cards = [ cardEnlaces(), cardProveedores() ];
+  }
   $("#ctrl").innerHTML = cards.join("");
 
   wire();
