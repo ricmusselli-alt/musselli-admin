@@ -20,7 +20,7 @@
   --fs-small:14px;               /* texto secundario, hints, notas, filas de datos */
   --fs-body:16px;                /* cuerpo estándar */
   --fs-value:20px;               /* valores destacados dentro de tarjetas */
-  --fs-value-lg:28px;            /* valores principales grandes (gasto del mes, KPIs) */
+  --fs-value-lg:30px;            /* valores principales grandes (gasto del mes, KPIs, costo de proveedor) */
   --fs-h3:20px;                  /* títulos de tarjeta / subsección */
   --fs-h2:26px;                  /* títulos de sección grande */
   --fs-h1:clamp(28px,4vw,40px);  /* título de página */
