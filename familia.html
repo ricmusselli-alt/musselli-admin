@@ -151,6 +151,12 @@ function cardGenSimple(){
         <button class="toggle ${p.enabled?'on':''}" id="btnToggle" aria-label="on/off"></button>
       </span>
     </div>
+    <div class="linea-row" style="margin-top:6px">
+      <span class="nom" style="font-size:var(--fs-small);font-family:var(--sans);font-weight:400;color:var(--texto-2)">¿Cuántas por mes? ${ayuda("Tope de publicaciones que genera el sistema por mes. El cron corre semanal pero se frena al llegar a este número. Los rechazados no cuentan.", true)}</span>
+      <span class="linea-row__ctrl">
+        <select id="famFreq">${[1,2,4].map(n => `<option value="${n}"${n === (p.frecuencia_mensual ?? (FKEY==='blog'?4:2)) ? ' selected' : ''}>${n} por mes</option>`).join("")}</select>
+      </span>
+    </div>
 
     <div class="card__sub">Crear una publicación ahora</div>
     <p class="card__hint">Arma un borrador y lo deja esperando tu aprobación en Contenido. No publica nada.</p>
@@ -303,6 +309,16 @@ function wire(){
   if (crear) crear.onclick = () => generar(false);
   const hintBtn = $("#btnHint");
   if (hintBtn) hintBtn.onclick = () => generar(true);
+
+  const famFreq = $("#famFreq");
+  if (famFreq) famFreq.onchange = async () => {
+    famFreq.disabled = true;
+    try {
+      const { property } = await api("POST", { action: "set_familia_freq", key: FKEY, frecuencia: Number(famFreq.value) });
+      if (property) Object.assign(FAM, property);
+    } catch(e){ alert("Error: " + e.message); }
+    finally { famFreq.disabled = false; }
+  };
 
   const lead = $("#carr_lead");
   if (lead) lead.onchange = () => { $("#carr_leadFields").hidden = !lead.checked; };
