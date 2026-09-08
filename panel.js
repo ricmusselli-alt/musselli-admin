@@ -30,10 +30,22 @@
     return `<span class="ayuda${abajo ? " abajo" : ""}" data-ayuda="${esc(texto)}" role="img" aria-label="Ayuda">?</span>`;
   }
 
+  // Token siempre fresco: el cliente de Supabase renueva la sesión en segundo
+  // plano, pero la variable `token` local quedaba congelada del init y se vencía
+  // a la hora → "no_autorizado" en cualquier acción hasta recargar la página.
+  async function currentToken() {
+    try {
+      const { data } = await sb.auth.getSession();
+      if (data && data.session) { token = data.session.access_token; return token; }
+    } catch (_) { /* usamos el que haya */ }
+    return token;
+  }
+
   async function api(method, body) {
+    const t = await currentToken();
     const res = await fetch(SUPABASE_URL + "/functions/v1/admin-registry", {
       method,
-      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));

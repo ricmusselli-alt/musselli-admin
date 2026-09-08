@@ -393,7 +393,7 @@ function renderGuias(){
       <option value="luthier">Luthería</option>
       <option value="guitartech">Guitar Tech</option>
     </select>
-    <input id="g_slug" placeholder="slug del lead magnet (ya cargado en Recursos)">
+    <input id="g_slug" placeholder="slug (opcional — se genera del tema)">
     <button id="g_gen" class="btn-solid btn-mini">Generar</button>
   </div>`;
   const guias = DATA.guias || [];
@@ -521,13 +521,14 @@ $("#revList").addEventListener("click", async (ev) => {
     const tema = ($("#g_tema").value || "").trim();
     const linea = $("#g_linea").value;
     const slug = ($("#g_slug").value || "").trim();
-    if (!tema || !slug){ alert("Completá tema y slug."); return; }
+    if (!tema){ alert("Escribí un tema."); return; }
     busy(gGen, "Redactando");
     try {
       const g = await api("POST", { action:"guia_generar", slug, tema, linea });
+      const realSlug = g.slug || slug;   // guia-generar puede derivar el slug del tema
       gGen.innerHTML = `<span class="spin"></span>Generando ${g.secciones.length} imágenes`;
       await Promise.all(g.secciones.map(s =>
-        api("POST", { action:"guia_imagen", slug, seccion_num: s.seccion_num, accion:"generar" })
+        api("POST", { action:"guia_imagen", slug: realSlug, seccion_num: s.seccion_num, accion:"generar" })
           .catch(e => console.warn("img " + s.seccion_num + ": " + e.message))
       ));
       await reload(); route();
