@@ -381,21 +381,21 @@ function wire(){
     const m = $("#gMsg");
     if (!tema){ m.className = "msg err"; m.textContent = "Escribí un tema."; return; }
     bg.disabled = true;
-    const orig = bg.textContent;
-    bg.textContent = "Redactando…";
-    m.className = "msg"; m.textContent = "Redactando la guía… puede tardar un minuto.";
+    const orig = bg.innerHTML;
+    bg.innerHTML = `<span class="spin"></span>Redactando…`;
+    m.className = "msg"; m.textContent = "Redactando la guía… puede tardar un minuto. No cierres esta pantalla.";
     try {
       const g = await api("POST", { action: "guia_generar", slug, tema, linea });
       const realSlug = g.slug || slug;
-      bg.textContent = `Generando ${g.secciones.length} imágenes…`;
-      m.textContent = `"${g.titulo}" — generando ${g.secciones.length} imágenes…`;
+      bg.innerHTML = `<span class="spin"></span>Generando ${g.secciones.length} imágenes…`;
+      m.textContent = `"${g.titulo}" — generando ${g.secciones.length} imágenes… No cierres esta pantalla.`;
       await Promise.all(g.secciones.map(s =>
         api("POST", { action: "guia_imagen", slug: realSlug, seccion_num: s.seccion_num, accion: "generar" }).catch(() => {})
       ));
       location.href = "contenido.html#guias";
     } catch(e){
       m.className = "msg err"; m.textContent = "No se pudo: " + e.message;
-      bg.disabled = false; bg.textContent = orig;
+      bg.disabled = false; bg.innerHTML = orig;
     }
   };
 }
