@@ -1,0 +1,160 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Mock UI Guías v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://ricmusselli-alt.github.io/musselli-admin/panel.css">
+<style id="pagecss"></style></head>
+<body>
+<div class="wrap"><div class="page-head"><h1 id="hTitle"></h1><p id="hDesc"></p></div>
+<div id="viewHub" hidden></div>
+<div id="viewTipo"><div id="revList"></div></div></div>
+<div id="g_lightbox"><img src="" alt=""></div>
+<script>
+// --- stub de Panel ---
+const $ = (s,r)=>(r||document).querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+window.Panel = { $, esc, ayuda:()=>"", api:async()=>({}), edgeFn:async()=>({}) };
+const H_FECHA = iso => iso ? new Date(iso).toLocaleDateString("es-AR",{day:"2-digit",month:"short",year:"2-digit"}) : "—";
+function busy(){} function unbusy(){} function reload(){} function route(){}
+let DATA = {
+  guias: [
+    { slug:"como-elegir-la-madera-del-fondo", linea:"luthier", estado:"borrador",
+      tema:"cómo elegir la madera del fondo de tu guitarra clásica",
+      texto_json:{ titulo_guia:"Guía técnica: la madera del fondo y los aros" } },
+    { slug:"goma-laca-vs-nitrocelulosa", linea:"luthier", estado:"publicada",
+      tema:"goma laca vs nitrocelulosa", publicada_at:"2026-09-08T20:00:00Z",
+      texto_json:{ titulo_guia:"Goma laca vs. barniz sintético" } },
+  ],
+  guia_secciones: [1,2,3,4,5].map(n => ({
+    slug:"como-elegir-la-madera-del-fondo", seccion_num:n,
+    titulo:["Densidad y rigidez del fondo","Palisandro, arce y ciprés","Cómo reflejan el sonido los aros","Humedad y estabilidad dimensional","Qué significa esto para vos"][n-1],
+    img_prompt:"foto...", img_intentos:n===2?2:1,
+    img_status: n<=3 ? "aprobada" : "pendiente",
+    img_url: `https://picsum.photos/seed/g${n}/400/400`,
+  })),
+};
+</script>
+<script>
+// --- pego acá las funciones reales de contenido.html (extraídas) ---
+const G_EST = {
+  borrador:    { txt:"Imágenes pendientes de revisión", cls:"warn" },
+  imagenes_ok: { txt:"Listo para publicar", cls:"idle" },
+  publicada:   { txt:"Publicada", cls:"ok" },
+};
+// Hostinger sirve la guía sin extensión (/guia.html redirige a /guia): link limpio para compartir.
+const GUIA_URL = (slug) => `https://ricardomusselli.com/recursos/${slug}/guia`;
+
+// Bloque de link con botón Copiar + Abrir (se reusa en tarjeta e historial).
+function linkCopiable(url){
+  return `<span class="g-link">
+    <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>
+    <button class="btn btn-ghost btn-copy" data-copy="${esc(url)}">Copiar</button>
+    <a class="btn btn-ghost btn-copy" href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir</a>
+  </span>`;
+}
+
+// Tarjeta de una guía EN CURSO (borrador / imagenes_ok): progreso + grilla 3×N + barra publicar.
+function guiaCard(g){
+  const secs = (DATA.guia_secciones || []).filter(s => s.slug === g.slug)
+    .sort((a,b) => a.seccion_num - b.seccion_num);
+  const total = secs.length;
+  const aprob = secs.filter(s => s.img_status === "aprobada").length;
+  const lineaLbl = g.linea === "luthier" ? "Luthería" : "Guitar Tech";
+  const e = G_EST[g.estado] || { txt:g.estado, cls:"idle" };
+  const titulo = (g.texto_json && g.texto_json.titulo_guia) || g.tema;
+
+  const grid = secs.map(s => {
+    const ap = s.img_status === "aprobada";
+    const dot = ap ? "ok" : "pend";
+    const intento = s.img_intentos > 1 ? ` · v${s.img_intentos}` : "";
+    const media = s.img_url
+      ? `<div class="g-thumb__imgwrap${ap ? "" : " pend"}" data-zoom="${esc(s.img_url)}">
+           <span class="g-thumb__n">${s.seccion_num}${intento}</span>
+           <span class="g-thumb__dot ${dot}"></span>
+           <img src="${esc(s.img_url)}" alt="" loading="lazy">
+         </div>`
+      : `<div class="g-thumb__imgwrap pend">
+           <span class="g-thumb__n">${s.seccion_num}</span>
+           <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--texto-mute);font-size:var(--fs-micro)">generando…</span>
+         </div>`;
+    return `<div class="g-thumb${ap ? " ok" : ""}">
+      ${media}
+      <div class="g-thumb__body">
+        <div class="g-thumb__tit">${esc(s.titulo)}</div>
+        <div class="g-thumb__acts">
+          <button class="btn-solid btn-mini" data-gap="${esc(g.slug)}|${s.seccion_num}" ${ap ? "disabled" : ""}>✓ Aprobar</button>
+          <button class="btn-ghost btn-mini" data-gre="${esc(g.slug)}|${s.seccion_num}">↻ Rehacer</button>
+        </div>
+        <input class="g-ajuste" data-ajuste="${esc(g.slug)}|${s.seccion_num}" placeholder="ajuste opcional, y ↻ de nuevo">
+      </div>
+    </div>`;
+  }).join("");
+
+  const listo = g.estado === "imagenes_ok";
+  const pub = `<div class="g-pub">
+    <button class="btn-solid btn-mini" data-gpub="${esc(g.slug)}" ${listo ? "" : "disabled"}>Publicar</button>
+    <span class="g-hint">${listo ? "Todas las imágenes aprobadas — al publicar aparece en el historial de abajo con el link." : `Faltan aprobar ${total - aprob} de ${total} imágenes.`}</span>
+  </div>`;
+
+  return `<div class="revitem" data-slug="${esc(g.slug)}">
+    <div class="revitem__head">
+      <span class="t">${esc(titulo)}</span>
+      <span class="tag">${lineaLbl}</span>
+      <span class="h-est ${e.cls}">${e.txt}</span>
+    </div>
+    <div class="g-prog"><b>${aprob}</b> de <b>${total}</b> imágenes aprobadas · slug <code>${esc(g.slug)}</code></div>
+    ${total ? `<div class="g-grid">${grid}</div>` : '<div class="vacio">Sin secciones — volvé a generar.</div>'}
+    ${pub}
+  </div>`;
+}
+
+// Historial de guías ya publicadas: fila compacta con link copiable.
+function guiasPublicadasHtml(pubs){
+  if (!pubs.length) return "";
+  const rows = pubs.map(g => {
+    const titulo = (g.texto_json && g.texto_json.titulo_guia) || g.tema;
+    const lineaLbl = g.linea === "luthier" ? "Luthería" : "Guitar Tech";
+    return `<tr>
+      <td>${esc(titulo)}<span class="h-linea">${lineaLbl}</span></td>
+      <td class="h-fecha">${H_FECHA(g.publicada_at)}</td>
+      <td>${linkCopiable(GUIA_URL(g.slug))}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="seccion" style="margin-top:38px">
+    <div class="seccion__head"><span class="kicker">Historial</span><h2>Guías publicadas</h2><span class="count">· ${pubs.length}</span></div>
+    <div style="overflow-x:auto"><table class="histtable g-hist">
+      <thead><tr><th>Guía</th><th>Publicada</th><th>Link</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function renderGuias(){
+  $("#hTitle").textContent = "Guías · Recursos";
+  $("#hDesc").textContent = "Cargá un tema, revisá las imágenes (aprobar / rehacer) y publicá. El link queda en el historial, con botón para copiarlo.";
+  const form = `<div class="card g-form">
+    <span class="kicker" style="width:100%">Nueva guía</span>
+    <input id="g_tema" placeholder="Tema de la guía (ej. Cómo elegir la madera de la tapa)">
+    <select id="g_linea">
+      <option value="luthier">Luthería</option>
+      <option value="guitartech">Guitar Tech</option>
+    </select>
+    <input id="g_slug" placeholder="slug (opcional — se genera del tema)">
+    <button id="g_gen" class="btn-solid btn-mini">Generar</button>
+  </div>`;
+  const guias = DATA.guias || [];
+  const enCurso = guias.filter(g => g.estado !== "publicada");
+  const pubs = guias.filter(g => g.estado === "publicada");
+  const lista = enCurso.length
+    ? enCurso.map(guiaCard).join("")
+    : (pubs.length ? "" : '<div class="vacio">Todavía no generaste ninguna guía.</div>');
+  $("#revList").innerHTML = form + lista + guiasPublicadasHtml(pubs);
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+}
+</script>
+<script>
+// inyecto el <style> de guías extraído de contenido.html
+document.getElementById("pagecss").textContent = "/* ---- Guías (motor de Recursos) ---- */\n  .g-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px}\n  .g-form input,.g-form select{background:var(--panel-2,#211d1a);border:1px solid var(--linea);\n    border-radius:8px;color:var(--texto);font:inherit;font-size:var(--fs-small);padding:9px 11px}\n  .g-form input#g_tema{flex:1;min-width:220px}\n  .g-form input#g_slug{width:210px}\n\n  .g-prog{font-size:var(--fs-small);color:var(--texto-2);margin:2px 0 14px}\n  .g-prog b{color:var(--texto)}\n\n  /* grilla de miniaturas: 3 por fila */\n  .g-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}\n  @media(max-width:640px){.g-grid{grid-template-columns:repeat(2,1fr)}}\n  .g-thumb{border:1px solid var(--linea);border-radius:10px;overflow:hidden;background:rgba(245,240,230,.02);display:flex;flex-direction:column}\n  .g-thumb.ok{border-color:rgba(122,168,116,.5)}\n  .g-thumb__imgwrap{position:relative;aspect-ratio:1;background:#0e0d0c;cursor:zoom-in}\n  .g-thumb__imgwrap img{width:100%;height:100%;object-fit:cover;display:block}\n  .g-thumb__imgwrap.pend img{opacity:.45}\n  .g-thumb__n{position:absolute;top:6px;left:6px;background:rgba(20,18,18,.82);color:#fff;font-size:11px;\n    padding:2px 7px;border-radius:6px}\n  .g-thumb__dot{position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%}\n  .g-thumb__dot.ok{background:var(--ok,#7aa874)} .g-thumb__dot.pend{background:var(--aviso,#d8a24a)}\n  .g-thumb__body{padding:9px;display:flex;flex-direction:column;gap:7px}\n  .g-thumb__tit{font-size:var(--fs-micro);color:var(--texto-2);line-height:1.35;\n    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n  .g-thumb__acts{display:flex;gap:6px}\n  .g-thumb__acts button{flex:1;font-size:11px;padding:5px 4px}\n  .g-ajuste{display:none;width:100%;background:var(--panel-2,#211d1a);border:1px solid var(--linea);\n    border-radius:7px;color:var(--texto);font:inherit;font-size:11.5px;padding:6px 8px;margin-top:2px}\n  .g-ajuste.show{display:block}\n\n  .g-pub{margin-top:18px;border-top:1px solid var(--linea);padding-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}\n  .g-hint{font-size:var(--fs-micro);color:var(--texto-mute)}\n\n  /* link con copiar */\n  .g-link{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}\n  .g-link a{color:var(--cobre);word-break:break-all;font-size:var(--fs-small)}\n  .btn-copy{font-size:11px;padding:5px 10px;white-space:nowrap}\n  .btn-copy.done{color:var(--ok,#7aa874);border-color:var(--ok,#7aa874)}\n\n  /* historial de guías publicadas */\n  .g-hist td{padding:10px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2);vertical-align:middle;font-size:var(--fs-small)}\n  .g-hist th{text-align:left;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--cobre);\n    padding:9px 12px;border-bottom:1px solid var(--linea-fuerte)}\n\n  /* lightbox */\n  #g_lightbox{position:fixed;inset:0;background:rgba(8,7,7,.9);display:none;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out;padding:24px}\n  #g_lightbox.show{display:flex}\n  #g_lightbox img{max-width:96vw;max-height:92vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}";
+renderGuias();
+</script>
+</body></html>

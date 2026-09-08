@@ -47,21 +47,54 @@
     padding:9px 12px;margin:0 0 12px;font-size:var(--fs-small);color:#e79a9c;line-height:1.5}
 
   /* ---- Guías (motor de Recursos) ---- */
-  .g-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px}
+  .g-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px}
   .g-form input,.g-form select{background:var(--panel-2,#211d1a);border:1px solid var(--linea);
     border-radius:8px;color:var(--texto);font:inherit;font-size:var(--fs-small);padding:9px 11px}
   .g-form input#g_tema{flex:1;min-width:220px}
-  .g-form input#g_slug{width:230px}
-  .g-sec{border:1px solid var(--linea);border-radius:12px;padding:14px;margin:12px 0;background:rgba(245,240,230,.02)}
-  .g-sec__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-  .g-sec__head b{font-size:var(--fs-small);color:var(--texto)}
-  .g-sec__img{display:block;width:100%;max-width:520px;border-radius:8px;border:1px solid rgba(200,155,108,.2);background:#0e0d0c}
-  .g-sec__img.pend{opacity:.5}
-  .g-ajuste{flex:1;min-width:150px;max-width:320px;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
-    border-radius:8px;color:var(--texto);font:inherit;font-size:var(--fs-small);padding:7px 10px}
-  .g-pub{margin-top:16px;border-top:1px solid var(--linea);padding-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .g-pub a{color:var(--cobre);word-break:break-all}
+  .g-form input#g_slug{width:210px}
+
+  .g-prog{font-size:var(--fs-small);color:var(--texto-2);margin:2px 0 14px}
+  .g-prog b{color:var(--texto)}
+
+  /* grilla de miniaturas: 3 por fila */
+  .g-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:640px){.g-grid{grid-template-columns:repeat(2,1fr)}}
+  .g-thumb{border:1px solid var(--linea);border-radius:10px;overflow:hidden;background:rgba(245,240,230,.02);display:flex;flex-direction:column}
+  .g-thumb.ok{border-color:rgba(122,168,116,.5)}
+  .g-thumb__imgwrap{position:relative;aspect-ratio:1;background:#0e0d0c;cursor:zoom-in}
+  .g-thumb__imgwrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .g-thumb__imgwrap.pend img{opacity:.45}
+  .g-thumb__n{position:absolute;top:6px;left:6px;background:rgba(20,18,18,.82);color:#fff;font-size:11px;
+    padding:2px 7px;border-radius:6px}
+  .g-thumb__dot{position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%}
+  .g-thumb__dot.ok{background:var(--ok,#7aa874)} .g-thumb__dot.pend{background:var(--aviso,#d8a24a)}
+  .g-thumb__body{padding:9px;display:flex;flex-direction:column;gap:7px}
+  .g-thumb__tit{font-size:var(--fs-micro);color:var(--texto-2);line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .g-thumb__acts{display:flex;gap:6px}
+  .g-thumb__acts button{flex:1;font-size:11px;padding:5px 4px}
+  .g-ajuste{display:none;width:100%;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:7px;color:var(--texto);font:inherit;font-size:11.5px;padding:6px 8px;margin-top:2px}
+  .g-ajuste.show{display:block}
+
+  .g-pub{margin-top:18px;border-top:1px solid var(--linea);padding-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .g-hint{font-size:var(--fs-micro);color:var(--texto-mute)}
+
+  /* link con copiar */
+  .g-link{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .g-link a{color:var(--cobre);word-break:break-all;font-size:var(--fs-small)}
+  .btn-copy{font-size:11px;padding:5px 10px;white-space:nowrap}
+  .btn-copy.done{color:var(--ok,#7aa874);border-color:var(--ok,#7aa874)}
+
+  /* historial de guías publicadas */
+  .g-hist td{padding:10px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2);vertical-align:middle;font-size:var(--fs-small)}
+  .g-hist th{text-align:left;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--cobre);
+    padding:9px 12px;border-bottom:1px solid var(--linea-fuerte)}
+
+  /* lightbox */
+  #g_lightbox{position:fixed;inset:0;background:rgba(8,7,7,.9);display:none;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out;padding:24px}
+  #g_lightbox.show{display:flex}
+  #g_lightbox img{max-width:96vw;max-height:92vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
@@ -87,6 +120,8 @@
   </div>
 
 </div>
+
+<div id="g_lightbox"><img src="" alt=""></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="panel.js"></script>
@@ -325,51 +360,64 @@ function renderTexto(t){
 
 /* ---------- Guías (motor de Recursos) ---------- */
 const G_EST = {
-  borrador:    { txt:"Borrador · imágenes pendientes", cls:"warn" },
-  imagenes_ok: { txt:"Imágenes aprobadas · listo para publicar", cls:"idle" },
+  borrador:    { txt:"Imágenes pendientes de revisión", cls:"warn" },
+  imagenes_ok: { txt:"Listo para publicar", cls:"idle" },
   publicada:   { txt:"Publicada", cls:"ok" },
 };
+// Hostinger sirve la guía sin extensión (/guia.html redirige a /guia): link limpio para compartir.
+const GUIA_URL = (slug) => `https://ricardomusselli.com/recursos/${slug}/guia`;
 
+// Bloque de link con botón Copiar + Abrir (se reusa en tarjeta e historial).
+function linkCopiable(url){
+  return `<span class="g-link">
+    <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>
+    <button class="btn btn-ghost btn-copy" data-copy="${esc(url)}">Copiar</button>
+    <a class="btn btn-ghost btn-copy" href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir</a>
+  </span>`;
+}
+
+// Tarjeta de una guía EN CURSO (borrador / imagenes_ok): progreso + grilla 3×N + barra publicar.
 function guiaCard(g){
-  const secs = (DATA.guia_secciones || []).filter(s => s.slug === g.slug);
+  const secs = (DATA.guia_secciones || []).filter(s => s.slug === g.slug)
+    .sort((a,b) => a.seccion_num - b.seccion_num);
   const total = secs.length;
+  const aprob = secs.filter(s => s.img_status === "aprobada").length;
   const lineaLbl = g.linea === "luthier" ? "Luthería" : "Guitar Tech";
   const e = G_EST[g.estado] || { txt:g.estado, cls:"idle" };
   const titulo = (g.texto_json && g.texto_json.titulo_guia) || g.tema;
 
-  const secHtml = secs.map(s => {
+  const grid = secs.map(s => {
     const ap = s.img_status === "aprobada";
-    const est = ap ? { txt:"aprobada", cls:"ok" } : { txt:"pendiente", cls:"warn" };
-    const intento = s.img_intentos > 1 ? ` · intento ${s.img_intentos}` : "";
-    const img = s.img_url
-      ? `<img class="g-sec__img${ap ? "" : ""}" src="${esc(s.img_url)}" alt="" loading="lazy">`
-      : `<div class="g-sec__img pend" style="height:200px;display:flex;align-items:center;justify-content:center;color:var(--texto-mute);font-size:var(--fs-micro)">generando imagen…</div>`;
-    return `<div class="g-sec" data-sec="${s.seccion_num}">
-      <div class="g-sec__head">
-        <b>Sección ${s.seccion_num}: ${esc(s.titulo)}</b>
-        <span class="h-est ${est.cls}">${est.txt}${intento}</span>
-      </div>
-      ${img}
-      <div class="cap">${esc(s.img_prompt)}</div>
-      <div class="revitem__acts">
-        <button class="btn-solid btn-mini" data-gap="${esc(g.slug)}|${s.seccion_num}" ${ap ? "disabled" : ""}>Aprobar</button>
-        <input class="g-ajuste" data-ajuste="${esc(g.slug)}|${s.seccion_num}" placeholder="ajuste opcional para rehacer…">
-        <button class="btn-ghost btn-mini" data-gre="${esc(g.slug)}|${s.seccion_num}">Rehacer</button>
+    const dot = ap ? "ok" : "pend";
+    const intento = s.img_intentos > 1 ? ` · v${s.img_intentos}` : "";
+    const media = s.img_url
+      ? `<div class="g-thumb__imgwrap${ap ? "" : " pend"}" data-zoom="${esc(s.img_url)}">
+           <span class="g-thumb__n">${s.seccion_num}${intento}</span>
+           <span class="g-thumb__dot ${dot}"></span>
+           <img src="${esc(s.img_url)}" alt="" loading="lazy">
+         </div>`
+      : `<div class="g-thumb__imgwrap pend">
+           <span class="g-thumb__n">${s.seccion_num}</span>
+           <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--texto-mute);font-size:var(--fs-micro)">generando…</span>
+         </div>`;
+    return `<div class="g-thumb${ap ? " ok" : ""}">
+      ${media}
+      <div class="g-thumb__body">
+        <div class="g-thumb__tit">${esc(s.titulo)}</div>
+        <div class="g-thumb__acts">
+          <button class="btn-solid btn-mini" data-gap="${esc(g.slug)}|${s.seccion_num}" ${ap ? "disabled" : ""}>✓ Aprobar</button>
+          <button class="btn-ghost btn-mini" data-gre="${esc(g.slug)}|${s.seccion_num}">↻ Rehacer</button>
+        </div>
+        <input class="g-ajuste" data-ajuste="${esc(g.slug)}|${s.seccion_num}" placeholder="ajuste opcional, y ↻ de nuevo">
       </div>
     </div>`;
   }).join("");
 
-  let pub;
-  if (g.estado === "publicada"){
-    const url = `https://ricardomusselli.com/recursos/${esc(g.slug)}/guia.html`;
-    pub = `<div class="g-pub"><span>Publicada:</span> <a href="${url}" target="_blank" rel="noopener">${url}</a></div>`;
-  } else {
-    const listo = g.estado === "imagenes_ok";
-    pub = `<div class="g-pub">
-      <button class="btn-solid btn-mini" data-gpub="${esc(g.slug)}" ${listo ? "" : "disabled"}>Publicar</button>
-      <span class="g-hint">${listo ? "Todas las imágenes aprobadas." : "Aprobá todas las imágenes para habilitar Publicar."}</span>
-    </div>`;
-  }
+  const listo = g.estado === "imagenes_ok";
+  const pub = `<div class="g-pub">
+    <button class="btn-solid btn-mini" data-gpub="${esc(g.slug)}" ${listo ? "" : "disabled"}>Publicar</button>
+    <span class="g-hint">${listo ? "Todas las imágenes aprobadas — al publicar aparece en el historial de abajo con el link." : `Faltan aprobar ${total - aprob} de ${total} imágenes.`}</span>
+  </div>`;
 
   return `<div class="revitem" data-slug="${esc(g.slug)}">
     <div class="revitem__head">
@@ -377,15 +425,36 @@ function guiaCard(g){
       <span class="tag">${lineaLbl}</span>
       <span class="h-est ${e.cls}">${e.txt}</span>
     </div>
-    <div class="g-hint" style="margin-bottom:8px">slug <code>${esc(g.slug)}</code> · tema: ${esc(g.tema)}</div>
-    ${total ? secHtml : '<div class="vacio">Sin secciones — volvé a generar.</div>'}
+    <div class="g-prog"><b>${aprob}</b> de <b>${total}</b> imágenes aprobadas · slug <code>${esc(g.slug)}</code></div>
+    ${total ? `<div class="g-grid">${grid}</div>` : '<div class="vacio">Sin secciones — volvé a generar.</div>'}
     ${pub}
+  </div>`;
+}
+
+// Historial de guías ya publicadas: fila compacta con link copiable.
+function guiasPublicadasHtml(pubs){
+  if (!pubs.length) return "";
+  const rows = pubs.map(g => {
+    const titulo = (g.texto_json && g.texto_json.titulo_guia) || g.tema;
+    const lineaLbl = g.linea === "luthier" ? "Luthería" : "Guitar Tech";
+    return `<tr>
+      <td>${esc(titulo)}<span class="h-linea">${lineaLbl}</span></td>
+      <td class="h-fecha">${H_FECHA(g.publicada_at)}</td>
+      <td>${linkCopiable(GUIA_URL(g.slug))}</td>
+    </tr>`;
+  }).join("");
+  return `<div class="seccion" style="margin-top:38px">
+    <div class="seccion__head"><span class="kicker">Historial</span><h2>Guías publicadas</h2><span class="count">· ${pubs.length}</span></div>
+    <div style="overflow-x:auto"><table class="histtable g-hist">
+      <thead><tr><th>Guía</th><th>Publicada</th><th>Link</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
   </div>`;
 }
 
 function renderGuias(){
   $("#hTitle").textContent = "Guías · Recursos";
-  $("#hDesc").textContent = "Generá una guía HTML tipo documento para un lead magnet. Aprobá cada imagen; cuando estén todas, publicás.";
+  $("#hDesc").textContent = "Cargá un tema, revisá las imágenes (aprobar / rehacer) y publicá. El link queda en el historial, con botón para copiarlo.";
   const form = `<div class="card g-form">
     <span class="kicker" style="width:100%">Nueva guía</span>
     <input id="g_tema" placeholder="Tema de la guía (ej. Cómo elegir la madera de la tapa)">
@@ -397,10 +466,12 @@ function renderGuias(){
     <button id="g_gen" class="btn-solid btn-mini">Generar</button>
   </div>`;
   const guias = DATA.guias || [];
-  const lista = guias.length
-    ? guias.map(guiaCard).join("")
-    : '<div class="vacio">Todavía no generaste ninguna guía.</div>';
-  $("#revList").innerHTML = form + lista;
+  const enCurso = guias.filter(g => g.estado !== "publicada");
+  const pubs = guias.filter(g => g.estado === "publicada");
+  const lista = enCurso.length
+    ? enCurso.map(guiaCard).join("")
+    : (pubs.length ? "" : '<div class="vacio">Todavía no generaste ninguna guía.</div>');
+  $("#revList").innerHTML = form + lista + guiasPublicadasHtml(pubs);
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -429,6 +500,8 @@ function route(){
 
 $("#btnBack").addEventListener("click", () => { location.hash = ""; });
 window.addEventListener("hashchange", route);
+$("#g_lightbox").addEventListener("click", () => $("#g_lightbox").classList.remove("show"));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#g_lightbox").classList.remove("show"); });
 
 // Botón "pensando": muestra un círculo girando mientras el sistema procesa.
 function busy(btn, texto){
@@ -544,11 +617,36 @@ $("#revList").addEventListener("click", async (ev) => {
 
   if (gRe){
     const [slug, num] = gRe.dataset.gre.split("|");
-    const inp = document.querySelector(`[data-ajuste="${slug}|${num}"]`);
+    const inp = document.querySelector(`.g-ajuste[data-ajuste="${slug}|${num}"]`);
+    // 1er clic: revela el campo de ajuste. 2do clic: rehace (con o sin ajuste).
+    if (inp && !inp.classList.contains("show")){
+      inp.classList.add("show"); inp.focus();
+      gRe.textContent = "↻ Rehacer ahora";
+      return;
+    }
     const ajuste = inp ? inp.value.trim() : "";
     busy(gRe, "Rehaciendo");
     try { await api("POST", { action:"guia_imagen", slug, seccion_num: Number(num), accion:"rehacer", ajuste }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); unbusy(gRe); }
+  }
+
+  // Ampliar miniatura (lightbox)
+  const zoom = ev.target.closest("[data-zoom]");
+  if (zoom){
+    const lb = $("#g_lightbox");
+    lb.querySelector("img").src = zoom.dataset.zoom;
+    lb.classList.add("show");
+  }
+
+  // Copiar link
+  const cp = ev.target.closest("[data-copy]");
+  if (cp && cp.tagName === "BUTTON"){
+    try {
+      await navigator.clipboard.writeText(cp.dataset.copy);
+      const orig = cp.textContent;
+      cp.textContent = "¡Copiado!"; cp.classList.add("done");
+      setTimeout(() => { cp.textContent = orig; cp.classList.remove("done"); }, 1600);
+    } catch(_) { window.prompt("Copiá el link:", cp.dataset.copy); }
   }
 
   if (gPub){
