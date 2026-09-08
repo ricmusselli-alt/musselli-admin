@@ -45,6 +45,23 @@
   .h-acc{white-space:nowrap}
   .pub-error{background:rgba(198,91,91,.12);border:1px solid rgba(198,91,91,.4);border-radius:8px;
     padding:9px 12px;margin:0 0 12px;font-size:var(--fs-small);color:#e79a9c;line-height:1.5}
+
+  /* ---- Guías (motor de Recursos) ---- */
+  .g-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px}
+  .g-form input,.g-form select{background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:8px;color:var(--texto);font:inherit;font-size:var(--fs-small);padding:9px 11px}
+  .g-form input#g_tema{flex:1;min-width:220px}
+  .g-form input#g_slug{width:230px}
+  .g-sec{border:1px solid var(--linea);border-radius:12px;padding:14px;margin:12px 0;background:rgba(245,240,230,.02)}
+  .g-sec__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .g-sec__head b{font-size:var(--fs-small);color:var(--texto)}
+  .g-sec__img{display:block;width:100%;max-width:520px;border-radius:8px;border:1px solid rgba(200,155,108,.2);background:#0e0d0c}
+  .g-sec__img.pend{opacity:.5}
+  .g-ajuste{flex:1;min-width:150px;max-width:320px;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:8px;color:var(--texto);font:inherit;font-size:var(--fs-small);padding:7px 10px}
+  .g-pub{margin-top:16px;border-top:1px solid var(--linea);padding-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .g-pub a{color:var(--cobre);word-break:break-all}
+  .g-hint{font-size:var(--fs-micro);color:var(--texto-mute)}
 </style>
 </head>
 <body>
@@ -81,6 +98,7 @@ const TIPOS = [
   { key:"carrusel",   logo:"instagram",  nom:"Carruseles Instagram", listo:true, famKey:"carrusel" },
   { key:"blog",       logo:"blog",       nom:"Musselli Blog",        listo:true, famKey:"blog" },
   { key:"tendencias", logo:"tendencias", nom:"Musselli Tendencias",  listo:true, famKey:"tendencias" },
+  { key:"guias",      logo:"recursos", ico:"G", nom:"Guías · Recursos", listo:true, famKey:"recursos" },
   { key:"tiktok",     logo:"tiktok", ico:"♪", nom:"Carruseles TikTok", listo:false },
 ];
 
@@ -88,6 +106,7 @@ function pendDe(key){
   if (key === "carrusel" || key === "tiktok") return (DATA.carrusel_drafts || []).length;
   if (key === "blog")     return (DATA.blog_drafts || []).length;
   if (key === "tendencias")return (DATA.trend_drafts || []).length;
+  if (key === "guias")    return (DATA.guias || []).filter(g => g.estado !== "publicada").length;
   return 0;
 }
 
@@ -304,6 +323,88 @@ function renderTexto(t){
   $("#viewTipo").hidden = false;
 }
 
+/* ---------- Guías (motor de Recursos) ---------- */
+const G_EST = {
+  borrador:    { txt:"Borrador · imágenes pendientes", cls:"warn" },
+  imagenes_ok: { txt:"Imágenes aprobadas · listo para publicar", cls:"idle" },
+  publicada:   { txt:"Publicada", cls:"ok" },
+};
+
+function guiaCard(g){
+  const secs = (DATA.guia_secciones || []).filter(s => s.slug === g.slug);
+  const total = secs.length;
+  const lineaLbl = g.linea === "luthier" ? "Luthería" : "Guitar Tech";
+  const e = G_EST[g.estado] || { txt:g.estado, cls:"idle" };
+  const titulo = (g.texto_json && g.texto_json.titulo_guia) || g.tema;
+
+  const secHtml = secs.map(s => {
+    const ap = s.img_status === "aprobada";
+    const est = ap ? { txt:"aprobada", cls:"ok" } : { txt:"pendiente", cls:"warn" };
+    const intento = s.img_intentos > 1 ? ` · intento ${s.img_intentos}` : "";
+    const img = s.img_url
+      ? `<img class="g-sec__img${ap ? "" : ""}" src="${esc(s.img_url)}" alt="" loading="lazy">`
+      : `<div class="g-sec__img pend" style="height:200px;display:flex;align-items:center;justify-content:center;color:var(--texto-mute);font-size:var(--fs-micro)">generando imagen…</div>`;
+    return `<div class="g-sec" data-sec="${s.seccion_num}">
+      <div class="g-sec__head">
+        <b>Sección ${s.seccion_num}: ${esc(s.titulo)}</b>
+        <span class="h-est ${est.cls}">${est.txt}${intento}</span>
+      </div>
+      ${img}
+      <div class="cap">${esc(s.img_prompt)}</div>
+      <div class="revitem__acts">
+        <button class="btn-solid btn-mini" data-gap="${esc(g.slug)}|${s.seccion_num}" ${ap ? "disabled" : ""}>Aprobar</button>
+        <input class="g-ajuste" data-ajuste="${esc(g.slug)}|${s.seccion_num}" placeholder="ajuste opcional para rehacer…">
+        <button class="btn-ghost btn-mini" data-gre="${esc(g.slug)}|${s.seccion_num}">Rehacer</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  let pub;
+  if (g.estado === "publicada"){
+    const url = `https://ricardomusselli.com/recursos/${esc(g.slug)}/guia.html`;
+    pub = `<div class="g-pub"><span>Publicada:</span> <a href="${url}" target="_blank" rel="noopener">${url}</a></div>`;
+  } else {
+    const listo = g.estado === "imagenes_ok";
+    pub = `<div class="g-pub">
+      <button class="btn-solid btn-mini" data-gpub="${esc(g.slug)}" ${listo ? "" : "disabled"}>Publicar</button>
+      <span class="g-hint">${listo ? "Todas las imágenes aprobadas." : "Aprobá todas las imágenes para habilitar Publicar."}</span>
+    </div>`;
+  }
+
+  return `<div class="revitem" data-slug="${esc(g.slug)}">
+    <div class="revitem__head">
+      <span class="t">${esc(titulo)}</span>
+      <span class="tag">${lineaLbl}</span>
+      <span class="h-est ${e.cls}">${e.txt}</span>
+    </div>
+    <div class="g-hint" style="margin-bottom:8px">slug <code>${esc(g.slug)}</code> · tema: ${esc(g.tema)}</div>
+    ${total ? secHtml : '<div class="vacio">Sin secciones — volvé a generar.</div>'}
+    ${pub}
+  </div>`;
+}
+
+function renderGuias(){
+  $("#hTitle").textContent = "Guías · Recursos";
+  $("#hDesc").textContent = "Generá una guía HTML tipo documento para un lead magnet. Aprobá cada imagen; cuando estén todas, publicás.";
+  const form = `<div class="card g-form">
+    <span class="kicker" style="width:100%">Nueva guía</span>
+    <input id="g_tema" placeholder="Tema de la guía (ej. Cómo elegir la madera de la tapa)">
+    <select id="g_linea">
+      <option value="luthier">Luthería</option>
+      <option value="guitartech">Guitar Tech</option>
+    </select>
+    <input id="g_slug" placeholder="slug del lead magnet (ya cargado en Recursos)">
+    <button id="g_gen" class="btn-solid btn-mini">Generar</button>
+  </div>`;
+  const guias = DATA.guias || [];
+  const lista = guias.length
+    ? guias.map(guiaCard).join("")
+    : '<div class="vacio">Todavía no generaste ninguna guía.</div>';
+  $("#revList").innerHTML = form + lista;
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+}
+
 function renderPlaceholder(t){
   $("#hTitle").textContent = "Carruseles TikTok";
   $("#hDesc").textContent = "Enviá lo pendiente a TikTok o rechazalo, y mirá el historial de lo que fue a TikTok.";
@@ -322,6 +423,7 @@ function route(){
   if (!t){ renderHub(); return; }
   if (t.key === "carrusel") renderCarrusel();
   else if (t.key === "blog" || t.key === "tendencias") renderTexto(t);
+  else if (t.key === "guias") renderGuias();
   else renderPlaceholder(t);
 }
 
@@ -407,6 +509,56 @@ $("#revList").addEventListener("click", async (ev) => {
       else if (decision === "redo") alert("Mandado a rehacer. Va a aparecer un borrador nuevo cuando termine.");
       await reload(); route();
     } catch(e){ alert("Error: " + e.message); unbusy(tx); }
+  }
+
+  // ---- Guías ----
+  const gGen = ev.target.closest("#g_gen");
+  const gAp  = ev.target.closest("[data-gap]");
+  const gRe  = ev.target.closest("[data-gre]");
+  const gPub = ev.target.closest("[data-gpub]");
+
+  if (gGen){
+    const tema = ($("#g_tema").value || "").trim();
+    const linea = $("#g_linea").value;
+    const slug = ($("#g_slug").value || "").trim();
+    if (!tema || !slug){ alert("Completá tema y slug."); return; }
+    busy(gGen, "Redactando");
+    try {
+      const g = await api("POST", { action:"guia_generar", slug, tema, linea });
+      gGen.innerHTML = `<span class="spin"></span>Generando ${g.secciones.length} imágenes`;
+      await Promise.all(g.secciones.map(s =>
+        api("POST", { action:"guia_imagen", slug, seccion_num: s.seccion_num, accion:"generar" })
+          .catch(e => console.warn("img " + s.seccion_num + ": " + e.message))
+      ));
+      await reload(); route();
+    } catch(e){ alert("No se pudo generar: " + e.message); unbusy(gGen); }
+  }
+
+  if (gAp){
+    const [slug, num] = gAp.dataset.gap.split("|");
+    busy(gAp, "Aprobando");
+    try { await api("POST", { action:"guia_imagen", slug, seccion_num: Number(num), accion:"aprobar" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); unbusy(gAp); }
+  }
+
+  if (gRe){
+    const [slug, num] = gRe.dataset.gre.split("|");
+    const inp = document.querySelector(`[data-ajuste="${slug}|${num}"]`);
+    const ajuste = inp ? inp.value.trim() : "";
+    busy(gRe, "Rehaciendo");
+    try { await api("POST", { action:"guia_imagen", slug, seccion_num: Number(num), accion:"rehacer", ajuste }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); unbusy(gRe); }
+  }
+
+  if (gPub){
+    const slug = gPub.dataset.gpub;
+    if (!confirm("¿Publicar esta guía ahora? Sube el guia.html a Hostinger. No se puede deshacer desde acá.")) return;
+    busy(gPub, "Publicando");
+    try {
+      const r = await api("POST", { action:"guia_publicar", slug });
+      alert("Publicada:\n" + r.url);
+      await reload(); route();
+    } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(gPub); }
   }
 });
 
