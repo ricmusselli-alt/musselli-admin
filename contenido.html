@@ -47,12 +47,6 @@
     padding:9px 12px;margin:0 0 12px;font-size:var(--fs-small);color:#e79a9c;line-height:1.5}
 
   /* ---- Guías (motor de Recursos) ---- */
-  .g-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px}
-  .g-form input,.g-form select{background:var(--panel-2,#211d1a);border:1px solid var(--linea);
-    border-radius:8px;color:var(--texto);font:inherit;font-size:var(--fs-small);padding:9px 11px}
-  .g-form input#g_tema{flex:1;min-width:220px}
-  .g-form input#g_slug{width:210px}
-
   .g-prog{font-size:var(--fs-small);color:var(--texto-2);margin:2px 0 14px}
   .g-prog b{color:var(--texto)}
 
@@ -463,24 +457,17 @@ function guiasPublicadasHtml(pubs){
 
 function renderGuias(){
   $("#hTitle").textContent = "Guías · Recursos";
-  $("#hDesc").textContent = "Cargá un tema, revisá las imágenes (aprobar / rehacer) y publicá. El link queda en el historial, con botón para copiarlo.";
-  const form = `<div class="card g-form">
-    <span class="kicker" style="width:100%">Nueva guía</span>
-    <input id="g_tema" placeholder="Tema de la guía (ej. Cómo elegir la madera de la tapa)">
-    <select id="g_linea">
-      <option value="luthier">Luthería</option>
-      <option value="guitartech">Guitar Tech</option>
-    </select>
-    <input id="g_slug" placeholder="slug (opcional — se genera del tema)">
-    <button id="g_gen" class="btn-solid btn-mini">Generar</button>
+  $("#hDesc").textContent = "Revisá las imágenes de cada guía (aprobar / rehacer) y publicá. El link queda en el historial, con botón para copiarlo.";
+  const nueva = `<div class="g-hint" style="margin-bottom:22px">
+    ¿Crear una guía nueva? → <a href="familia.html?f=recursos" style="color:var(--cobre)">Portada · Musselli Recursos</a>
   </div>`;
   const guias = DATA.guias || [];
   const enCurso = guias.filter(g => g.estado !== "publicada");
   const pubs = guias.filter(g => g.estado === "publicada");
   const lista = enCurso.length
     ? enCurso.map(guiaCard).join("")
-    : (pubs.length ? "" : '<div class="vacio">Todavía no generaste ninguna guía.</div>');
-  $("#revList").innerHTML = form + lista + guiasPublicadasHtml(pubs);
+    : (pubs.length ? "" : '<div class="vacio">No hay guías en revisión. Creá una desde Portada · Musselli Recursos.</div>');
+  $("#revList").innerHTML = nueva + lista + guiasPublicadasHtml(pubs);
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -593,29 +580,10 @@ $("#revList").addEventListener("click", async (ev) => {
     } catch(e){ alert("Error: " + e.message); unbusy(tx); }
   }
 
-  // ---- Guías ----
-  const gGen = ev.target.closest("#g_gen");
+  // ---- Guías (crear una nueva es en familia.html?f=recursos; acá solo revisar/publicar) ----
   const gAp  = ev.target.closest("[data-gap]");
   const gRe  = ev.target.closest("[data-gre]");
   const gPub = ev.target.closest("[data-gpub]");
-
-  if (gGen){
-    const tema = ($("#g_tema").value || "").trim();
-    const linea = $("#g_linea").value;
-    const slug = ($("#g_slug").value || "").trim();
-    if (!tema){ alert("Escribí un tema."); return; }
-    busy(gGen, "Redactando");
-    try {
-      const g = await api("POST", { action:"guia_generar", slug, tema, linea });
-      const realSlug = g.slug || slug;   // guia-generar puede derivar el slug del tema
-      gGen.innerHTML = `<span class="spin"></span>Generando ${g.secciones.length} imágenes`;
-      await Promise.all(g.secciones.map(s =>
-        api("POST", { action:"guia_imagen", slug: realSlug, seccion_num: s.seccion_num, accion:"generar" })
-          .catch(e => console.warn("img " + s.seccion_num + ": " + e.message))
-      ));
-      await reload(); route();
-    } catch(e){ alert("No se pudo generar: " + e.message); unbusy(gGen); }
-  }
 
   if (gAp){
     const [slug, num] = gAp.dataset.gap.split("|");

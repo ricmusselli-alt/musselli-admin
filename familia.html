@@ -170,6 +170,29 @@ function cardGenSimple(){
   </div>`;
 }
 
+/* ---------------- Recursos: crear una guía ---------------- */
+function cardCrearGuia(){
+  return `<div class="card card--wide">
+    <h3>Nueva guía ${ayuda("Genera una guía HTML tipo documento para un lead magnet: investiga, redacta y crea una imagen candidata por sección. Después la revisás y publicás desde Contenido → Guías.")}</h3>
+    <p class="card__hint">Cargá el tema y la línea. Al generar, el sistema redacta la guía y sus imágenes, y te lleva a Contenido para revisarlas y publicar.</p>
+    <label class="campo"><span>Tema de la guía</span>
+      <input type="text" id="gTema" placeholder="Ej: Cómo elegir la madera de la tapa"></label>
+    <div class="linea-row" style="margin-top:12px">
+      <span class="nom" style="font-size:var(--fs-small);font-family:var(--sans);font-weight:400;color:var(--texto-2)">Línea</span>
+      <span class="linea-row__ctrl">
+        <select id="gLinea"><option value="luthier">Luthería</option><option value="guitartech">Guitar Tech</option></select>
+      </span>
+    </div>
+    <label class="campo" style="margin-top:10px"><span>Slug (opcional) ${ayuda("El identificador en la URL. Si lo dejás vacío se genera del tema.", true)}</span>
+      <input type="text" id="gSlug" placeholder="Se genera del tema si lo dejás vacío"></label>
+    <div class="fila" style="margin-top:14px">
+      <button class="btn-solid btn-mini" id="btnCrearGuia">Generar</button>
+      <a class="btn btn-ghost btn-mini" href="contenido.html#guias" style="text-decoration:none">Ver / revisar imágenes</a>
+    </div>
+    <div class="msg" id="gMsg" style="margin-top:10px"></div>
+  </div>`;
+}
+
 /* ---------------- carruseles: configuración de la automatización ---------------- */
 function cfgOf(cat){ return (DATA.carrusel_config || []).find(c => c.category === cat) || {}; }
 function cardCarruselConfig(){
@@ -274,13 +297,17 @@ function render(){
 
   const pend = FKEY === "carrusel" ? (DATA.carrusel_drafts||[]).length
              : FKEY === "blog" ? (DATA.blog_drafts||[]).length
-             : FKEY === "tendencias" ? (DATA.trend_drafts||[]).length : 0;
+             : FKEY === "tendencias" ? (DATA.trend_drafts||[]).length
+             : FKEY === "recursos" ? (DATA.guias||[]).filter(g => g.estado !== "publicada").length : 0;
+  const pendHref = FKEY === "recursos" ? "contenido.html#guias" : `contenido.html#${esc(FKEY)}`;
   $("#alertPend").innerHTML = pend
-    ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pend===1?'publicación':'publicaciones'} esperando tu aprobación</span>
-        <a href="contenido.html#${esc(FKEY)}">Revisar ahora →</a></div>` : "";
+    ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${FKEY === "recursos" ? (pend===1?'guía con imágenes por revisar':'guías con imágenes por revisar') : (pend===1?'publicación':'publicaciones')+' esperando tu aprobación'}</span>
+        <a href="${pendHref}">Revisar ahora →</a></div>` : "";
 
   let cards;
-  if (FAM.has_generator && FKEY === "carrusel"){
+  if (FKEY === "recursos"){
+    cards = [ cardCrearGuia(), cardEnlaces(), cardProveedores() ];
+  } else if (FAM.has_generator && FKEY === "carrusel"){
     cards = [ cardCarruselCrear(), cardCarruselConfig(), cardTokens(), cardProveedores(), cardEnlaces() ];
   } else if (FAM.has_generator && GEN[FKEY]){
     cards = [ cardGenSimple(), cardProveedores(), cardEnlaces() ];
@@ -345,6 +372,32 @@ function wire(){
 
   const carrCrear = $("#carr_crear");
   if (carrCrear) carrCrear.onclick = crearCarrusel;
+
+  const bg = $("#btnCrearGuia");
+  if (bg) bg.onclick = async () => {
+    const tema = ($("#gTema").value || "").trim();
+    const linea = $("#gLinea").value;
+    const slug = ($("#gSlug").value || "").trim();
+    const m = $("#gMsg");
+    if (!tema){ m.className = "msg err"; m.textContent = "Escribí un tema."; return; }
+    bg.disabled = true;
+    const orig = bg.textContent;
+    bg.textContent = "Redactando…";
+    m.className = "msg"; m.textContent = "Redactando la guía… puede tardar un minuto.";
+    try {
+      const g = await api("POST", { action: "guia_generar", slug, tema, linea });
+      const realSlug = g.slug || slug;
+      bg.textContent = `Generando ${g.secciones.length} imágenes…`;
+      m.textContent = `"${g.titulo}" — generando ${g.secciones.length} imágenes…`;
+      await Promise.all(g.secciones.map(s =>
+        api("POST", { action: "guia_imagen", slug: realSlug, seccion_num: s.seccion_num, accion: "generar" }).catch(() => {})
+      ));
+      location.href = "contenido.html#guias";
+    } catch(e){
+      m.className = "msg err"; m.textContent = "No se pudo: " + e.message;
+      bg.disabled = false; bg.textContent = orig;
+    }
+  };
 }
 
 /* blog / tendencias */
