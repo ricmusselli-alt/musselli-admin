@@ -80,11 +80,16 @@
   .g-pub{margin-top:18px;border-top:1px solid var(--linea);padding-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .g-hint{font-size:var(--fs-micro);color:var(--texto-mute)}
 
-  /* link con copiar */
-  .g-link{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .g-link a{color:var(--cobre);word-break:break-all;font-size:var(--fs-small)}
-  .btn-copy{font-size:11px;padding:5px 10px;white-space:nowrap}
-  .btn-copy.done{color:var(--ok,#7aa874);border-color:var(--ok,#7aa874)}
+  /* link con copiar — SIEMPRE una sola línea */
+  .g-link{display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;max-width:100%}
+  .g-link a:first-child{color:var(--cobre);font-size:var(--fs-small);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(46vw,420px);flex:1 1 auto}
+  .btn-ico{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+    width:26px;min-width:26px;height:26px;flex:0 0 auto;padding:0;
+    border:1px solid var(--linea);border-radius:7px;background:none;color:var(--texto-2);cursor:pointer;
+    text-decoration:none;transition:color .15s,border-color .15s}
+  .btn-ico:hover{color:var(--texto);border-color:var(--linea-fuerte)}
+  .btn-ico.done{color:var(--ok,#7aa874);border-color:var(--ok,#7aa874)}
 
   /* historial de guías publicadas */
   .g-hist td{padding:10px 12px;border-bottom:1px solid var(--linea);color:var(--texto-2);vertical-align:middle;font-size:var(--fs-small)}
@@ -367,12 +372,16 @@ const G_EST = {
 // Hostinger sirve la guía sin extensión (/guia.html redirige a /guia): link limpio para compartir.
 const GUIA_URL = (slug) => `https://ricardomusselli.com/recursos/${slug}/guia`;
 
+// Íconos SVG (copiar / abrir en pestaña nueva) — sin texto, para no romper línea.
+const ICO_COPY = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>`;
+const ICO_OPEN = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>`;
+
 // Bloque de link con botón Copiar + Abrir (se reusa en tarjeta e historial).
 function linkCopiable(url){
   return `<span class="g-link">
     <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>
-    <button class="btn btn-ghost btn-copy" data-copy="${esc(url)}">Copiar</button>
-    <a class="btn btn-ghost btn-copy" href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir</a>
+    <button class="btn-ico btn-copy" data-copy="${esc(url)}" title="Copiar link" aria-label="Copiar link">${ICO_COPY}</button>
+    <a class="btn-ico" href="${esc(url)}" target="_blank" rel="noopener" title="Abrir en pestaña nueva" aria-label="Abrir">${ICO_OPEN}</a>
   </span>`;
 }
 
@@ -638,14 +647,13 @@ $("#revList").addEventListener("click", async (ev) => {
     lb.classList.add("show");
   }
 
-  // Copiar link
-  const cp = ev.target.closest("[data-copy]");
-  if (cp && cp.tagName === "BUTTON"){
+  // Copiar link (botón con ícono — feedback por color + title)
+  const cp = ev.target.closest("button[data-copy]");
+  if (cp){
     try {
       await navigator.clipboard.writeText(cp.dataset.copy);
-      const orig = cp.textContent;
-      cp.textContent = "¡Copiado!"; cp.classList.add("done");
-      setTimeout(() => { cp.textContent = orig; cp.classList.remove("done"); }, 1600);
+      cp.classList.add("done"); const t = cp.title; cp.title = "¡Copiado!";
+      setTimeout(() => { cp.classList.remove("done"); cp.title = t; }, 1600);
     } catch(_) { window.prompt("Copiá el link:", cp.dataset.copy); }
   }
 
