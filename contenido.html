@@ -455,9 +455,39 @@ function guiasPublicadasHtml(pubs){
   </div>`;
 }
 
+// Lead magnets: cada uno con su botón "Publicar embudo" (página puente index.html).
+function leadMagnetsHtml(lms, guias){
+  if (!lms.length) return "";
+  const guiaPub = new Set(guias.filter(g => g.estado === "publicada").map(g => g.slug));
+  const rows = lms.map(r => {
+    const lineaLbl = r.linea === "luthier" ? "Luthería" : r.linea === "guitartech" ? "Guitar Tech" : "—";
+    const tieneGuia = guiaPub.has(r.slug)
+      ? `<span class="h-est ok">guía publicada</span>`
+      : `<span class="h-est warn">sin guía</span>`;
+    const puenteUrl = `https://ricardomusselli.com/recursos/${r.slug}/`;
+    const linkCol = r.publicado
+      ? linkCopiable(puenteUrl)
+      : `<span class="g-hint">sin publicar</span>`;
+    return `<tr>
+      <td>${esc(r.pdf_titulo || r.slug)}<span class="h-linea">${lineaLbl} · <code>${esc(r.slug)}</code></span></td>
+      <td>${tieneGuia}</td>
+      <td>${linkCol}</td>
+      <td class="h-acc"><button class="btn-solid btn-mini" data-embudo="${esc(r.slug)}">Publicar embudo</button></td>
+    </tr>`;
+  }).join("");
+  return `<div class="seccion" style="margin-top:38px">
+    <div class="seccion__head"><span class="kicker">Embudo</span><h2>Páginas puente</h2><span class="count">· ${lms.length}</span></div>
+    <p class="g-hint" style="margin:0 0 12px">Publica el <code>index.html</code> del embudo (video · audio · videollamada · burbuja). Conviene tener la guía publicada primero, así el botón de descarga apunta a la guía real.</p>
+    <div style="overflow-x:auto"><table class="histtable g-hist">
+      <thead><tr><th>Lead magnet</th><th>Guía</th><th>Link del embudo</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+
 function renderGuias(){
   $("#hTitle").textContent = "Guías · Recursos";
-  $("#hDesc").textContent = "Revisá las imágenes de cada guía (aprobar / rehacer) y publicá. El link queda en el historial, con botón para copiarlo.";
+  $("#hDesc").textContent = "Revisá las imágenes de cada guía (aprobar / rehacer) y publicá. Abajo, los embudos (páginas puente) de cada lead magnet.";
   const nueva = `<div class="g-hint" style="margin-bottom:22px">
     ¿Crear una guía nueva? → <a href="familia.html?f=recursos" style="color:var(--cobre)">Portada · Musselli Recursos</a>
   </div>`;
@@ -467,7 +497,9 @@ function renderGuias(){
   const lista = enCurso.length
     ? enCurso.map(guiaCard).join("")
     : (pubs.length ? "" : '<div class="vacio">No hay guías en revisión. Creá una desde Portada · Musselli Recursos.</div>');
-  $("#revList").innerHTML = nueva + lista + guiasPublicadasHtml(pubs);
+  $("#revList").innerHTML = nueva + lista
+    + guiasPublicadasHtml(pubs)
+    + leadMagnetsHtml(DATA.recursos_leadmagnets || [], guias);
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -634,6 +666,20 @@ $("#revList").addEventListener("click", async (ev) => {
       alert("Publicada:\n" + r.url);
       await reload(); route();
     } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(gPub); }
+  }
+
+  // Publicar embudo (página puente index.html)
+  const emb = ev.target.closest("[data-embudo]");
+  if (emb){
+    const slug = emb.dataset.embudo;
+    if (!confirm("¿Publicar la página puente de este lead magnet? Sube el index.html a Hostinger (video · audio · videollamada · burbuja).")) return;
+    const orig = emb.innerHTML;
+    emb.disabled = true; emb.innerHTML = `<span class="spin"></span>Publicando…`;
+    try {
+      const r = await api("POST", { action:"recurso_publicar", slug });
+      alert("Embudo publicado:\n" + r.url);
+      await reload(); route();
+    } catch(e){ alert("No se pudo publicar el embudo: " + e.message); emb.disabled = false; emb.innerHTML = orig; }
   }
 });
 
