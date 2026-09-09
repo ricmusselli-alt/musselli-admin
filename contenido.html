@@ -94,6 +94,32 @@
   #g_lightbox{position:fixed;inset:0;background:rgba(8,7,7,.9);display:none;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out;padding:24px}
   #g_lightbox.show{display:flex}
   #g_lightbox img{max-width:96vw;max-height:92vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+
+  /* ---- Reels de prueba ---- */
+  .reel-panel{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:20px}
+  .reel-togs{display:flex;gap:12px;flex-wrap:wrap}
+  .rl-tog{display:inline-flex;align-items:center;gap:9px;border-radius:999px;padding:9px 16px;
+    font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--linea);background:none;color:inherit}
+  .rl-tog__dot{width:9px;height:9px;border-radius:50%;background:#6b6b6b}
+  .rl-tog.on{border-color:#3f7d4f;color:#8fd6a0} .rl-tog.on .rl-tog__dot{background:#54c06e}
+  .rl-tog.off .rl-tog__dot{background:#8a5a2a}
+  .reel-stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--texto-mute)}
+  .reel-stats b{color:var(--texto);font-size:15px}
+  .reel-warn{margin-top:12px;font-size:12.5px;color:#e6b877;background:rgba(230,184,119,.09);
+    border:1px solid rgba(230,184,119,.25);border-radius:10px;padding:9px 12px}
+  .reel-alta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  .reel-alta input,.reel-alta select{background:var(--panel);border:1px solid var(--linea);
+    border-radius:9px;padding:9px 11px;color:var(--texto);font:inherit;font-size:13px}
+  .reel-alta input#rlTema{flex:1;min-width:220px}
+  .reel-item{display:flex;gap:16px;align-items:flex-start}
+  .reel-vid{width:150px;aspect-ratio:9/16;border-radius:10px;background:#000;flex:0 0 auto}
+  .reel-body{flex:1;min-width:0}
+  .reel-hook{font-weight:700;font-size:15px;letter-spacing:.02em;color:var(--texto)}
+  .reel-cuerpo{font-size:13px;color:var(--texto-mute);margin-top:3px}
+  .reel-cta{font-size:12.5px;color:var(--cobre);margin-top:3px}
+  .reel-meta{display:flex;gap:10px;align-items:center;margin:9px 0 10px;flex-wrap:wrap}
+  .reel-dim{font-size:12px;color:var(--texto-mute)}
+  @media(max-width:520px){.reel-item{flex-direction:column}.reel-vid{width:130px}}
 </style>
 </head>
 <body>
@@ -133,6 +159,7 @@ const TIPOS = [
   { key:"blog",       logo:"blog",       nom:"Musselli Blog",        listo:true, famKey:"blog" },
   { key:"tendencias", logo:"tendencias", nom:"Musselli Tendencias",  listo:true, famKey:"tendencias" },
   { key:"guias",      logo:"recursos", ico:"G", nom:"Guías · Recursos", listo:true, famKey:"recursos" },
+  { key:"reels",      logo:"instagram", ico:"▶", nom:"Reels de prueba", listo:true, famKey:"carrusel" },
   { key:"tiktok",     logo:"tiktok", ico:"♪", nom:"Carruseles TikTok", listo:false },
 ];
 
@@ -141,6 +168,7 @@ function pendDe(key){
   if (key === "blog")     return (DATA.blog_drafts || []).length;
   if (key === "tendencias")return (DATA.trend_drafts || []).length;
   if (key === "guias")    return (DATA.guias || []).filter(g => g.estado !== "publicada").length;
+  if (key === "reels")    return (DATA.reels || []).filter(r => r.estado === "pending_review").length;
   return 0;
 }
 
@@ -504,6 +532,108 @@ function renderGuias(){
   $("#viewTipo").hidden = false;
 }
 
+/* ---------- Reels de prueba (Trial Reels · Luthería) ---------- */
+const RL_EST = {
+  render:         { txt:"Renderizando…",       cls:"warn" },
+  pending_review: { txt:"Esperando tu OK",     cls:"warn" },
+  approved:       { txt:"Aprobado · en cola",  cls:"idle" },
+  publishing:     { txt:"Publicando…",         cls:"idle" },
+  published:      { txt:"Publicado",           cls:"ok"   },
+  rejected:       { txt:"Rechazado",           cls:"down" },
+  error:          { txt:"Error",               cls:"down" },
+};
+const RL_MOODS = ["", "calmo", "calido", "energico", "cinematografico"];
+const RL_FECHA = (s) => s ? new Date(s).toLocaleString("es-AR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—";
+
+function rlToggle(on, onTxt, offTxt, attr){
+  return `<button class="rl-tog ${on ? "on" : "off"}" data-${attr}="${on ? "0" : "1"}">
+    <span class="rl-tog__dot"></span>${on ? onTxt : offTxt}</button>`;
+}
+
+function reelItem(r){
+  const e = RL_EST[r.estado] || { txt:r.estado, cls:"idle" };
+  return `<div class="revitem reel-item">
+    <video class="reel-vid" src="${esc(r.video_url || "")}" controls preload="metadata" playsinline></video>
+    <div class="reel-body">
+      <div class="reel-hook">${esc(r.hook || "(sin hook)")}</div>
+      ${r.cuerpo ? `<div class="reel-cuerpo">${esc(r.cuerpo)}</div>` : ""}
+      ${r.cta ? `<div class="reel-cta">${esc(r.cta)}</div>` : ""}
+      <div class="reel-meta"><span class="h-est ${e.cls}">${e.txt}</span>
+        <span class="reel-dim">${r.topic ? esc(r.topic) : ""}</span></div>
+      <div class="revitem__acts" data-rid="${esc(r.id)}">
+        <button class="btn-solid btn-mini" data-reel-ap>APROBAR</button>
+        <button class="btn-ghost btn-mini" data-reel-re>REHACER</button>
+        <button class="btn-danger btn-mini" data-reel-rx>RECHAZAR</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function reelHistFila(r){
+  const e = RL_EST[r.estado] || { txt:r.estado, cls:"idle" };
+  const err = r.error_msg ? `<span class="h-linea" style="color:#e79a9c">⚠ ${esc(String(r.error_msg).slice(0,120))}</span>` : "";
+  return `<tr>
+    <td class="h-tit">${esc(r.hook || "(sin hook)")}<span class="h-linea">${r.topic ? esc(r.topic) : ""}</span>${err}</td>
+    <td><span class="h-est ${e.cls}">${e.txt}</span></td>
+    <td class="h-fecha">${RL_FECHA(r.created_at)}</td>
+    <td class="h-fecha">${RL_FECHA(r.published_at || r.publicar_at)}</td>
+  </tr>`;
+}
+
+function renderReels(){
+  const cfg    = DATA.reel_config || {};
+  const activo = cfg.activo === true;
+  const auto   = cfg.auto_publicar === true;
+  const plan   = DATA.reel_plan_hoy || null;
+  const enBanco = DATA.reel_topics_pendientes || 0;
+  const reels  = DATA.reels || [];
+  const pend   = reels.filter(r => r.estado === "pending_review");
+  const hist   = reels.filter(r => ["approved","publishing","published","rejected","error"].includes(r.estado));
+  const hoyIso = new Date().toISOString().slice(0, 10);
+  const hoyN   = reels.filter(r => r.estado === "published" && (r.published_at || "").slice(0, 10) === hoyIso).length;
+
+  $("#hTitle").textContent = "Reels de prueba · Luthería";
+  $("#hDesc").textContent  = "Trial Reels de @ricardomusselli_luthier. Se generan con fotos reales del banco (sin IA). "
+    + "Con Auto-publicar apagado, cada reel espera tu OK acá antes de programarse.";
+
+  const cabecera = `<div class="reel-panel">
+    <div class="reel-togs">
+      ${rlToggle(activo, "Línea ACTIVA", "Línea PAUSADA", "reel-activo")}
+      ${rlToggle(auto, "Auto-publicar ON", "Auto-publicar OFF", "reel-auto")}
+    </div>
+    <div class="reel-stats">
+      <span><b>${hoyN}</b> publicados hoy${plan && plan.objetivo_dia ? ` / objetivo ${plan.objetivo_dia}` : ""}</span>
+      <span><b>${enBanco}</b> temas en el banco</span>
+      <span><b>${pend.length}</b> esperando tu OK</span>
+    </div>
+    ${auto ? `<div class="reel-warn">Auto-publicar está <b>ON</b>: los reels nuevos se publican solos según los horarios, sin pasar por esta pantalla. Apagalo para volver a revisar a mano.</div>` : ""}
+  </div>
+
+  <div class="reel-alta">
+    <input id="rlTema" type="text" placeholder="Tema / idea (opcional — si lo dejás vacío toma uno del banco)">
+    <input id="rlAng"  type="text" placeholder="Ángulo (opcional)">
+    <select id="rlMood">${RL_MOODS.map(m => `<option value="${m}">${m || "mood…"}</option>`).join("")}</select>
+    <button class="btn-ghost btn-mini" id="rlAddTema">+ Guardar tema</button>
+    <button class="btn-solid btn-mini" id="rlGen">Generar un reel ahora</button>
+  </div>`;
+
+  const revision = auto
+    ? ""
+    : (pend.length
+        ? `<div class="seccion" style="margin-top:26px"><div class="seccion__head"><span class="kicker">En revisión</span><h2>Esperando tu OK</h2><span class="count">· ${pend.length}</span></div>${pend.map(reelItem).join("")}</div>`
+        : `<div class="vacio" style="margin-top:26px">No hay reels esperando aprobación.</div>`);
+
+  const historial = hist.length
+    ? `<div class="seccion" style="margin-top:34px"><div class="seccion__head"><span class="kicker">Historial</span><h2>Reels ya resueltos</h2><span class="count">· ${hist.length}</span></div>
+        <div style="overflow-x:auto"><table class="histtable"><thead><tr><th>Hook</th><th>Estado</th><th>Generado</th><th>Publicado / programado</th></tr></thead>
+        <tbody>${hist.map(reelHistFila).join("")}</tbody></table></div></div>`
+    : "";
+
+  $("#revList").innerHTML = cabecera + revision + historial;
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+}
+
 function renderPlaceholder(t){
   $("#hTitle").textContent = "Carruseles TikTok";
   $("#hDesc").textContent = "Enviá lo pendiente a TikTok o rechazalo, y mirá el historial de lo que fue a TikTok.";
@@ -523,6 +653,7 @@ function route(){
   if (t.key === "carrusel") renderCarrusel();
   else if (t.key === "blog" || t.key === "tendencias") renderTexto(t);
   else if (t.key === "guias") renderGuias();
+  else if (t.key === "reels") renderReels();
   else renderPlaceholder(t);
 }
 
@@ -680,6 +811,59 @@ $("#revList").addEventListener("click", async (ev) => {
       alert("Embudo publicado:\n" + r.url);
       await reload(); route();
     } catch(e){ alert("No se pudo publicar el embudo: " + e.message); emb.disabled = false; emb.innerHTML = orig; }
+  }
+
+  // ---- Reels de prueba ----
+  const rlAct = ev.target.closest("[data-reel-activo]");
+  if (rlAct){
+    try { await api("POST", { action:"set_reel_activo", activo: rlAct.dataset.reelActivo === "1" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  const rlAuto = ev.target.closest("[data-reel-auto]");
+  if (rlAuto){
+    const encender = rlAuto.dataset.reelAuto === "1";
+    if (encender && !confirm("¿Encender AUTO-PUBLICAR? Los reels nuevos se van a publicar solos, sin que los revises. Podés apagarlo cuando quieras.")) return;
+    try { await api("POST", { action:"set_reel_autopublicar", auto: encender }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+
+  if (ev.target.closest("#rlAddTema")){
+    const topic = ($("#rlTema").value || "").trim();
+    if (!topic){ alert("Escribí el tema."); return; }
+    const btn = ev.target.closest("#rlAddTema"); busy(btn, "Guardando");
+    try {
+      await api("POST", { action:"add_reel_topic", topic, angulo: ($("#rlAng").value||"").trim(), mood: $("#rlMood").value });
+      await reload(); route();
+    } catch(e){ alert("Error: " + e.message); unbusy(btn); }
+  }
+
+  if (ev.target.closest("#rlGen")){
+    const btn = ev.target.closest("#rlGen");
+    if (!confirm("¿Generar un reel ahora? Tarda ~1 minuto (Gemini + fotos de Drive + render).")) return;
+    busy(btn, "Generando");
+    try {
+      const topic = ($("#rlTema").value || "").trim();
+      const r = await api("POST", { action:"reel_generar", manual:true, ...(topic ? { topic } : {}) });
+      if (r.status === "sin_temas") alert("No hay temas en el banco. Guardá al menos uno o escribí un tema arriba.");
+      await reload(); route();
+    } catch(e){ alert("No se pudo generar: " + e.message); unbusy(btn); }
+  }
+
+  const rAp = ev.target.closest("[data-reel-ap]");
+  const rRe = ev.target.closest("[data-reel-re]");
+  const rRx = ev.target.closest("[data-reel-rx]");
+  const rBtn = rAp || rRe || rRx;
+  if (rBtn){
+    const reelId = rBtn.closest(".revitem__acts")?.dataset.rid;
+    if (!reelId) return;
+    const accion = rAp ? "aprobar" : rRe ? "rehacer" : "rechazar";
+    const msg = { aprobar:"¿Aprobar este reel? Queda en cola y se publica solo en un horario al azar dentro de la ventana.",
+                  rehacer:"¿Rehacer? Se descarta este y se genera otro con el mismo tema.",
+                  rechazar:"¿Rechazar este reel? No se publica." }[accion];
+    if (!confirm(msg)) return;
+    busy(rBtn, accion === "aprobar" ? "Aprobando" : accion === "rehacer" ? "Rehaciendo" : "Rechazando");
+    try { await api("POST", { action:"reel_publicar", accion, reel_id: reelId }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); unbusy(rBtn); }
   }
 });
 
