@@ -133,6 +133,44 @@
   .reel-meta{display:flex;gap:10px;align-items:center;margin:9px 0 10px;flex-wrap:wrap}
   .reel-dim{font-size:12px;color:var(--texto-mute)}
   @media(max-width:520px){.reel-item{flex-direction:column}.reel-vid{width:130px}}
+
+  /* ---- Conversaciones IG ---- */
+  .cv-sub{display:flex;gap:6px;margin:14px 0}
+  .cv-sub button{padding:7px 14px;border:1px solid var(--linea);border-radius:9px;background:rgba(245,240,230,.02);
+    color:var(--texto-mute);font-weight:600;font-size:12.5px;cursor:pointer}
+  .cv-sub button.sel{color:var(--texto);border-color:var(--cobre);background:var(--panel)}
+  .cv-regla{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:12px}
+  .cv-regla.off{opacity:.55}
+  .cv-regla__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cv-regla__head .t{font-weight:700;font-size:14px;flex:1;min-width:160px;color:var(--texto)}
+  .cv-regla__meta{font-size:12px;color:var(--texto-mute);margin-top:6px;line-height:1.5}
+  .cv-regla__meta code{background:rgba(245,240,230,.06);padding:1px 6px;border-radius:5px;color:var(--cobre)}
+  .cv-form{background:var(--panel);border:1px solid var(--linea-fuerte);border-radius:12px;padding:16px;margin-bottom:16px;display:none}
+  .cv-form.show{display:block}
+  .cv-form label{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);margin:12px 0 5px}
+  .cv-form input[type=text],.cv-form input[type=url],.cv-form textarea,.cv-form select{
+    width:100%;background:var(--panel-2,#211d1a);border:1px solid var(--linea);border-radius:8px;
+    color:var(--texto);font:inherit;font-size:13px;padding:8px 10px}
+  .cv-form textarea{min-height:52px;resize:vertical}
+  .cv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .cv-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(200,155,108,.14);border:1px solid rgba(200,155,108,.35);
+    color:var(--texto);font-size:12px;padding:3px 8px;border-radius:999px}
+  .cv-chip b{cursor:pointer;color:var(--texto-mute)}
+  .cv-row{display:flex;gap:12px;flex-wrap:wrap}
+  .cv-row>div{flex:1;min-width:180px}
+  .cv-radio{display:flex;gap:16px;font-size:13px;color:var(--texto-2);margin-top:4px}
+  .cv-radio label{display:inline-flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;color:var(--texto-2);font-size:13px;margin:0}
+  .cv-conv{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:13px 15px;margin-bottom:10px}
+  .cv-conv__top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cv-conv__u{font-weight:700;font-size:13.5px;color:var(--texto)}
+  .cv-conv__st{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:6px}
+  .cv-conv__st.abierta{color:#e6b877;background:rgba(230,184,119,.12)}
+  .cv-conv__st.humana{color:#6db3d8;background:rgba(109,179,216,.12)}
+  .cv-conv__st.resuelta{color:var(--texto-mute);background:rgba(245,240,230,.05)}
+  .cv-conv__msg{font-size:13px;color:var(--texto-mute);margin:7px 0;line-height:1.5}
+  .cv-conv__acts{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .cv-conv__acts input{flex:1;min-width:200px;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:8px;color:var(--texto);font:inherit;font-size:12.5px;padding:7px 9px}
 </style>
 </head>
 <body>
@@ -173,6 +211,7 @@ const TIPOS = [
   { key:"tendencias", logo:"tendencias", nom:"Musselli Tendencias",  listo:true, famKey:"tendencias" },
   { key:"guias",      logo:"recursos", ico:"G", nom:"Guías · Recursos", listo:true, famKey:"recursos" },
   { key:"reels",      logo:"instagram", ico:"▶", nom:"Reels de prueba", listo:true, famKey:"carrusel" },
+  { key:"convos",     logo:"instagram", ico:"✉", nom:"Conversaciones IG", listo:true, famKey:"carrusel" },
   { key:"tiktok",     logo:"tiktok", ico:"♪", nom:"Carruseles TikTok", listo:false },
 ];
 
@@ -182,6 +221,7 @@ function pendDe(key){
   if (key === "tendencias")return (DATA.trend_drafts || []).length;
   if (key === "guias")    return (DATA.guias || []).filter(g => g.estado !== "publicada").length;
   if (key === "reels")    return (DATA.reels || []).filter(r => r.estado === "pending_review").length;
+  if (key === "convos")   return ((DATA.ig_pend_humano || {}).luthier || 0) + ((DATA.ig_pend_humano || {}).guitartech || 0);
   return 0;
 }
 
@@ -674,6 +714,153 @@ function renderReels(){
   $("#viewTipo").hidden = false;
 }
 
+/* ===================== Conversaciones IG ===================== */
+let convoCat = "luthier";
+let convoTab = "reglas";          // reglas | bandeja
+let cvEdit   = null;              // regla en edición ({} = nueva) o null
+let cvChips  = [];                // palabras clave del editor
+
+function mediaIdDeUrl(u){
+  const m = String(u||"").match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/);
+  return m ? m[1] : "";
+}
+
+function cvReglaCard(r){
+  const modo = r.match_modo === "cualquiera"
+    ? "cualquier comentario"
+    : (r.palabras_clave||[]).map(k=>`<code>${esc(k)}</code>`).join(" ");
+  const alcance = r.media_id ? `post <code>${esc(r.media_id)}</code>` : "todos los posts";
+  return `<div class="cv-regla ${r.activo ? "" : "off"}">
+    <div class="cv-regla__head">
+      <span class="t">${esc(r.nombre || "Regla")}</span>
+      <button class="btn-ghost btn-mini" data-cv-edit="${r.id}">Editar</button>
+      <button class="btn-ghost btn-mini" data-cv-toggle="${r.id}" data-on="${r.activo ? 0 : 1}">${r.activo ? "Pausar" : "Activar"}</button>
+      <button class="btn-danger btn-mini" data-cv-del="${r.id}">Borrar</button>
+    </div>
+    <div class="cv-regla__meta">
+      Dispara con: ${modo} · Alcance: ${alcance}<br>
+      Manda: botón «${esc(r.boton_texto || "Ingresar aquí")}» → ${esc(r.link_embudo || "—")}<br>
+      ${(r.dm_textos||[]).length} texto(s) de DM${r.comment_reply ? " · + respuesta pública" : ""}
+    </div>
+  </div>`;
+}
+
+function cvEditor(){
+  if (!cvEdit) return "";
+  const r = cvEdit;
+  const modoCualq = r.match_modo === "cualquiera";
+  return `<div class="cv-form show" id="cvForm">
+    <label>Nombre de la regla (interno)</label>
+    <input type="text" id="cvNombre" value="${esc(r.nombre||"")}" placeholder="Ej: Guía de setup">
+
+    <div class="cv-row">
+      <div>
+        <label>Link del post o reel (opcional)</label>
+        <input type="url" id="cvPost" value="${esc(r.post_url||"")}" placeholder="https://instagram.com/p/…  — vacío = cualquier post">
+      </div>
+      <div>
+        <label>Texto del botón</label>
+        <input type="text" id="cvBoton" value="${esc(r.boton_texto||"Ingresar aquí")}" maxlength="20">
+      </div>
+    </div>
+
+    <label>¿Cuándo responde?</label>
+    <div class="cv-radio">
+      <label><input type="radio" name="cvModo" value="keyword" ${modoCualq?"":"checked"}> Por palabra clave</label>
+      <label><input type="radio" name="cvModo" value="cualquiera" ${modoCualq?"checked":""}> Cualquier comentario</label>
+    </div>
+
+    <div id="cvKW" ${modoCualq?"hidden":""}>
+      <label>Palabras clave (variantes) — Enter para agregar</label>
+      <input type="text" id="cvChipInput" placeholder="setup, seteo, quiero, info…">
+      <div class="cv-chips" id="cvChips"></div>
+      <div class="cv-regla__meta">Tolera acentos y 1–2 letras de error. Podés poner varias variantes.</div>
+    </div>
+
+    <label>Link del embudo (Musselli Recursos)</label>
+    <input type="url" id="cvLink" value="${esc(r.link_embudo||"")}" placeholder="https://ricardomusselli.com/…">
+
+    <label>Textos del DM — uno por línea (se rota al azar)</label>
+    <textarea id="cvTextos" placeholder="¡Gracias por tu interés! Acá tenés la guía 👇&#10;Te dejo el acceso, cualquier duda escribime 🙌">${esc((r.dm_textos||[]).join("\n"))}</textarea>
+
+    <label>Respuesta pública bajo el comentario (opcional)</label>
+    <input type="text" id="cvReply" value="${esc(r.comment_reply||"")}" placeholder="¡Te lo mandé por DM! 📩">
+
+    <div class="revitem__acts" style="margin-top:16px">
+      <button class="btn-solid btn-mini" id="cvGuardar">Guardar regla</button>
+      <button class="btn-ghost btn-mini" id="cvCancelar">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+function cvConvCard(c){
+  const st = c.estado || "abierta";
+  return `<div class="cv-conv">
+    <div class="cv-conv__top">
+      <span class="cv-conv__u">@${esc(c.username || c.ig_user_id || "?")}</span>
+      <span class="cv-conv__st ${st}">${st}</span>
+      <span class="reel-dim">${RL_FECHA(c.ultimo_at)}</span>
+    </div>
+    <div class="cv-conv__msg">${esc(c.ultimo_texto || "")}</div>
+    <div class="cv-conv__acts" data-uid="${esc(c.ig_user_id)}" data-cid="${esc(c.id)}">
+      <input type="text" placeholder="Responder a mano…" data-cv-reply-input>
+      <button class="btn-solid btn-mini" data-cv-send>Enviar</button>
+      ${st!=="resuelta" ? `<button class="btn-ghost btn-mini" data-cv-resolve>Marcar resuelta</button>` : `<button class="btn-ghost btn-mini" data-cv-reopen>Reabrir</button>`}
+    </div>
+  </div>`;
+}
+
+function renderConvos(){
+  const cuentas = RL_CUENTAS;
+  const cuenta  = cuentas.find(c => c.key === convoCat) || cuentas[0];
+  const cfg     = (DATA.ig_config || {})[convoCat] || { auto_dm:false, auto_reply:false };
+  const reglas  = (DATA.ig_reglas || {})[convoCat] || [];
+  const convos  = (DATA.ig_convos || []).filter(c => c.categoria === convoCat);
+
+  $("#hTitle").textContent = "Conversaciones IG · " + cuenta.nom;
+  $("#hDesc").textContent  = "Cuando alguien comenta con una palabra clave, el sistema le manda un DM con el botón al embudo. Acá configurás las reglas y ves la bandeja.";
+
+  const tabs = `<div class="reel-tabs">${cuentas.map(c => {
+    const on = c.key === convoCat;
+    const st = ((DATA.ig_config||{})[c.key]||{}).auto_dm === true;
+    return `<button class="reel-tab ${on?"sel":""}" data-convocat="${c.key}">
+      <span class="reel-tab__dot ${st?"on":"off"}"></span>${c.nom}</button>`;
+  }).join("")}</div>`;
+
+  const panelCfg = `<div class="reel-panel"><div class="reel-switches">
+    ${rlSwitch(cfg.auto_dm === true, "Auto-DM", "ON: los comentarios que matchean una regla reciben el DM solos. OFF: quedan en la bandeja para que respondas a mano.", "cv-autodm")}
+    ${rlSwitch(cfg.auto_reply === true, "Respuesta pública", "ON: además del DM, deja el comentario público de la regla (ej. «Te lo mandé por DM 📩»).", "cv-autoreply")}
+  </div></div>`;
+
+  const sub = `<div class="cv-sub">
+    <button data-cvsub="reglas" class="${convoTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
+    <button data-cvsub="bandeja" class="${convoTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
+  </div>`;
+
+  let cuerpo = "";
+  if (convoTab === "reglas"){
+    cuerpo = `<div class="revitem__acts" style="margin-bottom:12px">
+        <button class="btn-solid btn-mini" id="cvNueva">+ Nueva regla</button>
+      </div>`
+      + cvEditor()
+      + (reglas.length ? reglas.map(cvReglaCard).join("") : `<div class="vacio">Todavía no hay reglas para ${cuenta.nom}.</div>`);
+  } else {
+    cuerpo = convos.length ? convos.map(cvConvCard).join("") : `<div class="vacio">No hay conversaciones registradas todavía.</div>`;
+  }
+
+  $("#revList").innerHTML = tabs + panelCfg + sub + cuerpo;
+  $("#viewHub").hidden = true;
+  $("#viewTipo").hidden = false;
+
+  if (convoTab === "reglas" && cvEdit) cvPintarChips();
+}
+
+function cvPintarChips(){
+  const box = document.getElementById("cvChips");
+  if (!box) return;
+  box.innerHTML = cvChips.map((k,i) => `<span class="cv-chip">${esc(k)}<b data-cv-chipdel="${i}">✕</b></span>`).join("");
+}
+
 function renderPlaceholder(t){
   $("#hTitle").textContent = "Carruseles TikTok";
   $("#hDesc").textContent = "Enviá lo pendiente a TikTok o rechazalo, y mirá el historial de lo que fue a TikTok.";
@@ -694,6 +881,7 @@ function route(){
   else if (t.key === "blog" || t.key === "tendencias") renderTexto(t);
   else if (t.key === "guias") renderGuias();
   else if (t.key === "reels") renderReels();
+  else if (t.key === "convos") renderConvos();
   else renderPlaceholder(t);
 }
 
@@ -907,6 +1095,111 @@ $("#revList").addEventListener("click", async (ev) => {
     busy(rBtn, accion === "aprobar" ? "Aprobando" : accion === "rehacer" ? "Rehaciendo" : "Rechazando");
     try { await api("POST", { action:"reel_publicar", accion, reel_id: reelId }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); unbusy(rBtn); }
+  }
+
+  // ---- Conversaciones IG ----
+  const cvTab = ev.target.closest("[data-convocat]");
+  if (cvTab){ convoCat = cvTab.dataset.convocat; cvEdit = null; renderConvos(); return; }
+
+  const cvSub = ev.target.closest("[data-cvsub]");
+  if (cvSub){ convoTab = cvSub.dataset.cvsub; cvEdit = null; renderConvos(); return; }
+
+  const cvADm = ev.target.closest("[data-cv-autodm]");
+  if (cvADm){
+    const on = cvADm.dataset.cvAutodm === "1";
+    if (on && !confirm("¿Encender Auto-DM? Los comentarios que matcheen una regla van a recibir el DM automáticamente.")) return;
+    try { await api("POST", { action:"set_ig_autodm", category: convoCat, auto_dm: on }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  const cvARp = ev.target.closest("[data-cv-autoreply]");
+  if (cvARp){
+    try { await api("POST", { action:"set_ig_autodm", category: convoCat, auto_reply: cvARp.dataset.cvAutoreply === "1" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+
+  if (ev.target.closest("#cvNueva")){
+    cvEdit = { match_modo:"keyword", boton_texto:"Ingresar aquí", dm_textos:[], activo:true };
+    cvChips = []; renderConvos(); return;
+  }
+  const cvEd = ev.target.closest("[data-cv-edit]");
+  if (cvEd){
+    const r = ((DATA.ig_reglas||{})[convoCat]||[]).find(x => String(x.id) === cvEd.dataset.cvEdit);
+    if (r){ cvEdit = { ...r }; cvChips = [...(r.palabras_clave||[])]; renderConvos(); }
+    return;
+  }
+  if (ev.target.closest("#cvCancelar")){ cvEdit = null; renderConvos(); return; }
+
+  const cvChipDel = ev.target.closest("[data-cv-chipdel]");
+  if (cvChipDel){ cvChips.splice(Number(cvChipDel.dataset.cvChipdel), 1); cvPintarChips(); return; }
+
+  if (ev.target.closest("#cvGuardar")){
+    const modo = (document.querySelector('input[name="cvModo"]:checked')||{}).value || "keyword";
+    const post = ($("#cvPost").value||"").trim();
+    const regla = {
+      id: cvEdit && cvEdit.id ? cvEdit.id : undefined,
+      nombre: ($("#cvNombre").value||"").trim(),
+      post_url: post,
+      media_id: mediaIdDeUrl(post),
+      match_modo: modo,
+      palabras_clave: modo === "keyword" ? cvChips : [],
+      link_embudo: ($("#cvLink").value||"").trim(),
+      boton_texto: ($("#cvBoton").value||"").trim() || "Ingresar aquí",
+      dm_textos: ($("#cvTextos").value||"").split("\n").map(s=>s.trim()).filter(Boolean),
+      comment_reply: ($("#cvReply").value||"").trim(),
+      activo: cvEdit && cvEdit.activo === false ? false : true,
+    };
+    const btn = ev.target.closest("#cvGuardar"); busy(btn, "Guardando");
+    try { await api("POST", { action:"ig_regla_save", category: convoCat, regla }); cvEdit = null; await reload(); route(); }
+    catch(e){ alert("No se pudo guardar: " + e.message); unbusy(btn); }
+  }
+
+  const cvTg = ev.target.closest("[data-cv-toggle]");
+  if (cvTg){
+    try { await api("POST", { action:"ig_regla_toggle", id: Number(cvTg.dataset.cvToggle), activo: cvTg.dataset.on === "1" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  const cvDl = ev.target.closest("[data-cv-del]");
+  if (cvDl){
+    if (!confirm("¿Borrar esta regla? No se puede deshacer.")) return;
+    try { await api("POST", { action:"ig_regla_del", id: Number(cvDl.dataset.cvDel) }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+
+  const cvSend = ev.target.closest("[data-cv-send]");
+  if (cvSend){
+    const box = cvSend.closest(".cv-conv__acts");
+    const txt = (box.querySelector("[data-cv-reply-input]").value||"").trim();
+    if (!txt){ alert("Escribí la respuesta."); return; }
+    busy(cvSend, "Enviando");
+    try { await api("POST", { action:"ig_conv_responder", category: convoCat, ig_user_id: box.dataset.uid, texto: txt }); await reload(); route(); }
+    catch(e){ alert("No se pudo enviar: " + e.message); unbusy(cvSend); }
+  }
+  const cvRes = ev.target.closest("[data-cv-resolve]");
+  const cvReo = ev.target.closest("[data-cv-reopen]");
+  if (cvRes || cvReo){
+    const box = (cvRes||cvReo).closest(".cv-conv__acts");
+    try { await api("POST", { action:"ig_conv_estado", conv_id: Number(box.dataset.cid), estado: cvRes ? "resuelta" : "abierta" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+});
+
+// chips de palabras clave: Enter o coma agrega
+$("#revList").addEventListener("keydown", (ev) => {
+  const inp = ev.target.closest("#cvChipInput");
+  if (!inp) return;
+  if (ev.key === "Enter" || ev.key === ","){
+    ev.preventDefault();
+    const v = inp.value.trim().replace(/,$/,"");
+    if (v && !cvChips.includes(v)){ cvChips.push(v); cvPintarChips(); }
+    inp.value = "";
+  }
+});
+
+// mostrar/ocultar palabras clave según el modo elegido
+$("#revList").addEventListener("change", (ev) => {
+  if (ev.target.name === "cvModo"){
+    const kw = document.getElementById("cvKW");
+    if (kw) kw.hidden = ev.target.value !== "keyword";
   }
 });
 
