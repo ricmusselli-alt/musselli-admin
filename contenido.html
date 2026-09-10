@@ -171,6 +171,9 @@
   .cv-conv__acts{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
   .cv-conv__acts input{flex:1;min-width:200px;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
     border-radius:8px;color:var(--texto);font:inherit;font-size:12.5px;padding:7px 9px}
+  .cv-modlista{width:100%;min-height:70px;resize:vertical;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:8px;color:var(--texto);font:inherit;font-size:13px;padding:8px 10px;margin:8px 0}
+  .cv-modlbl{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);margin-top:10px}
 </style>
 </head>
 <body>
@@ -832,6 +835,22 @@ function renderConvos(){
     ${rlSwitch(cfg.auto_reply === true, "Respuesta pública", "ON: además del DM, deja el comentario público de la regla (ej. «Te lo mandé por DM 📩»).", "cv-autoreply")}
   </div></div>`;
 
+  const ocultos = (DATA.ig_ocultos || []).filter(o => o.categoria === convoCat);
+  const modPanel = `<div class="reel-panel"><div class="reel-switches">
+    ${rlSwitch(cfg.mod_activa === true, "Moderación de comentarios", "Oculta solo los comentarios que caen en la lista negra de abajo. No borra nada: los podés volver a mostrar.", "cv-modact")}
+    ${rlSwitch(cfg.mod_ocultar_links === true, "Ocultar links de terceros", "Oculta comentarios con URLs que no sean de ricardomusselli.com.", "cv-modlinks")}
+  </div>
+    <label class="cv-modlbl">Lista negra — una palabra o frase por línea</label>
+    <textarea id="cvModLista" class="cv-modlista" placeholder="vendo&#10;sigueme&#10;curso gratis">${esc((cfg.mod_lista||[]).join("\n"))}</textarea>
+    <button class="btn-ghost btn-mini" id="cvModGuardar">Guardar lista</button>
+    ${ocultos.length ? `<div class="cv-modlbl" style="margin-top:14px">Ocultados recientes · ${ocultos.length}</div>` +
+      ocultos.map(o => `<div class="cv-conv"><div class="cv-conv__top">
+        <span class="cv-conv__u">@${esc(o.from_username||"?")}</span><span class="reel-dim">${RL_FECHA(o.recibido_at)}</span></div>
+        <div class="cv-conv__msg">${esc(o.texto||"")}</div>
+        <div class="cv-conv__acts"><button class="btn-ghost btn-mini" data-cv-mostrar="${o.id}|${esc(o.external_id||"")}">Volver a mostrar</button></div>
+      </div>`).join("") : ""}
+  </div>`;
+
   const sub = `<div class="cv-sub">
     <button data-cvsub="reglas" class="${convoTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
     <button data-cvsub="bandeja" class="${convoTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
@@ -848,7 +867,7 @@ function renderConvos(){
     cuerpo = convos.length ? convos.map(cvConvCard).join("") : `<div class="vacio">No hay conversaciones registradas todavía.</div>`;
   }
 
-  $("#revList").innerHTML = tabs + panelCfg + sub + cuerpo;
+  $("#revList").innerHTML = tabs + panelCfg + modPanel + sub + cuerpo;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 
@@ -1115,6 +1134,29 @@ $("#revList").addEventListener("click", async (ev) => {
   if (cvARp){
     try { await api("POST", { action:"set_ig_autodm", category: convoCat, auto_reply: cvARp.dataset.cvAutoreply === "1" }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); }
+  }
+
+  const cvMdA = ev.target.closest("[data-cv-modact]");
+  if (cvMdA){
+    try { await api("POST", { action:"set_ig_moderacion", category: convoCat, mod_activa: cvMdA.dataset.cvModact === "1" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  const cvMdL = ev.target.closest("[data-cv-modlinks]");
+  if (cvMdL){
+    try { await api("POST", { action:"set_ig_moderacion", category: convoCat, mod_ocultar_links: cvMdL.dataset.cvModlinks === "1" }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  if (ev.target.closest("#cvModGuardar")){
+    const btn = ev.target.closest("#cvModGuardar"); busy(btn, "Guardando");
+    const lista = ($("#cvModLista").value||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    try { await api("POST", { action:"set_ig_moderacion", category: convoCat, mod_lista: lista }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); unbusy(btn); }
+  }
+  const cvMst = ev.target.closest("[data-cv-mostrar]");
+  if (cvMst){
+    const [eid, cid] = cvMst.dataset.cvMostrar.split("|");
+    try { await api("POST", { action:"ig_mod_mostrar", category: convoCat, evento_id: Number(eid), comment_id: cid }); await reload(); route(); }
+    catch(e){ alert("No se pudo: " + e.message); }
   }
 
   if (ev.target.closest("#cvNueva")){
