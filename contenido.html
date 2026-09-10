@@ -174,6 +174,17 @@
   .cv-modlista{width:100%;min-height:70px;resize:vertical;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
     border-radius:8px;color:var(--texto);font:inherit;font-size:13px;padding:8px 10px;margin:8px 0}
   .cv-modlbl{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);margin-top:10px}
+  .cv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+  .cv-kpi{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px}
+  .cv-kpi b{display:block;font-size:22px;color:var(--texto);line-height:1.1}
+  .cv-kpi span{font-size:11.5px;color:var(--texto-mute)}
+  .cv-embudo{margin-top:16px}
+  .cv-embudo__row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--linea)}
+  .cv-embudo__row .n{font-weight:700;color:var(--texto);min-width:34px;text-align:right}
+  .cv-embudo__row .bar{flex:1;height:8px;border-radius:999px;background:rgba(200,155,108,.15);overflow:hidden}
+  .cv-embudo__row .bar i{display:block;height:100%;background:var(--cobre)}
+  .cv-embudo__row .lbl{font-size:12.5px;color:var(--texto-2);min-width:150px}
+  .cv-embudo__row .lbl small{color:var(--texto-mute)}
 </style>
 </head>
 <body>
@@ -813,6 +824,43 @@ function cvConvCard(c){
   </div>`;
 }
 
+function cvAnalitica(){
+  const s = DATA.ig_stats || { d7:{}, d30:{}, reglas:[], bandeja:{} };
+  const kpi = (o={}) => `<div class="cv-kpis">
+    <div class="cv-kpi"><b>${o.comentarios||0}</b><span>comentarios recibidos</span></div>
+    <div class="cv-kpi"><b>${o.dms||0}</b><span>DMs automáticos enviados</span></div>
+    <div class="cv-kpi"><b>${o.historias||0}</b><span>respuestas a historias</span></div>
+    <div class="cv-kpi"><b>${o.reply_pub||0}</b><span>respuestas públicas</span></div>
+    <div class="cv-kpi"><b>${o.ocultados||0}</b><span>comentarios ocultados</span></div>
+  </div>`;
+
+  const reglas = (s.reglas || []);
+  const max = Math.max(1, ...reglas.map(r => r.dms30));
+  const embudo = reglas.length
+    ? `<div class="cv-embudo">${reglas.map(r => `
+        <div class="cv-embudo__row">
+          <span class="lbl">${esc(r.nombre)} <small>· ${r.categoria==="luthier"?"Luthería":"Guitar Tech"}${r.activo?"":" · pausada"}</small></span>
+          <span class="bar"><i style="width:${Math.round(r.dms30/max*100)}%"></i></span>
+          <span class="n">${r.dms30}</span>
+        </div>`).join("")}</div>`
+    : `<div class="vacio">Todavía no hay reglas con envíos.</div>`;
+
+  const b = s.bandeja || {};
+  const bandeja = `<div class="cv-kpis">
+    <div class="cv-kpi"><b>${b.abierta||0}</b><span>abiertas</span></div>
+    <div class="cv-kpi"><b>${b.humana||0}</b><span>tomadas a mano</span></div>
+    <div class="cv-kpi"><b>${b.resuelta||0}</b><span>resueltas</span></div>
+  </div>`;
+
+  return `
+    <div class="cv-modlbl">Últimos 7 días · ambas cuentas</div>${kpi(s.d7)}
+    <div class="cv-modlbl">Últimos 30 días · ambas cuentas</div>${kpi(s.d30)}
+    <div class="cv-modlbl">DMs por regla / lead magnet · últimos 30 días</div>${embudo}
+    <div class="cv-modlbl">Estado de la bandeja</div>${bandeja}
+    <div class="cv-regla__meta" style="margin-top:14px">Los clics en los links y el alcance de IG se agregan cuando Meta apruebe el permiso de estadísticas.</div>
+  `;
+}
+
 function renderConvos(){
   const cuentas = RL_CUENTAS;
   const cuenta  = cuentas.find(c => c.key === convoCat) || cuentas[0];
@@ -854,10 +902,13 @@ function renderConvos(){
   const sub = `<div class="cv-sub">
     <button data-cvsub="reglas" class="${convoTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
     <button data-cvsub="bandeja" class="${convoTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
+    <button data-cvsub="analitica" class="${convoTab==="analitica"?"sel":""}">Analítica</button>
   </div>`;
 
   let cuerpo = "";
-  if (convoTab === "reglas"){
+  if (convoTab === "analitica"){
+    cuerpo = cvAnalitica();
+  } else if (convoTab === "reglas"){
     cuerpo = `<div class="revitem__acts" style="margin-bottom:12px">
         <button class="btn-solid btn-mini" id="cvNueva">+ Nueva regla</button>
       </div>`
