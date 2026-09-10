@@ -56,12 +56,13 @@ const NOMBRE_FAMILIA = {
 };
 const ICONO_FAMILIA = { blog:"✒", tendencias:"◷", carrusel:"▤", web:"◉", portfolio:"❖" };
 /* nombre del archivo del logo cuando no coincide con la clave */
-const LOGO_ARCHIVO = { carrusel:"carruseles" };
+const LOGO_ARCHIVO = { carrusel:"carruseles", convos:"instagram" };
 
 function pendientesDe(key, DATA){
   if (key === "carrusel") return (DATA.carrusel_drafts || []).length;
   if (key === "blog")      return (DATA.blog_drafts || []).length;      // lo llenará el backend más adelante
   if (key === "tendencias")return (DATA.trend_drafts || []).length;
+  if (key === "convos")    return ((DATA.ig_pend_humano || {}).luthier || 0) + ((DATA.ig_pend_humano || {}).guitartech || 0);
   return 0;
 }
 

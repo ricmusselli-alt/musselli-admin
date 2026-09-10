@@ -136,6 +136,21 @@ function cardEnlaces(){
   </div>`;
 }
 
+/* ---------------- tarjeta: Conversaciones IG ---------------- */
+function cardConvos(){
+  const cfg = (DATA.ig_config || {});
+  const luz = (c) => (c && c.auto_dm === true) ? "ON" : "OFF";
+  return `<div class="card card--wide">
+    <h3>Automatización de Instagram ${ayuda("Responde comentarios, DMs y respuestas a historias. La configuración fina (reglas, palabras clave, textos, moderación) y la bandeja están en Contenido.")}</h3>
+    <p class="mini-note" style="margin:2px 0 14px">
+      Auto-DM · Luthería: <b>${luz(cfg.luthier)}</b> &nbsp;·&nbsp; Guitar Tech: <b>${luz(cfg.guitartech)}</b>
+    </p>
+    <div class="fila">
+      <a class="btn btn-solid btn-mini" href="contenido.html#convos" style="text-decoration:none">Gestionar reglas y bandeja →</a>
+    </div>
+  </div>`;
+}
+
 /* ---------------- tarjeta: generación (blog / tendencias) ---------------- */
 function cardGenSimple(){
   const p = FAM;
@@ -298,14 +313,20 @@ function render(){
   const pend = FKEY === "carrusel" ? (DATA.carrusel_drafts||[]).length
              : FKEY === "blog" ? (DATA.blog_drafts||[]).length
              : FKEY === "tendencias" ? (DATA.trend_drafts||[]).length
-             : FKEY === "recursos" ? (DATA.guias||[]).filter(g => g.estado !== "publicada").length : 0;
+             : FKEY === "recursos" ? (DATA.guias||[]).filter(g => g.estado !== "publicada").length
+             : FKEY === "convos" ? (((DATA.ig_pend_humano||{}).luthier||0) + ((DATA.ig_pend_humano||{}).guitartech||0)) : 0;
   const pendHref = FKEY === "recursos" ? "contenido.html#guias" : `contenido.html#${esc(FKEY)}`;
+  const pendTxt = FKEY === "recursos" ? (pend===1?'guía con imágenes por revisar':'guías con imágenes por revisar')
+                : FKEY === "convos" ? (pend===1?'conversación esperando respuesta':'conversaciones esperando respuesta')
+                : (pend===1?'publicación':'publicaciones')+' esperando tu aprobación';
   $("#alertPend").innerHTML = pend
-    ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${FKEY === "recursos" ? (pend===1?'guía con imágenes por revisar':'guías con imágenes por revisar') : (pend===1?'publicación':'publicaciones')+' esperando tu aprobación'}</span>
-        <a href="${pendHref}">Revisar ahora →</a></div>` : "";
+    ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pendTxt}</span>
+        <a href="${pendHref}">${FKEY === "convos" ? "Ir a la bandeja →" : "Revisar ahora →"}</a></div>` : "";
 
   let cards;
-  if (FKEY === "recursos"){
+  if (FKEY === "convos"){
+    cards = [ cardConvos(), cardProveedores(), cardEnlaces() ];
+  } else if (FKEY === "recursos"){
     cards = [ cardCrearGuia(), cardEnlaces(), cardProveedores() ];
   } else if (FAM.has_generator && FKEY === "carrusel"){
     cards = [ cardCarruselCrear(), cardCarruselConfig(), cardTokens(), cardProveedores(), cardEnlaces() ];
