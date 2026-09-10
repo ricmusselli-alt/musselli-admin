@@ -96,6 +96,13 @@
   #g_lightbox img{max-width:96vw;max-height:92vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 
   /* ---- Reels de prueba ---- */
+  .reel-tabs{display:flex;gap:6px;margin-bottom:14px}
+  .reel-tab{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid var(--linea);
+    border-radius:10px 10px 0 0;background:rgba(245,240,230,.02);color:var(--texto-mute);font-weight:600;
+    font-size:13px;cursor:pointer;border-bottom:2px solid transparent}
+  .reel-tab.sel{color:var(--texto);border-color:var(--linea-fuerte);border-bottom-color:var(--cobre);background:var(--panel)}
+  .reel-tab__dot{width:8px;height:8px;border-radius:50%}
+  .reel-tab__dot.on{background:#54c06e} .reel-tab__dot.off{background:#8a5a2a}
   .reel-panel{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:20px}
   .reel-switches{display:flex;flex-direction:column;gap:10px}
   .rl-sw{display:flex;align-items:center;justify-content:space-between;gap:16px;
@@ -194,8 +201,11 @@ function renderHub(){
   $("#hDesc").textContent = "Todo lo que Blog, Tendencias y Carruseles generan, esperando tu OK. Elegí qué querés revisar.";
   $("#tipos").innerHTML = TIPOS.map(t => {
     const n = pendDe(t.key);
-    const s = t.listo ? saludContenido(t.famKey || t.key)
-      : { cls:"idle", txt:"EN DESARROLLO", tip:"todavía en preparación" };
+    const s = !t.listo
+      ? { cls:"idle", txt:"EN DESARROLLO", tip:"todavía en preparación" }
+      : t.key === "reels"
+        ? (DATA.reels_salud || { cls:"idle", txt:"—", tip:"sin datos" })   // semáforo REAL del motor
+        : saludContenido(t.famKey || t.key);
     const ini = t.ico || t.nom.replace(/^Musselli\s+/i, "").charAt(0).toUpperCase() || "M";
     const icoBody = t.logo
       ? `<img class="familia__logo" src="logos/${esc(t.logo)}.png" alt=""
@@ -594,23 +604,39 @@ function reelHistFila(r){
   </tr>`;
 }
 
-function renderReels(){
-  const cfg    = DATA.reel_config || {};
-  const activo = cfg.activo === true;
-  const auto   = cfg.auto_publicar === true;
-  const plan   = DATA.reel_plan_hoy || null;
-  const enBanco = DATA.reel_topics_pendientes || 0;
-  const reels  = DATA.reels || [];
-  const pend   = reels.filter(r => r.estado === "pending_review");
-  const hist   = reels.filter(r => ["approved","publishing","published","rejected","error"].includes(r.estado));
-  const hoyIso = new Date().toISOString().slice(0, 10);
-  const hoyN   = reels.filter(r => r.estado === "published" && (r.published_at || "").slice(0, 10) === hoyIso).length;
+// cuenta seleccionada en la tarjeta de Reels (se mantiene entre re-renders)
+let reelCat = "luthier";
+const RL_CUENTAS = [
+  { key:"luthier",    nom:"Luthería",   handle:"@ricardomusselli_luthier" },
+  { key:"guitartech", nom:"Guitar Tech", handle:"@ricardomusselli_guitartech" },
+];
 
-  $("#hTitle").textContent = "Reels de prueba · Luthería";
-  $("#hDesc").textContent  = "Trial Reels de @ricardomusselli_luthier. Se generan con fotos reales del banco (sin IA). "
+function renderReels(){
+  const cfgAll  = DATA.reel_config || {};
+  const cfg     = cfgAll[reelCat] || {};
+  const activo  = cfg.activo === true;
+  const auto    = cfg.auto_publicar === true;
+  const plan    = (DATA.reel_plan_hoy || {})[reelCat] || null;
+  const enBanco = (DATA.reel_topics_pendientes || {})[reelCat] || 0;
+  const reels   = (DATA.reels || []).filter(r => (r.category || "luthier") === reelCat);
+  const pend    = reels.filter(r => r.estado === "pending_review");
+  const hist    = reels.filter(r => ["approved","publishing","published","rejected","error"].includes(r.estado));
+  const hoyIso  = new Date().toISOString().slice(0, 10);
+  const hoyN    = reels.filter(r => r.estado === "published" && (r.published_at || "").slice(0, 10) === hoyIso).length;
+  const cuenta  = RL_CUENTAS.find(c => c.key === reelCat) || RL_CUENTAS[0];
+
+  $("#hTitle").textContent = "Reels de prueba · " + cuenta.nom;
+  $("#hDesc").textContent  = `Trial Reels de ${cuenta.handle}. Se generan con fotos reales del banco (sin IA). `
     + "Con Auto-publicar apagado, cada reel espera tu OK acá antes de programarse.";
 
-  const cabecera = `<div class="reel-panel">
+  const tabs = `<div class="reel-tabs">${RL_CUENTAS.map(c => {
+    const on = c.key === reelCat;
+    const st = (cfgAll[c.key] || {}).activo === true;
+    return `<button class="reel-tab ${on ? "sel" : ""}" data-reelcat="${c.key}">
+      <span class="reel-tab__dot ${st ? "on" : "off"}"></span>${c.nom}</button>`;
+  }).join("")}</div>`;
+
+  const cabecera = tabs + `<div class="reel-panel">
     <div class="reel-switches">
       ${rlSwitch(activo, "Línea de reels", "Genera candidatos automáticamente y los pone en cola. Apagada, no se genera nada solo.", "reel-activo")}
       ${rlSwitch(auto, "Auto-publicar", "ON: cada reel generado se publica solo (sin tu revisión). OFF: cada reel espera tu APROBAR acá.", "reel-auto")}
@@ -828,16 +854,19 @@ $("#revList").addEventListener("click", async (ev) => {
   }
 
   // ---- Reels de prueba ----
+  const rlTab = ev.target.closest("[data-reelcat]");
+  if (rlTab){ reelCat = rlTab.dataset.reelcat; renderReels(); return; }
+
   const rlAct = ev.target.closest("[data-reel-activo]");
   if (rlAct){
-    try { await api("POST", { action:"set_reel_activo", activo: rlAct.dataset.reelActivo === "1" }); await reload(); route(); }
+    try { await api("POST", { action:"set_reel_activo", category: reelCat, activo: rlAct.dataset.reelActivo === "1" }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); }
   }
   const rlAuto = ev.target.closest("[data-reel-auto]");
   if (rlAuto){
     const encender = rlAuto.dataset.reelAuto === "1";
     if (encender && !confirm("¿Encender AUTO-PUBLICAR? Los reels nuevos se van a publicar solos, sin que los revises. Podés apagarlo cuando quieras.")) return;
-    try { await api("POST", { action:"set_reel_autopublicar", auto: encender }); await reload(); route(); }
+    try { await api("POST", { action:"set_reel_autopublicar", category: reelCat, auto: encender }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); }
   }
 
@@ -846,7 +875,7 @@ $("#revList").addEventListener("click", async (ev) => {
     if (!topic){ alert("Escribí el tema."); return; }
     const btn = ev.target.closest("#rlAddTema"); busy(btn, "Guardando");
     try {
-      await api("POST", { action:"add_reel_topic", topic, angulo: ($("#rlAng").value||"").trim(), mood: $("#rlMood").value });
+      await api("POST", { action:"add_reel_topic", category: reelCat, topic, angulo: ($("#rlAng").value||"").trim(), mood: $("#rlMood").value });
       await reload(); route();
     } catch(e){ alert("Error: " + e.message); unbusy(btn); }
   }
@@ -857,7 +886,7 @@ $("#revList").addEventListener("click", async (ev) => {
     busy(btn, "Generando");
     try {
       const topic = ($("#rlTema").value || "").trim();
-      const r = await api("POST", { action:"reel_generar", manual:true, ...(topic ? { topic } : {}) });
+      const r = await api("POST", { action:"reel_generar", manual:true, category: reelCat, ...(topic ? { topic } : {}) });
       if (r.status === "sin_temas") alert("No hay temas en el banco. Guardá al menos uno o escribí un tema arriba.");
       await reload(); route();
     } catch(e){ alert("No se pudo generar: " + e.message); unbusy(btn); }
