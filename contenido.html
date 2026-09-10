@@ -816,7 +816,11 @@ function cvConvCard(c){
       <span class="reel-dim">${RL_FECHA(c.ultimo_at)}</span>
     </div>
     <div class="cv-conv__msg">${esc(c.ultimo_texto || "")}</div>
-    <div class="cv-conv__acts" data-uid="${esc(c.ig_user_id)}" data-cid="${esc(c.id)}">
+    ${c.borrador_ia ? `<div class="cv-conv__msg" style="border-left:2px solid var(--cobre);padding-left:10px;color:var(--texto-2)">
+      <b style="color:var(--cobre);font-size:11px;letter-spacing:.08em">SUGERENCIA DE LA IA</b><br>${esc(c.borrador_ia)}
+      <div style="margin-top:6px"><button class="btn-ghost btn-mini" data-cv-usardraft="${esc(c.ig_user_id)}">Enviar esta sugerencia</button></div>
+    </div>` : ""}
+    <div class="cv-conv__acts" data-uid="${esc(c.ig_user_id)}" data-cid="${esc(c.id)}" data-draft="${esc(c.borrador_ia || "")}">
       <input type="text" placeholder="Responder a mano…" data-cv-reply-input>
       <button class="btn-solid btn-mini" data-cv-send>Enviar</button>
       ${st!=="resuelta" ? `<button class="btn-ghost btn-mini" data-cv-resolve>Marcar resuelta</button>` : `<button class="btn-ghost btn-mini" data-cv-reopen>Reabrir</button>`}
@@ -899,6 +903,15 @@ function renderConvos(){
       </div>`).join("") : ""}
   </div>`;
 
+  const faqPanel = `<div class="reel-panel"><div class="reel-switches">
+    ${rlSwitch(cfg.faq_auto === true, "FAQ automática (Gemini)", "ON: los DMs con preguntas comunes se responden solos con la info de abajo. OFF: Gemini prepara un borrador y vos lo mandás desde la bandeja.", "cv-faqauto")}
+  </div>
+    <label class="cv-modlbl">Información para responder — precios, turnos, envíos, qué hacés y qué no, horarios, ubicación…</label>
+    <textarea id="cvFaqTexto" class="cv-modlista" style="min-height:120px" placeholder="Ej:&#10;Hago setups, cambios de trastes y reparaciones de guitarra.&#10;El setup básico arranca en $X y tarda unos 3 días.&#10;Estoy en Huixquilucan, con turno previo.&#10;Envíos: retiro y entrega en el taller; no hago envíos de instrumentos.">${esc(cfg.faq_texto||"")}</textarea>
+    <button class="btn-ghost btn-mini" id="cvFaqGuardar">Guardar información</button>
+    <div class="cv-regla__meta" style="margin-top:8px">Gemini responde SOLO con esto. Si la pregunta pide un presupuesto o turno concreto, no responde y lo deja para vos.</div>
+  </div>`;
+
   const sub = `<div class="cv-sub">
     <button data-cvsub="reglas" class="${convoTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
     <button data-cvsub="bandeja" class="${convoTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
@@ -918,7 +931,7 @@ function renderConvos(){
     cuerpo = convos.length ? convos.map(cvConvCard).join("") : `<div class="vacio">No hay conversaciones registradas todavía.</div>`;
   }
 
-  $("#revList").innerHTML = tabs + panelCfg + modPanel + sub + cuerpo;
+  $("#revList").innerHTML = tabs + panelCfg + faqPanel + modPanel + sub + cuerpo;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 
@@ -1185,6 +1198,28 @@ $("#revList").addEventListener("click", async (ev) => {
   if (cvARp){
     try { await api("POST", { action:"set_ig_autodm", category: convoCat, auto_reply: cvARp.dataset.cvAutoreply === "1" }); await reload(); route(); }
     catch(e){ alert("Error: " + e.message); }
+  }
+
+  const cvFqA = ev.target.closest("[data-cv-faqauto]");
+  if (cvFqA){
+    const on = cvFqA.dataset.cvFaqauto === "1";
+    if (on && !confirm("¿Encender la FAQ automática? Los DMs con preguntas comunes se van a responder solos con la info que cargaste.")) return;
+    try { await api("POST", { action:"set_ig_faq", category: convoCat, faq_auto: on }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); }
+  }
+  if (ev.target.closest("#cvFaqGuardar")){
+    const btn = ev.target.closest("#cvFaqGuardar"); busy(btn, "Guardando");
+    try { await api("POST", { action:"set_ig_faq", category: convoCat, faq_texto: ($("#cvFaqTexto").value||"") }); await reload(); route(); }
+    catch(e){ alert("Error: " + e.message); unbusy(btn); }
+  }
+  const cvUD = ev.target.closest("[data-cv-usardraft]");
+  if (cvUD){
+    const box = cvUD.closest(".cv-conv").querySelector(".cv-conv__acts");
+    const txt = box.dataset.draft;
+    if (!txt) return;
+    busy(cvUD, "Enviando");
+    try { await api("POST", { action:"ig_conv_responder", category: convoCat, ig_user_id: cvUD.dataset.cvUsardraft, texto: txt }); await reload(); route(); }
+    catch(e){ alert("No se pudo enviar: " + e.message); unbusy(cvUD); }
   }
 
   const cvMdA = ev.target.closest("[data-cv-modact]");
