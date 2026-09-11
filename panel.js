@@ -34,7 +34,14 @@
   // muestra en desktop, pero en mobile no hay hover; esto lo hace accesible en los dos).
   document.addEventListener("click", (ev) => {
     const el = ev.target.closest && ev.target.closest(".ayuda");
-    if (el) alert(el.dataset.ayuda || "");
+    if (el) { alert(el.dataset.ayuda || ""); return; }
+    // luces de estado (Portada, hub de Contenido): tocarlas muestra el motivo
+    // (mismo texto que ya viene en el "title" para el hover) en vez de navegar.
+    const luz = ev.target.closest && ev.target.closest(".familia__status[title]");
+    if (luz && luz.getAttribute("title")) {
+      ev.preventDefault(); ev.stopPropagation();
+      alert(luz.getAttribute("title"));
+    }
   });
 
   // Token siempre fresco: el cliente de Supabase renueva la sesión en segundo
