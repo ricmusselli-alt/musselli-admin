@@ -255,6 +255,7 @@ let mrCat = "luthier";
 let mrTab = "reglas";      // reglas | bandeja | analitica
 let mrEdit = null;
 let mrChips = [];
+let mrTagFilter = "";      // filtro de la bandeja por etiqueta
 
 function mrReglaCard(r){
   const modo = r.match_modo === "cualquiera" ? "cualquier comentario"
@@ -270,7 +271,7 @@ function mrReglaCard(r){
     <div class="cv-regla__meta">
       Dispara con: ${modo} · Alcance: ${alcance}<br>
       Manda: botón «${esc(r.boton_texto||"Ingresar aquí")}» → ${esc(r.link_embudo||"—")}<br>
-      ${(r.dm_textos||[]).length} texto(s) de DM${r.comment_reply?" · + respuesta pública":""}${r.webhook_url?" · + webhook":""}${r.ml_grupo?" · + MailerLite":""}
+      ${(r.dm_textos||[]).length} texto(s) de DM${r.comment_reply?" · + respuesta pública":""}${r.etiqueta?` · etiqueta «${esc(r.etiqueta)}»`:""}${r.webhook_url?" · + webhook":""}${r.ml_grupo?" · + MailerLite":""}
     </div>
   </div>`;
 }
@@ -304,6 +305,8 @@ function mrEditor(){
     <textarea id="mrTextos" placeholder="¡Gracias por tu interés! Acá tenés la guía 👇">${esc((r.dm_textos||[]).join("\n"))}</textarea>
     <label>Respuesta pública bajo el comentario (opcional)</label>
     <input type="text" id="mrReply" value="${esc(r.comment_reply||"")}" placeholder="¡Te lo mandé por DM! 📩">
+    <label>Etiqueta a aplicar al contacto (opcional)</label>
+    <input type="text" id="mrEtiqueta" value="${esc(r.etiqueta||"")}" maxlength="40" placeholder="Ej: pidió-setup, interesado-compra, curso">
     <div class="cv-row">
       <div><label>Grupo de MailerLite (opcional)</label>
         <input type="text" id="mrMlg" value="${esc(r.ml_grupo||"")}" placeholder="ID numérico del grupo"></div>
@@ -331,6 +334,10 @@ function mrConvCard(c){
       <b style="color:var(--cobre);font-size:11px">SUGERENCIA DE LA IA</b><br>${esc(c.borrador_ia)}
       <div style="margin-top:6px"><button class="btn-ghost btn-mini" data-mr-usardraft="${esc(c.ig_user_id)}">Enviar esta sugerencia</button></div>
     </div>` : ""}
+    <div class="cv-chips" style="margin:8px 0" data-cid="${esc(c.id)}">
+      ${(c.tags||[]).map(t=>`<span class="cv-chip">${esc(t)}<b data-mr-tagdel="${esc(c.id)}|${esc(t)}">✕</b></span>`).join("")}
+      <input type="text" class="cv-tagin" data-mr-tagadd="${esc(c.id)}" placeholder="＋ etiqueta" style="width:110px;font-size:12px;padding:3px 8px;background:var(--panel-2,#211d1a);border:1px solid var(--linea);border-radius:999px;color:var(--texto)">
+    </div>
     <div class="cv-conv__acts" data-uid="${esc(c.ig_user_id)}" data-cid="${esc(c.id)}" data-draft="${esc(c.borrador_ia||"")}">
       <input type="text" placeholder="Responder a mano…" data-mr-reply-input>
       <button class="btn-solid btn-mini" data-mr-send>Enviar</button>
@@ -356,10 +363,15 @@ function mrAnalitica(){
         <span class="n">${r.dms30}</span></div>`).join("")}</div>`
     : `<div class="vacio">Todavía no hay reglas con envíos.</div>`;
   const b = s.bandeja||{};
+  const tg = s.tags||[];
+  const tagsHtml = tg.length
+    ? `<div class="cv-chips">${tg.map(x=>`<span class="cv-chip">${esc(x.tag)} · <b style="cursor:default">${x.n}</b></span>`).join("")}</div>`
+    : `<div class="vacio">Todavía no hay contactos etiquetados.</div>`;
   return `
     <div class="cv-modlbl">Últimos 7 días · ambas cuentas</div>${kpi(s.d7)}
     <div class="cv-modlbl">Últimos 30 días · ambas cuentas</div>${kpi(s.d30)}
     <div class="cv-modlbl">DMs por regla / lead magnet · últimos 30 días</div>${embudo}
+    <div class="cv-modlbl">Contactos por etiqueta</div>${tagsHtml}
     <div class="cv-modlbl">Estado de la bandeja</div>
     <div class="cv-kpis">
       <div class="cv-kpi"><b>${b.abierta||0}</b><span>abiertas</span></div>
@@ -427,7 +439,15 @@ function mrRender(){
   else if (mrTab === "reglas") cuerpo = `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nueva regla</button></div>`
       + mrEditor()
       + (reglas.length ? reglas.map(mrReglaCard).join("") : `<div class="vacio">Todavía no hay reglas para esta cuenta.</div>`);
-  else cuerpo = convos.length ? convos.map(mrConvCard).join("") : `<div class="vacio">No hay conversaciones registradas todavía.</div>`;
+  else {
+    const tagsDisp = [...new Set(convos.flatMap(c => c.tags || []))].sort();
+    const filtro = tagsDisp.length ? `<div class="cv-sub" style="flex-wrap:wrap">
+      <button data-mr-tagfilter="" class="${mrTagFilter?"":"sel"}">Todas</button>
+      ${tagsDisp.map(t=>`<button data-mr-tagfilter="${esc(t)}" class="${mrTagFilter===t?"sel":""}">${esc(t)}</button>`).join("")}
+    </div>` : "";
+    const lista = mrTagFilter ? convos.filter(c => (c.tags||[]).includes(mrTagFilter)) : convos;
+    cuerpo = filtro + (lista.length ? lista.map(mrConvCard).join("") : `<div class="vacio">Nada para mostrar${mrTagFilter?` con la etiqueta «${esc(mrTagFilter)}»`:""}.</div>`);
+  }
 
   const soloConfig = mrTab === "reglas";
   root.innerHTML = tabs + (soloConfig ? panelCfg + faqPanel + modPanel : "") + sub + cuerpo;
@@ -448,6 +468,10 @@ function mrWire(){
       document.getElementById("mrRoot")?.scrollIntoView({behavior:"smooth"}); return; }
     const tab = g("[data-mrcat]");   if (tab){ mrCat=tab.dataset.mrcat; mrEdit=null; mrRender(); return; }
     const sb  = g("[data-mrsub]");   if (sb){ mrTab=sb.dataset.mrsub; mrEdit=null; mrRender(); return; }
+    const tf  = g("[data-mr-tagfilter]"); if (tf){ mrTagFilter=tf.dataset.mrTagfilter; mrRender(); return; }
+    const td  = g("[data-mr-tagdel]");
+    if (td){ const [cid,tag]=td.dataset.mrTagdel.split("|");
+      try{ await api("POST",{action:"ig_conv_tag_del",conv_id:Number(cid),tag}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
 
     const ad = g("[data-mr-autodm]");
     if (ad){ const on=ad.dataset.mrAutodm==="1"; if(on&&!confirm("¿Encender Auto-DM? Los comentarios que matcheen una regla reciben el DM automáticamente.")) return;
@@ -492,6 +516,7 @@ function mrWire(){
         boton_texto:(document.getElementById("mrBoton").value||"").trim()||"Ingresar aquí",
         dm_textos:(document.getElementById("mrTextos").value||"").split("\n").map(s=>s.trim()).filter(Boolean),
         comment_reply:(document.getElementById("mrReply").value||"").trim(),
+        etiqueta:(document.getElementById("mrEtiqueta").value||"").trim(),
         ml_grupo:(document.getElementById("mrMlg").value||"").trim(),
         webhook_url:(document.getElementById("mrHook").value||"").trim(),
         activo: mrEdit&&mrEdit.activo===false ? false : true,
@@ -520,14 +545,27 @@ function mrWire(){
       try{ await api("POST",{action:"ig_conv_estado",conv_id:Number(box.dataset.cid),estado:rs?"resuelta":"abierta"}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
   });
 
-  document.addEventListener("keydown", (ev) => {
-    const inp = ev.target.closest && ev.target.closest("#mrChipInput");
-    if (!inp) return;
-    if (ev.key === "Enter" || ev.key === ","){
+  document.addEventListener("keydown", async (ev) => {
+    if (!ev.target.closest) return;
+    const chip = ev.target.closest("#mrChipInput");
+    if (chip){
+      if (ev.key === "Enter" || ev.key === ","){
+        ev.preventDefault();
+        const v = chip.value.trim().replace(/,$/,"");
+        if (v && !mrChips.includes(v)){ mrChips.push(v); mrPintarChips(); }
+        chip.value = "";
+      }
+      return;
+    }
+    const tagin = ev.target.closest("[data-mr-tagadd]");
+    if (tagin && ev.key === "Enter"){
       ev.preventDefault();
-      const v = inp.value.trim().replace(/,$/,"");
-      if (v && !mrChips.includes(v)){ mrChips.push(v); mrPintarChips(); }
-      inp.value = "";
+      const tag = tagin.value.trim().replace(/,$/,"");
+      if (!tag) return;
+      const cid = Number(tagin.dataset.mrTagadd);
+      tagin.disabled = true;
+      try{ await api("POST",{action:"ig_conv_tag_add",conv_id:cid,tag}); await reload(); }
+      catch(e){ alert("Error: "+e.message); tagin.disabled=false; }
     }
   });
   document.addEventListener("change", (ev) => {
