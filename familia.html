@@ -56,6 +56,99 @@
   dialog::backdrop{background:rgba(0,0,0,.6)}
   dialog h3{font-family:var(--serif);font-weight:600;margin:0 0 14px;font-size:var(--fs-h3)}
   .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+  /* ===== ManyRic (movido desde contenido) ===== */
+  .revitem__acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  /* ---- Reels de prueba ---- */
+  .reel-tabs{display:flex;gap:6px;margin-bottom:14px}
+  .reel-tab{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid var(--linea);
+    border-radius:10px 10px 0 0;background:rgba(245,240,230,.02);color:var(--texto-mute);font-weight:600;
+    font-size:13px;cursor:pointer;border-bottom:2px solid transparent}
+  .reel-tab.sel{color:var(--texto);border-color:var(--linea-fuerte);border-bottom-color:var(--cobre);background:var(--panel)}
+  .reel-tab__dot{width:8px;height:8px;border-radius:50%}
+  .reel-tab__dot.on{background:#54c06e} .reel-tab__dot.off{background:#8a5a2a}
+  .reel-panel{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px;margin-bottom:20px}
+  .reel-switches{display:flex;flex-direction:column;gap:10px}
+  .rl-sw{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:12px 14px;border:1px solid var(--linea);border-radius:12px;background:rgba(245,240,230,.02)}
+  .rl-sw__label{font-weight:600;font-size:13.5px;color:var(--texto)}
+  .rl-sw__hint{display:block;font-size:11.5px;color:var(--texto-mute);font-weight:400;margin-top:3px;max-width:46ch}
+  .rl-sw__ctl{display:inline-flex;align-items:center;gap:10px;background:none;border:0;cursor:pointer;padding:0;flex:0 0 auto}
+  .rl-sw__state{font-size:11px;font-weight:800;letter-spacing:.12em;width:30px;text-align:right}
+  .rl-sw__state.on{color:#54c06e} .rl-sw__state.off{color:var(--texto-mute)}
+  .rl-track{width:48px;height:27px;border-radius:999px;background:#4a4a4a;position:relative;transition:background .15s;flex:0 0 auto}
+  .rl-track.on{background:#3f7d4f}
+  .rl-knob{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .rl-track.on .rl-knob{left:24px}
+  .reel-stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--texto-mute)}
+  .reel-stats b{color:var(--texto);font-size:15px}
+  .reel-warn{margin-top:12px;font-size:12.5px;color:#e6b877;background:rgba(230,184,119,.09);
+    border:1px solid rgba(230,184,119,.25);border-radius:10px;padding:9px 12px}
+  .reel-alta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  .reel-alta input,.reel-alta select{background:var(--panel);border:1px solid var(--linea);
+    border-radius:9px;padding:9px 11px;color:var(--texto);font:inherit;font-size:13px}
+  .reel-alta input#rlTema{flex:1;min-width:220px}
+  .reel-item{display:flex;gap:16px;align-items:flex-start}
+  .reel-vid{width:150px;aspect-ratio:9/16;border-radius:10px;background:#000;flex:0 0 auto}
+  .reel-body{flex:1;min-width:0}
+  .reel-hook{font-weight:700;font-size:15px;letter-spacing:.02em;color:var(--texto)}
+  .reel-cuerpo{font-size:13px;color:var(--texto-mute);margin-top:3px}
+  .reel-cta{font-size:12.5px;color:var(--cobre);margin-top:3px}
+  .reel-meta{display:flex;gap:10px;align-items:center;margin:9px 0 10px;flex-wrap:wrap}
+  .reel-dim{font-size:12px;color:var(--texto-mute)}
+  @media(max-width:520px){.reel-item{flex-direction:column}.reel-vid{width:130px}}
+
+  /* ---- Conversaciones IG ---- */
+  .cv-sub{display:flex;gap:6px;margin:14px 0}
+  .cv-sub button{padding:7px 14px;border:1px solid var(--linea);border-radius:9px;background:rgba(245,240,230,.02);
+    color:var(--texto-mute);font-weight:600;font-size:12.5px;cursor:pointer}
+  .cv-sub button.sel{color:var(--texto);border-color:var(--cobre);background:var(--panel)}
+  .cv-regla{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:12px}
+  .cv-regla.off{opacity:.55}
+  .cv-regla__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cv-regla__head .t{font-weight:700;font-size:14px;flex:1;min-width:160px;color:var(--texto)}
+  .cv-regla__meta{font-size:12px;color:var(--texto-mute);margin-top:6px;line-height:1.5}
+  .cv-regla__meta code{background:rgba(245,240,230,.06);padding:1px 6px;border-radius:5px;color:var(--cobre)}
+  .cv-form{background:var(--panel);border:1px solid var(--linea-fuerte);border-radius:12px;padding:16px;margin-bottom:16px;display:none}
+  .cv-form.show{display:block}
+  .cv-form label{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);margin:12px 0 5px}
+  .cv-form input[type=text],.cv-form input[type=url],.cv-form textarea,.cv-form select{
+    width:100%;background:var(--panel-2,#211d1a);border:1px solid var(--linea);border-radius:8px;
+    color:var(--texto);font:inherit;font-size:13px;padding:8px 10px}
+  .cv-form textarea{min-height:52px;resize:vertical}
+  .cv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .cv-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(200,155,108,.14);border:1px solid rgba(200,155,108,.35);
+    color:var(--texto);font-size:12px;padding:3px 8px;border-radius:999px}
+  .cv-chip b{cursor:pointer;color:var(--texto-mute)}
+  .cv-row{display:flex;gap:12px;flex-wrap:wrap}
+  .cv-row>div{flex:1;min-width:180px}
+  .cv-radio{display:flex;gap:16px;font-size:13px;color:var(--texto-2);margin-top:4px}
+  .cv-radio label{display:inline-flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;color:var(--texto-2);font-size:13px;margin:0}
+  .cv-conv{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:13px 15px;margin-bottom:10px}
+  .cv-conv__top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cv-conv__u{font-weight:700;font-size:13.5px;color:var(--texto)}
+  .cv-conv__st{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:6px}
+  .cv-conv__st.abierta{color:#e6b877;background:rgba(230,184,119,.12)}
+  .cv-conv__st.humana{color:#6db3d8;background:rgba(109,179,216,.12)}
+  .cv-conv__st.resuelta{color:var(--texto-mute);background:rgba(245,240,230,.05)}
+  .cv-conv__msg{font-size:13px;color:var(--texto-mute);margin:7px 0;line-height:1.5}
+  .cv-conv__acts{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .cv-conv__acts input{flex:1;min-width:200px;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:8px;color:var(--texto);font:inherit;font-size:12.5px;padding:7px 9px}
+  .cv-modlista{width:100%;min-height:70px;resize:vertical;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
+    border-radius:8px;color:var(--texto);font:inherit;font-size:13px;padding:8px 10px;margin:8px 0}
+  .cv-modlbl{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);margin-top:10px}
+  .cv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+  .cv-kpi{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px}
+  .cv-kpi b{display:block;font-size:22px;color:var(--texto);line-height:1.1}
+  .cv-kpi span{font-size:11.5px;color:var(--texto-mute)}
+  .cv-embudo{margin-top:16px}
+  .cv-embudo__row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--linea)}
+  .cv-embudo__row .n{font-weight:700;color:var(--texto);min-width:34px;text-align:right}
+  .cv-embudo__row .bar{flex:1;height:8px;border-radius:999px;background:rgba(200,155,108,.15);overflow:hidden}
+  .cv-embudo__row .bar i{display:block;height:100%;background:var(--cobre)}
+  .cv-embudo__row .lbl{font-size:12.5px;color:var(--texto-2);min-width:150px}
+  .cv-embudo__row .lbl small{color:var(--texto-mute)}
 </style>
 </head>
 <body>
@@ -136,19 +229,313 @@ function cardEnlaces(){
   </div>`;
 }
 
-/* ---------------- tarjeta: Conversaciones IG ---------------- */
+/* ================= ManyRic (config + bandeja + analítica) ================= */
 function cardConvos(){
-  const cfg = (DATA.ig_config || {});
-  const luz = (c) => (c && c.auto_dm === true) ? "ON" : "OFF";
-  return `<div class="card card--wide">
-    <h3>Automatización de Instagram ${ayuda("Responde comentarios, DMs y respuestas a historias. La configuración fina (reglas, palabras clave, textos, moderación) y la bandeja están en Contenido.")}</h3>
-    <p class="mini-note" style="margin:2px 0 14px">
-      Auto-DM · Luthería: <b>${luz(cfg.luthier)}</b> &nbsp;·&nbsp; Guitar Tech: <b>${luz(cfg.guitartech)}</b>
-    </p>
-    <div class="fila">
-      <a class="btn btn-solid btn-mini" href="contenido.html#convos" style="text-decoration:none">Gestionar reglas y bandeja →</a>
+  return `<div class="card card--wide" style="padding-top:8px"><div id="mrRoot"></div></div>`;
+}
+
+const RL_CUENTAS = [
+  { key:"luthier",    nom:"Luthería" },
+  { key:"guitartech", nom:"Guitar Tech" },
+];
+const MR_FECHA = (s) => s ? new Date(s).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "—";
+function mrBusy(btn,t){ btn._o=btn.innerHTML; btn.disabled=true; btn.innerHTML="… "+t; }
+function mrUnbusy(btn){ if(btn._o!=null) btn.innerHTML=btn._o; btn.disabled=false; }
+function mrSwitch(on,label,hint,attr){
+  return `<div class="rl-sw">
+    <span class="rl-sw__label">${label}<span class="rl-sw__hint">${hint}</span></span>
+    <button class="rl-sw__ctl" data-${attr}="${on?"0":"1"}" aria-pressed="${on}">
+      <span class="rl-sw__state ${on?"on":"off"}">${on?"ON":"OFF"}</span>
+      <span class="rl-track ${on?"on":""}"><span class="rl-knob"></span></span>
+    </button></div>`;
+}
+function mrMediaId(u){ const m=String(u||"").match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/); return m?m[1]:""; }
+
+let mrCat = "luthier";
+let mrTab = "reglas";      // reglas | bandeja | analitica
+let mrEdit = null;
+let mrChips = [];
+
+function mrReglaCard(r){
+  const modo = r.match_modo === "cualquiera" ? "cualquier comentario"
+    : (r.palabras_clave||[]).map(k=>`<code>${esc(k)}</code>`).join(" ");
+  const alcance = r.media_id ? `post <code>${esc(r.media_id)}</code>` : "todos los posts";
+  return `<div class="cv-regla ${r.activo?"":"off"}">
+    <div class="cv-regla__head">
+      <span class="t">${esc(r.nombre||"Regla")}</span>
+      <button class="btn-ghost btn-mini" data-mr-edit="${r.id}">Editar</button>
+      <button class="btn-ghost btn-mini" data-mr-toggle="${r.id}" data-on="${r.activo?0:1}">${r.activo?"Pausar":"Activar"}</button>
+      <button class="btn-danger btn-mini" data-mr-del="${r.id}">Borrar</button>
+    </div>
+    <div class="cv-regla__meta">
+      Dispara con: ${modo} · Alcance: ${alcance}<br>
+      Manda: botón «${esc(r.boton_texto||"Ingresar aquí")}» → ${esc(r.link_embudo||"—")}<br>
+      ${(r.dm_textos||[]).length} texto(s) de DM${r.comment_reply?" · + respuesta pública":""}${r.webhook_url?" · + webhook":""}${r.ml_grupo?" · + MailerLite":""}
     </div>
   </div>`;
+}
+
+function mrEditor(){
+  if (!mrEdit) return "";
+  const r = mrEdit; const cualq = r.match_modo === "cualquiera";
+  return `<div class="cv-form show">
+    <label>Nombre de la regla (interno)</label>
+    <input type="text" id="mrNombre" value="${esc(r.nombre||"")}" placeholder="Ej: Guía de setup">
+    <div class="cv-row">
+      <div><label>Link del post o reel (opcional)</label>
+        <input type="url" id="mrPost" value="${esc(r.post_url||"")}" placeholder="https://instagram.com/p/…  vacío = cualquier post"></div>
+      <div><label>Texto del botón</label>
+        <input type="text" id="mrBoton" value="${esc(r.boton_texto||"Ingresar aquí")}" maxlength="20"></div>
+    </div>
+    <label>¿Cuándo responde?</label>
+    <div class="cv-radio">
+      <label><input type="radio" name="mrModo" value="keyword" ${cualq?"":"checked"}> Por palabra clave</label>
+      <label><input type="radio" name="mrModo" value="cualquiera" ${cualq?"checked":""}> Cualquier comentario</label>
+    </div>
+    <div id="mrKW" ${cualq?"hidden":""}>
+      <label>Palabras clave (variantes) — Enter para agregar</label>
+      <input type="text" id="mrChipInput" placeholder="setup, seteo, quiero, info…">
+      <div class="cv-chips" id="mrChips"></div>
+      <div class="cv-regla__meta">Tolera acentos y 1–2 letras de error.</div>
+    </div>
+    <label>Link del embudo (Musselli Recursos)</label>
+    <input type="url" id="mrLink" value="${esc(r.link_embudo||"")}" placeholder="https://ricardomusselli.com/…">
+    <label>Textos del DM — uno por línea (se rota al azar)</label>
+    <textarea id="mrTextos" placeholder="¡Gracias por tu interés! Acá tenés la guía 👇">${esc((r.dm_textos||[]).join("\n"))}</textarea>
+    <label>Respuesta pública bajo el comentario (opcional)</label>
+    <input type="text" id="mrReply" value="${esc(r.comment_reply||"")}" placeholder="¡Te lo mandé por DM! 📩">
+    <div class="cv-row">
+      <div><label>Grupo de MailerLite (opcional)</label>
+        <input type="text" id="mrMlg" value="${esc(r.ml_grupo||"")}" placeholder="ID numérico del grupo"></div>
+      <div><label>Webhook / HTTP request (opcional)</label>
+        <input type="url" id="mrHook" value="${esc(r.webhook_url||"")}" placeholder="https://… CRM, planilla o Make"></div>
+    </div>
+    <div class="cv-regla__meta">Al dispararse la regla se hace un POST con cuenta, usuario de IG, comentario, regla y link. MailerLite se suma al completar el embudo.</div>
+    <div class="revitem__acts" style="margin-top:16px">
+      <button class="btn-solid btn-mini" id="mrGuardar">Guardar regla</button>
+      <button class="btn-ghost btn-mini" id="mrCancelar">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+function mrConvCard(c){
+  const st = c.estado || "abierta";
+  return `<div class="cv-conv">
+    <div class="cv-conv__top">
+      <span class="cv-conv__u">@${esc(c.username||c.ig_user_id||"?")}</span>
+      <span class="cv-conv__st ${st}">${st}</span>
+      <span class="reel-dim">${MR_FECHA(c.ultimo_at)}</span>
+    </div>
+    <div class="cv-conv__msg">${esc(c.ultimo_texto||"")}</div>
+    ${c.borrador_ia ? `<div class="cv-conv__msg" style="border-left:2px solid var(--cobre);padding-left:10px">
+      <b style="color:var(--cobre);font-size:11px">SUGERENCIA DE LA IA</b><br>${esc(c.borrador_ia)}
+      <div style="margin-top:6px"><button class="btn-ghost btn-mini" data-mr-usardraft="${esc(c.ig_user_id)}">Enviar esta sugerencia</button></div>
+    </div>` : ""}
+    <div class="cv-conv__acts" data-uid="${esc(c.ig_user_id)}" data-cid="${esc(c.id)}" data-draft="${esc(c.borrador_ia||"")}">
+      <input type="text" placeholder="Responder a mano…" data-mr-reply-input>
+      <button class="btn-solid btn-mini" data-mr-send>Enviar</button>
+      ${st!=="resuelta" ? `<button class="btn-ghost btn-mini" data-mr-resolve>Marcar resuelta</button>` : `<button class="btn-ghost btn-mini" data-mr-reopen>Reabrir</button>`}
+    </div>
+  </div>`;
+}
+
+function mrAnalitica(){
+  const s = DATA.ig_stats || { d7:{}, d30:{}, reglas:[], bandeja:{} };
+  const kpi = (o={}) => `<div class="cv-kpis">
+    <div class="cv-kpi"><b>${o.comentarios||0}</b><span>comentarios recibidos</span></div>
+    <div class="cv-kpi"><b>${o.dms||0}</b><span>DMs automáticos</span></div>
+    <div class="cv-kpi"><b>${o.historias||0}</b><span>respuestas a historias</span></div>
+    <div class="cv-kpi"><b>${o.reply_pub||0}</b><span>respuestas públicas</span></div>
+    <div class="cv-kpi"><b>${o.ocultados||0}</b><span>comentarios ocultados</span></div>
+  </div>`;
+  const rr = s.reglas||[]; const mx = Math.max(1, ...rr.map(r=>r.dms30));
+  const embudo = rr.length ? `<div class="cv-embudo">${rr.map(r=>`
+      <div class="cv-embudo__row">
+        <span class="lbl">${esc(r.nombre)} <small>· ${r.categoria==="luthier"?"Luthería":"Guitar Tech"}${r.activo?"":" · pausada"}</small></span>
+        <span class="bar"><i style="width:${Math.round(r.dms30/mx*100)}%"></i></span>
+        <span class="n">${r.dms30}</span></div>`).join("")}</div>`
+    : `<div class="vacio">Todavía no hay reglas con envíos.</div>`;
+  const b = s.bandeja||{};
+  return `
+    <div class="cv-modlbl">Últimos 7 días · ambas cuentas</div>${kpi(s.d7)}
+    <div class="cv-modlbl">Últimos 30 días · ambas cuentas</div>${kpi(s.d30)}
+    <div class="cv-modlbl">DMs por regla / lead magnet · últimos 30 días</div>${embudo}
+    <div class="cv-modlbl">Estado de la bandeja</div>
+    <div class="cv-kpis">
+      <div class="cv-kpi"><b>${b.abierta||0}</b><span>abiertas</span></div>
+      <div class="cv-kpi"><b>${b.humana||0}</b><span>tomadas a mano</span></div>
+      <div class="cv-kpi"><b>${b.resuelta||0}</b><span>resueltas</span></div>
+    </div>
+    <div class="cv-regla__meta" style="margin-top:14px">Los clics en los links y el alcance de IG se agregan cuando Meta apruebe el permiso de estadísticas.</div>`;
+}
+
+function mrPintarChips(){
+  const box = document.getElementById("mrChips");
+  if (box) box.innerHTML = mrChips.map((k,i)=>`<span class="cv-chip">${esc(k)}<b data-mr-chipdel="${i}">✕</b></span>`).join("");
+}
+
+function mrRender(){
+  const root = document.getElementById("mrRoot");
+  if (!root) return;
+  const cfg    = (DATA.ig_config || {})[mrCat] || { auto_dm:false, auto_reply:false };
+  const reglas = (DATA.ig_reglas || {})[mrCat] || [];
+  const convos = (DATA.ig_convos || []).filter(c => c.categoria === mrCat);
+  const ocultos = (DATA.ig_ocultos || []).filter(o => o.categoria === mrCat);
+
+  const tabs = `<div class="reel-tabs">${RL_CUENTAS.map(c=>{
+    const on = c.key===mrCat; const st = ((DATA.ig_config||{})[c.key]||{}).auto_dm===true;
+    return `<button class="reel-tab ${on?"sel":""}" data-mrcat="${c.key}"><span class="reel-tab__dot ${st?"on":"off"}"></span>${c.nom}</button>`;
+  }).join("")}</div>`;
+
+  const panelCfg = `<div class="reel-panel"><div class="reel-switches">
+    ${mrSwitch(cfg.auto_dm===true,"Auto-DM","ON: los comentarios que matchean una regla reciben el DM solos. OFF: quedan en la bandeja.","mr-autodm")}
+    ${mrSwitch(cfg.auto_reply===true,"Respuesta pública","ON: además del DM, deja el comentario público de la regla.","mr-autoreply")}
+  </div></div>`;
+
+  const faqPanel = `<div class="reel-panel"><div class="reel-switches">
+    ${mrSwitch(cfg.faq_auto===true,"FAQ automática (Gemini)","ON: los DMs con preguntas comunes se responden solos. OFF: Gemini deja un borrador en la bandeja.","mr-faqauto")}
+  </div>
+    <label class="cv-modlbl">Información para responder — precios, turnos, envíos, qué hacés y qué no, horarios, ubicación…</label>
+    <textarea id="mrFaqTexto" class="cv-modlista" style="min-height:120px">${esc(cfg.faq_texto||"")}</textarea>
+    <button class="btn-ghost btn-mini" id="mrFaqGuardar">Guardar información</button>
+    <div class="cv-regla__meta" style="margin-top:8px">Gemini responde SOLO con esto. Si piden presupuesto o turno concreto, lo deja para vos.</div>
+  </div>`;
+
+  const modPanel = `<div class="reel-panel"><div class="reel-switches">
+    ${mrSwitch(cfg.mod_activa===true,"Moderación de comentarios","Oculta los comentarios que caen en la lista negra. No borra: se pueden volver a mostrar.","mr-modact")}
+    ${mrSwitch(cfg.mod_ocultar_links===true,"Ocultar links de terceros","Oculta comentarios con URLs que no sean de ricardomusselli.com.","mr-modlinks")}
+  </div>
+    <label class="cv-modlbl">Lista negra — una palabra o frase por línea</label>
+    <textarea id="mrModLista" class="cv-modlista">${esc((cfg.mod_lista||[]).join("\n"))}</textarea>
+    <button class="btn-ghost btn-mini" id="mrModGuardar">Guardar lista</button>
+    ${ocultos.length ? `<div class="cv-modlbl" style="margin-top:14px">Ocultados recientes · ${ocultos.length}</div>` +
+      ocultos.map(o=>`<div class="cv-conv"><div class="cv-conv__top">
+        <span class="cv-conv__u">@${esc(o.from_username||"?")}</span><span class="reel-dim">${MR_FECHA(o.recibido_at)}</span></div>
+        <div class="cv-conv__msg">${esc(o.texto||"")}</div>
+        <div class="cv-conv__acts"><button class="btn-ghost btn-mini" data-mr-mostrar="${o.id}|${esc(o.external_id||"")}">Volver a mostrar</button></div>
+      </div>`).join("") : ""}
+  </div>`;
+
+  const sub = `<div class="cv-sub">
+    <button data-mrsub="reglas" class="${mrTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
+    <button data-mrsub="bandeja" class="${mrTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
+    <button data-mrsub="analitica" class="${mrTab==="analitica"?"sel":""}">Analítica</button>
+  </div>`;
+
+  let cuerpo = "";
+  if (mrTab === "analitica") cuerpo = mrAnalitica();
+  else if (mrTab === "reglas") cuerpo = `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nueva regla</button></div>`
+      + mrEditor()
+      + (reglas.length ? reglas.map(mrReglaCard).join("") : `<div class="vacio">Todavía no hay reglas para esta cuenta.</div>`);
+  else cuerpo = convos.length ? convos.map(mrConvCard).join("") : `<div class="vacio">No hay conversaciones registradas todavía.</div>`;
+
+  const soloConfig = mrTab === "reglas";
+  root.innerHTML = tabs + (soloConfig ? panelCfg + faqPanel + modPanel : "") + sub + cuerpo;
+  if (soloConfig && mrEdit) mrPintarChips();
+}
+
+let mrWired = false;
+function mrWire(){
+  if (mrWired) return; mrWired = true;
+  const rerun = async () => { await reload(); };
+
+  document.addEventListener("click", async (ev) => {
+    if (!document.getElementById("mrRoot")) return;
+    const t = ev.target;
+    const g = (s) => t.closest(s);
+
+    if (g("#mrIrBandeja")){ ev.preventDefault(); mrTab="bandeja"; mrEdit=null; mrRender();
+      document.getElementById("mrRoot")?.scrollIntoView({behavior:"smooth"}); return; }
+    const tab = g("[data-mrcat]");   if (tab){ mrCat=tab.dataset.mrcat; mrEdit=null; mrRender(); return; }
+    const sb  = g("[data-mrsub]");   if (sb){ mrTab=sb.dataset.mrsub; mrEdit=null; mrRender(); return; }
+
+    const ad = g("[data-mr-autodm]");
+    if (ad){ const on=ad.dataset.mrAutodm==="1"; if(on&&!confirm("¿Encender Auto-DM? Los comentarios que matcheen una regla reciben el DM automáticamente.")) return;
+      try{ await api("POST",{action:"set_ig_autodm",category:mrCat,auto_dm:on}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+    const ar = g("[data-mr-autoreply]");
+    if (ar){ try{ await api("POST",{action:"set_ig_autodm",category:mrCat,auto_reply:ar.dataset.mrAutoreply==="1"}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+
+    const fa = g("[data-mr-faqauto]");
+    if (fa){ const on=fa.dataset.mrFaqauto==="1"; if(on&&!confirm("¿Encender la FAQ automática? Los DMs con preguntas comunes se responden solos con la info cargada.")) return;
+      try{ await api("POST",{action:"set_ig_faq",category:mrCat,faq_auto:on}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+    if (g("#mrFaqGuardar")){ const b=g("#mrFaqGuardar"); mrBusy(b,"Guardando");
+      try{ await api("POST",{action:"set_ig_faq",category:mrCat,faq_texto:(document.getElementById("mrFaqTexto").value||"")}); await rerun(); }catch(e){ alert("Error: "+e.message); mrUnbusy(b); } return; }
+
+    const ma = g("[data-mr-modact]");
+    if (ma){ try{ await api("POST",{action:"set_ig_moderacion",category:mrCat,mod_activa:ma.dataset.mrModact==="1"}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+    const ml = g("[data-mr-modlinks]");
+    if (ml){ try{ await api("POST",{action:"set_ig_moderacion",category:mrCat,mod_ocultar_links:ml.dataset.mrModlinks==="1"}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+    if (g("#mrModGuardar")){ const b=g("#mrModGuardar"); mrBusy(b,"Guardando");
+      const lista=(document.getElementById("mrModLista").value||"").split("\n").map(s=>s.trim()).filter(Boolean);
+      try{ await api("POST",{action:"set_ig_moderacion",category:mrCat,mod_lista:lista}); await rerun(); }catch(e){ alert("Error: "+e.message); mrUnbusy(b); } return; }
+    const mst = g("[data-mr-mostrar]");
+    if (mst){ const [eid,cid]=mst.dataset.mrMostrar.split("|");
+      try{ await api("POST",{action:"ig_mod_mostrar",category:mrCat,evento_id:Number(eid),comment_id:cid}); await rerun(); }catch(e){ alert("No se pudo: "+e.message); } return; }
+
+    if (g("#mrNueva")){ mrEdit={match_modo:"keyword",boton_texto:"Ingresar aquí",dm_textos:[],activo:true}; mrChips=[]; mrRender(); return; }
+    const ed = g("[data-mr-edit]");
+    if (ed){ const r=((DATA.ig_reglas||{})[mrCat]||[]).find(x=>String(x.id)===ed.dataset.mrEdit);
+      if(r){ mrEdit={...r}; mrChips=[...(r.palabras_clave||[])]; mrRender(); } return; }
+    if (g("#mrCancelar")){ mrEdit=null; mrRender(); return; }
+    const cd = g("[data-mr-chipdel]");
+    if (cd){ mrChips.splice(Number(cd.dataset.mrChipdel),1); mrPintarChips(); return; }
+
+    if (g("#mrGuardar")){
+      const modo=(document.querySelector('input[name="mrModo"]:checked')||{}).value||"keyword";
+      const post=(document.getElementById("mrPost").value||"").trim();
+      const regla={
+        id: mrEdit&&mrEdit.id ? mrEdit.id : undefined,
+        nombre:(document.getElementById("mrNombre").value||"").trim(),
+        post_url:post, media_id:mrMediaId(post), match_modo:modo,
+        palabras_clave: modo==="keyword" ? mrChips : [],
+        link_embudo:(document.getElementById("mrLink").value||"").trim(),
+        boton_texto:(document.getElementById("mrBoton").value||"").trim()||"Ingresar aquí",
+        dm_textos:(document.getElementById("mrTextos").value||"").split("\n").map(s=>s.trim()).filter(Boolean),
+        comment_reply:(document.getElementById("mrReply").value||"").trim(),
+        ml_grupo:(document.getElementById("mrMlg").value||"").trim(),
+        webhook_url:(document.getElementById("mrHook").value||"").trim(),
+        activo: mrEdit&&mrEdit.activo===false ? false : true,
+      };
+      const b=g("#mrGuardar"); mrBusy(b,"Guardando");
+      try{ await api("POST",{action:"ig_regla_save",category:mrCat,regla}); mrEdit=null; await rerun(); }
+      catch(e){ alert("No se pudo guardar: "+e.message); mrUnbusy(b); } return;
+    }
+    const tg = g("[data-mr-toggle]");
+    if (tg){ try{ await api("POST",{action:"ig_regla_toggle",id:Number(tg.dataset.mrToggle),activo:tg.dataset.on==="1"}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+    const dl = g("[data-mr-del]");
+    if (dl){ if(!confirm("¿Borrar esta regla? No se puede deshacer.")) return;
+      try{ await api("POST",{action:"ig_regla_del",id:Number(dl.dataset.mrDel)}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+
+    const ud = g("[data-mr-usardraft]");
+    if (ud){ const box=ud.closest(".cv-conv").querySelector(".cv-conv__acts"); const txt=box.dataset.draft; if(!txt) return;
+      mrBusy(ud,"Enviando");
+      try{ await api("POST",{action:"ig_conv_responder",category:mrCat,ig_user_id:ud.dataset.mrUsardraft,texto:txt}); await rerun(); }catch(e){ alert("No se pudo enviar: "+e.message); mrUnbusy(ud); } return; }
+    const snd = g("[data-mr-send]");
+    if (snd){ const box=snd.closest(".cv-conv__acts"); const txt=(box.querySelector("[data-mr-reply-input]").value||"").trim();
+      if(!txt){ alert("Escribí la respuesta."); return; }
+      mrBusy(snd,"Enviando");
+      try{ await api("POST",{action:"ig_conv_responder",category:mrCat,ig_user_id:box.dataset.uid,texto:txt}); await rerun(); }catch(e){ alert("No se pudo enviar: "+e.message); mrUnbusy(snd); } return; }
+    const rs = g("[data-mr-resolve]"), ro = g("[data-mr-reopen]");
+    if (rs||ro){ const box=(rs||ro).closest(".cv-conv__acts");
+      try{ await api("POST",{action:"ig_conv_estado",conv_id:Number(box.dataset.cid),estado:rs?"resuelta":"abierta"}); await rerun(); }catch(e){ alert("Error: "+e.message); } return; }
+  });
+
+  document.addEventListener("keydown", (ev) => {
+    const inp = ev.target.closest && ev.target.closest("#mrChipInput");
+    if (!inp) return;
+    if (ev.key === "Enter" || ev.key === ","){
+      ev.preventDefault();
+      const v = inp.value.trim().replace(/,$/,"");
+      if (v && !mrChips.includes(v)){ mrChips.push(v); mrPintarChips(); }
+      inp.value = "";
+    }
+  });
+  document.addEventListener("change", (ev) => {
+    if (ev.target.name === "mrModo"){
+      const kw = document.getElementById("mrKW");
+      if (kw) kw.hidden = ev.target.value !== "keyword";
+    }
+  });
 }
 
 /* ---------------- tarjeta: generación (blog / tendencias) ---------------- */
@@ -320,8 +707,11 @@ function render(){
                 : FKEY === "convos" ? (pend===1?'conversación esperando respuesta':'conversaciones esperando respuesta')
                 : (pend===1?'publicación':'publicaciones')+' esperando tu aprobación';
   $("#alertPend").innerHTML = pend
-    ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pendTxt}</span>
-        <a href="${pendHref}">${FKEY === "convos" ? "Ir a la bandeja →" : "Revisar ahora →"}</a></div>` : "";
+    ? (FKEY === "convos"
+        ? `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pendTxt}</span>
+           <a href="#" id="mrIrBandeja">Ir a la bandeja →</a></div>`
+        : `<div class="alert-box"><span><b style="color:var(--aviso)">${pend}</b> ${pendTxt}</span>
+           <a href="${pendHref}">Revisar ahora →</a></div>`) : "";
 
   let cards;
   if (FKEY === "convos"){
@@ -338,6 +728,7 @@ function render(){
   $("#ctrl").innerHTML = cards.join("");
 
   wire();
+  if (FKEY === "convos"){ mrWire(); mrRender(); }
 }
 
 /* ---------------- eventos ---------------- */
