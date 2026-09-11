@@ -604,9 +604,26 @@ function leadMagnetsHtml(lms, guias){
       </div>
     </div>`;
   }).join("");
+  const grupoGeneral = (DATA.app_config || {}).ml_grupo_general;
+  const cajaGeneral = `<div class="cv-regla" style="margin-bottom:22px">
+    <div class="cv-regla__head">
+      <span class="t">Secuencia general (todas las guías)</span>
+      ${ayuda("Un solo grupo y una sola Automation en MailerLite, compartida por TODAS las guías. La armás una vez en tu vida: cada guía nueva cae sola acá, sin crear nada por guía. Es la alternativa simple a tener una secuencia distinta por cada guía.")}
+    </div>
+    ${grupoGeneral
+      ? `<div class="cv-regla__meta">Grupo asignado: <code>${esc(grupoGeneral)}</code> — armá o revisá su Automation en MailerLite (trigger: "Subscriber joins a group").</div>`
+      : `<div class="cv-regla__meta">Todavía no está creada. Sin esto, ninguna guía manda seguimiento automático (salvo que le hayas puesto un grupo propio más abajo).</div>
+         <div class="revitem__acts" style="margin-top:8px;flex-wrap:wrap">
+           <input type="text" id="mlGrupoGeneralIn" placeholder="Pegar un ID de grupo existente" style="flex:1;min-width:180px">
+           <button class="btn-ghost btn-mini" id="mlGrupoGeneralGuardar">Guardar ese ID</button>
+           <button class="btn-solid btn-mini" id="mlGrupoGeneralCrear">Crear grupo nuevo</button>
+         </div>`}
+  </div>`;
+
   return `<div class="seccion" style="margin-top:12px">
     <div class="seccion__head"><span class="kicker">Embudo</span><h2>Lead magnets</h2><span class="count">· ${lms.length}</span></div>
-    <p class="g-hint" style="margin:0 0 16px">Por cada guía: primero publicás su embudo (①), después armás su secuencia de mail (②) — son dos pasos independientes, podés hacer uno sin el otro.</p>
+    <p class="g-hint" style="margin:0 0 16px">Por cada guía: primero publicás su embudo (①). La secuencia de mail (②) es opcional — usá la general de arriba (una vez en la vida) o, si alguna guía lo merece, una propia.</p>
+    ${cajaGeneral}
     ${cards}
   </div>`;
 }
@@ -838,6 +855,21 @@ $("#revList").addEventListener("click", async (ev) => {
   const gTab = ev.target.closest("[data-gtab]");
   if (gTab){ guiaTab = gTab.dataset.gtab; renderGuias(); return; }
 
+  if (ev.target.closest("#mlGrupoGeneralGuardar")){
+    const btn = ev.target.closest("#mlGrupoGeneralGuardar");
+    const grupo = (document.getElementById("mlGrupoGeneralIn")?.value || "").trim();
+    if (!grupo){ alert("Pegá el ID del grupo, o usá 'Crear grupo nuevo'."); return; }
+    busy(btn, "Guardando");
+    try { await api("POST", { action:"grupo_general_guardar", ml_grupo: grupo }); await reload(); route(); }
+    catch(e){ alert("No se pudo guardar: " + e.message); unbusy(btn); }
+  }
+  if (ev.target.closest("#mlGrupoGeneralCrear")){
+    const btn = ev.target.closest("#mlGrupoGeneralCrear");
+    if (!confirm("¿Crear el grupo de la Secuencia general en MailerLite?")) return;
+    busy(btn, "Creando");
+    try { await api("POST", { action:"grupo_general_crear" }); await reload(); route(); }
+    catch(e){ alert("No se pudo crear: " + e.message); unbusy(btn); }
+  }
   const mlGuardar = ev.target.closest("[data-ml-guardar]");
   if (mlGuardar){
     const slug = mlGuardar.dataset.mlGuardar;
