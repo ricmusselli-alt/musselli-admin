@@ -164,6 +164,7 @@
       </div>
     </div>
     <p id="famDesc"></p>
+    <div id="mrManualBtn"></div>
   </div>
 
   <div class="msg" id="topMsg"></div>
@@ -243,7 +244,7 @@ function mrBusy(btn,t){ btn._o=btn.innerHTML; btn.disabled=true; btn.innerHTML="
 function mrUnbusy(btn){ if(btn._o!=null) btn.innerHTML=btn._o; btn.disabled=false; }
 function mrSwitch(on,label,hint,attr){
   return `<div class="rl-sw">
-    <span class="rl-sw__label">${label}<span class="rl-sw__hint">${hint}</span></span>
+    <span class="rl-sw__label">${label} ${ayuda(hint)}</span>
     <button class="rl-sw__ctl" data-${attr}="${on?"0":"1"}" aria-pressed="${on}">
       <span class="rl-sw__state ${on?"on":"off"}">${on?"ON":"OFF"}</span>
       <span class="rl-track ${on?"on":""}"><span class="rl-knob"></span></span>
@@ -282,44 +283,44 @@ function mrEditor(){
   if (!mrEdit) return "";
   const r = mrEdit; const cualq = r.match_modo === "cualquiera";
   return `<div class="cv-form show">
-    <label>Nombre de la regla (interno)</label>
+    <label>Nombre de la regla (interno) ${ayuda("Solo para reconocerla vos en la lista. No la ve nadie más.")}</label>
     <input type="text" id="mrNombre" value="${esc(r.nombre||"")}" placeholder="Ej: Guía de setup">
     <div class="cv-row">
-      <div><label>Link del post o reel (opcional)</label>
+      <div><label>Link del post o reel (opcional) ${ayuda("Pegá el link de un post/reel puntual para que la regla SOLO aplique ahí. Si lo dejás vacío, aplica a cualquier post de esta cuenta.")}</label>
         <input type="url" id="mrPost" value="${esc(r.post_url||"")}" placeholder="https://instagram.com/p/…  vacío = cualquier post"></div>
-      <div><label>Texto del botón</label>
+      <div><label>Texto del botón ${ayuda("La palabra que ve la persona en el botón del DM, ej. 'Ingresar aquí', 'Ver la guía', 'Reservar'. Máximo 20 caracteres.")}</label>
         <input type="text" id="mrBoton" value="${esc(r.boton_texto||"Ingresar aquí")}" maxlength="20"></div>
     </div>
-    <label>¿Cuándo responde?</label>
+    <label>¿Cuándo responde? ${ayuda("Por palabra clave: solo dispara si el comentario/DM contiene alguna de las palabras que cargues abajo. Cualquier comentario: dispara SIEMPRE que alguien interactúe (usalo con cuidado, sobre todo sin restringir a un post).")}</label>
     <div class="cv-radio">
       <label><input type="radio" name="mrModo" value="keyword" ${cualq?"":"checked"}> Por palabra clave</label>
       <label><input type="radio" name="mrModo" value="cualquiera" ${cualq?"checked":""}> Cualquier comentario</label>
     </div>
     <div id="mrKW" ${cualq?"hidden":""}>
-      <label>Palabras clave (variantes) — Enter para agregar</label>
+      <label>Palabras clave (variantes) ${ayuda("Escribí una palabra y Enter para agregarla como chip. Cargá todas las variantes que se te ocurran (con y sin tilde, errores comunes) — el sistema ya tolera 1-2 letras de diferencia y mayúsculas/minúsculas solo.")}</label>
       <input type="text" id="mrChipInput" placeholder="setup, seteo, quiero, info…">
       <div class="cv-chips" id="mrChips"></div>
       <div class="cv-regla__meta">Tolera acentos y 1–2 letras de error.</div>
     </div>
-    <label>Link del embudo (Musselli Recursos)</label>
+    <label>Link del embudo (Musselli Recursos) ${ayuda("La URL a la que vas a mandar a la persona: tu lead magnet, la página de turnos, el catálogo, etc. Puede ser cualquier link, no tiene que ser de ricardomusselli.com.")}</label>
     <input type="url" id="mrLink" value="${esc(r.link_embudo||"")}" placeholder="https://ricardomusselli.com/…">
-    <label>Textos del DM — uno por línea (se rota al azar)</label>
+    <label>Textos del DM ${ayuda("El mensaje que recibe la persona por Instagram Direct. Podés cargar varios (uno por línea): el sistema elige uno al azar cada vez, para que no le llegue siempre el mismo texto a la gente.")}</label>
     <textarea id="mrTextos" placeholder="¡Gracias por tu interés! Acá tenés la guía 👇">${esc((r.dm_textos||[]).join("\n"))}</textarea>
-    <label>Respuesta pública bajo el comentario (opcional)</label>
+    <label>Respuesta pública bajo el comentario (opcional) ${ayuda("Si lo completás Y el switch 'Respuesta pública' de la cuenta está en ON, el sistema deja este comentario público debajo del de la persona (ej. '¡Te lo mandé por DM! 📩'). Si lo dejás vacío, no comenta nada aunque el switch esté prendido.")}</label>
     <input type="text" id="mrReply" value="${esc(r.comment_reply||"")}" placeholder="¡Te lo mandé por DM! 📩">
-    <label>Etiqueta a aplicar al contacto (opcional)</label>
+    <label>Etiqueta a aplicar al contacto (opcional) ${ayuda("Cuando esta regla dispara, le pega esta etiqueta a la persona en la Bandeja (ej. 'pidió-setup'). Sirve para filtrar la bandeja y ver en Analítica cuánta gente pidió cada cosa.")}</label>
     <input type="text" id="mrEtiqueta" value="${esc(r.etiqueta||"")}" maxlength="40" placeholder="Ej: pidió-setup, interesado-compra, curso">
     <div class="cv-row">
-      <div><label>Seguimiento: horas después, si no respondió (1–23, vacío = no)</label>
+      <div><label>Seguimiento: horas (opcional) ${ayuda("Si la persona NO responde después de este DM, a las X horas le llega automáticamente el texto de seguimiento (un solo reintento). Tiene que ser entre 1 y 23 — Instagram no deja mandar mensajes libres pasadas las 24 h sin que la persona escriba de nuevo. Dejalo vacío si no querés seguimiento.")}</label>
         <input type="number" id="mrFupH" min="1" max="23" value="${r.followup_horas||""}" placeholder="ej. 12"></div>
-      <div><label>Texto del seguimiento</label>
+      <div><label>Texto del seguimiento ${ayuda("El mensaje que se manda si no respondió a tiempo. Ej: '¿Pudiste verla? Cualquier duda me escribís 🙌'.")}</label>
         <input type="text" id="mrFupT" value="${esc(r.followup_texto||"")}" placeholder="¿Pudiste verla? Cualquier duda me escribís 🙌"></div>
     </div>
     <div class="cv-regla__meta">El seguimiento se manda solo si la persona NO respondió y no pasaron 24 h (límite de Instagram). Un solo reintento.</div>
     <div class="cv-row">
-      <div><label>Grupo de MailerLite (opcional)</label>
+      <div><label>Grupo de MailerLite (opcional) ${ayuda("El ID numérico de un grupo de MailerLite. Como para sumar un contacto hace falta su email (y desde un comentario no lo tenés), lo que hace el sistema es agregarle ese grupo al LINK del embudo (?mlg=...); cuando la persona completa el formulario, capturar-lead la suma a ese grupo además del de la línea.")}</label>
         <input type="text" id="mrMlg" value="${esc(r.ml_grupo||"")}" placeholder="ID numérico del grupo"></div>
-      <div><label>Webhook / HTTP request (opcional)</label>
+      <div><label>Webhook / HTTP request (opcional) ${ayuda("Una URL https:// tuya (CRM, planilla de Google con Apps Script, Make, Zapier). Cuando la regla dispara y el DM sale bien, el sistema le manda un POST con cuenta, usuario de IG, qué comentó, qué regla y el link. Dejalo vacío si no lo usás.")}</label>
         <input type="url" id="mrHook" value="${esc(r.webhook_url||"")}" placeholder="https://… CRM, planilla o Make"></div>
     </div>
     <div class="cv-regla__meta">Al dispararse la regla se hace un POST con cuenta, usuario de IG, comentario, regla y link. MailerLite se suma al completar el embudo.</div>
@@ -368,21 +369,21 @@ function mrFlujoEditor(){
   if (!mrFlujoEdit) return "";
   const f = mrFlujoEdit; const cualq = f.match_modo === "cualquiera";
   return `<div class="cv-form show">
-    <label>Nombre del flujo (interno)</label>
+    <label>Nombre del flujo (interno) ${ayuda("Solo para reconocerlo vos en la lista.")}</label>
     <input type="text" id="mrFNombre" value="${esc(f.nombre||"")}" placeholder="Ej: Turno de reparación">
-    <label>Link del post o reel (opcional)</label>
+    <label>Link del post o reel (opcional) ${ayuda("Vacío = el flujo arranca desde cualquier post de esta cuenta.")}</label>
     <input type="url" id="mrFPost" value="${esc(f.post_url||"")}" placeholder="vacío = cualquier post">
-    <label>¿Cuándo arranca?</label>
+    <label>¿Cuándo arranca? ${ayuda("Igual que en las reglas: por palabra clave, o con cualquier comentario/DM.")}</label>
     <div class="cv-radio">
       <label><input type="radio" name="mrFModo" value="keyword" ${cualq?"":"checked"}> Por palabra clave</label>
       <label><input type="radio" name="mrFModo" value="cualquiera" ${cualq?"checked":""}> Cualquier comentario</label>
     </div>
     <div id="mrFKW" ${cualq?"hidden":""}>
-      <label>Palabras clave — Enter para agregar</label>
+      <label>Palabras clave ${ayuda("Escribí una palabra y Enter para agregarla. Tolera acentos y errores de tipeo, igual que en las reglas.")}</label>
       <input type="text" id="mrFChipInput" placeholder="turno, reparar, arreglar…">
       <div class="cv-chips" id="mrFChips"></div>
     </div>
-    <label>Pasos del flujo</label>
+    <label>Pasos del flujo ${ayuda("Cada paso empieza con [N] seguido del mensaje. Podés agregar boton:, link:, etiqueta:, grupo ml:, webhook: igual que en una regla. Las líneas 'si dice: palabra1, palabra2 -> N' definen a qué paso salta según lo que responda la persona; 'si no matchea -> N' es el camino por defecto. Si un paso no tiene ninguna rama, ahí termina el flujo.")}</label>
     <textarea id="mrFPasos" class="cv-modlista" style="min-height:220px;font-family:monospace;font-size:12.5px" placeholder="[1] ¿Es guitarra eléctrica o criolla?
 si dice: electrica, electrico -> 2
 si dice: criolla, acustica -> 3
@@ -496,7 +497,7 @@ function mrRender(){
   const faqPanel = `<div class="reel-panel"><div class="reel-switches">
     ${mrSwitch(cfg.faq_auto===true,"FAQ automática (Gemini)","ON: los DMs con preguntas comunes se responden solos. OFF: Gemini deja un borrador en la bandeja.","mr-faqauto")}
   </div>
-    <label class="cv-modlbl">Información para responder — precios, turnos, envíos, qué hacés y qué no, horarios, ubicación…</label>
+    <label class="cv-modlbl">Información para responder ${ayuda("Todo lo que Gemini puede usar para contestar preguntas por DM: precios, turnos, envíos, qué hacés y qué no, horarios, ubicación. Escribilo como notas sueltas, no hace falta redactar bonito. Cuanto más completo, mejor responde.")} — precios, turnos, envíos, qué hacés y qué no, horarios, ubicación…</label>
     <textarea id="mrFaqTexto" class="cv-modlista" style="min-height:120px">${esc(cfg.faq_texto||"")}</textarea>
     <button class="btn-ghost btn-mini" id="mrFaqGuardar">Guardar información</button>
     <div class="cv-regla__meta" style="margin-top:8px">Gemini responde SOLO con esto. Si piden presupuesto o turno concreto, lo deja para vos.</div>
@@ -506,7 +507,7 @@ function mrRender(){
     ${mrSwitch(cfg.mod_activa===true,"Moderación de comentarios","Oculta los comentarios que caen en la lista negra. No borra: se pueden volver a mostrar.","mr-modact")}
     ${mrSwitch(cfg.mod_ocultar_links===true,"Ocultar links de terceros","Oculta comentarios con URLs que no sean de ricardomusselli.com.","mr-modlinks")}
   </div>
-    <label class="cv-modlbl">Lista negra — una palabra o frase por línea</label>
+    <label class="cv-modlbl">Lista negra ${ayuda("Una palabra o frase por línea. Cualquier comentario que contenga alguna se oculta solo (no se borra: podés volver a mostrarlo). Ej: vendo, sigueme, curso gratis.")} — una palabra o frase por línea</label>
     <textarea id="mrModLista" class="cv-modlista">${esc((cfg.mod_lista||[]).join("\n"))}</textarea>
     <button class="btn-ghost btn-mini" id="mrModGuardar">Guardar lista</button>
     ${ocultos.length ? `<div class="cv-modlbl" style="margin-top:14px">Ocultados recientes · ${ocultos.length}</div>` +
@@ -520,13 +521,14 @@ function mrRender(){
   const ibTxt = (cfg.ice_breakers||[]).map(x=>`${x.q} | ${x.payload}`).join("\n");
   const miTxt = (cfg.menu_items||[]).map(m=>`${m.title} | ${m.kind==="web_url"?m.url:m.payload}`).join("\n");
   const icePanel = `<div class="reel-panel">
-    <div class="cv-modlbl">Ice Breakers — preguntas que aparecen al abrir el DM (máx 4) · formato: <code>Pregunta | PALABRA_CLAVE</code></div>
+    <div class="cv-modlbl">Ice Breakers ${ayuda("Preguntas prearmadas que Instagram muestra cuando alguien abre el DM por primera vez, antes de escribir nada. Máximo 4. Formato: Pregunta | PALABRA_CLAVE — esa palabra clave tiene que coincidir con una regla en modo 'palabra clave' para que, al tocarla, la persona reciba el DM de esa regla.")} — preguntas que aparecen al abrir el DM (máx 4) · formato: <code>Pregunta | PALABRA_CLAVE</code></div>
     <textarea id="mrIce" class="cv-modlista" placeholder="¿Hacés setups? | SETUP&#10;Quiero turno para una reparación | REPARACION&#10;Info sobre los cursos | CURSOS">${esc(ibTxt)}</textarea>
-    <div class="cv-modlbl">Menú persistente — el menú fijo del chat (máx 5) · <code>Título | PALABRA_CLAVE</code> o <code>Título | https://…</code></div>
+    <div class="cv-modlbl">Menú persistente ${ayuda("El menú fijo que aparece siempre en el chat (ícono de opciones). Máximo 5 ítems. Formato: Título | PALABRA_CLAVE (dispara una regla) o Título | https://... (abre el link directo, sin pasar por ninguna regla).")} — el menú fijo del chat (máx 5) · <code>Título | PALABRA_CLAVE</code> o <code>Título | https://…</code></div>
     <textarea id="mrMenu" class="cv-modlista" placeholder="Reservar turno | https://ricardomusselli.com/turnos&#10;Ver cursos | CURSOS&#10;Hablar con una persona | HUMANO">${esc(miTxt)}</textarea>
     <div class="revitem__acts" style="margin-top:10px">
       <button class="btn-ghost btn-mini" id="mrMenuGuardar">Guardar</button>
       <button class="btn-solid btn-mini" id="mrMenuPublicar">Publicar en Instagram</button>
+      ${ayuda("Guardar solo lo deja listo en el panel. Publicar en Instagram lo sube de verdad al perfil de la cuenta — recién ahí la gente lo ve.")}
     </div>
     <div class="cv-regla__meta">La PALABRA_CLAVE tiene que coincidir con una regla (modo palabra clave). Al tocar la opción, la persona recibe el DM de esa regla. Con URL, abre el link directo.</div>
   </div>`;
@@ -907,6 +909,10 @@ function render(){
     ? `<span class="dot ${st==='up'?'up':st==='down'?'down':''}"></span> ${st==='up'?'Live':st==='down'?'Caído':'sin datos'}`
     : `<span class="tag">${FAM.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>`;
   $("#famDesc").textContent = FAM.description || DESC_FAMILIA[FKEY] || "";
+  const manualBox = document.getElementById("mrManualBtn");
+  if (manualBox) manualBox.innerHTML = FKEY === "convos"
+    ? `<a class="btn btn-ghost btn-mini" href="manyric-manual.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;margin-top:10px">📘 Manual de instrucciones</a>`
+    : "";
 
   const pend = FKEY === "carrusel" ? (DATA.carrusel_drafts||[]).length
              : FKEY === "blog" ? (DATA.blog_drafts||[]).length

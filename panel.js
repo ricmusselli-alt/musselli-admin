@@ -25,10 +25,17 @@
     return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   }
 
-  // signo "?" con explicación al pasar el mouse. Uso: Panel.ayuda("Este botón sirve para...")
+  // signo "?" con explicación al pasar el mouse (desktop) o al tocarlo (mobile / click).
+  // Uso: Panel.ayuda("Este botón sirve para...")
   function ayuda(texto, abajo) {
     return `<span class="ayuda${abajo ? " abajo" : ""}" data-ayuda="${esc(texto)}" role="img" aria-label="Ayuda">?</span>`;
   }
+  // click/tap en cualquier "?" del panel → alerta con el texto completo (el hover ya lo
+  // muestra en desktop, pero en mobile no hay hover; esto lo hace accesible en los dos).
+  document.addEventListener("click", (ev) => {
+    const el = ev.target.closest && ev.target.closest(".ayuda");
+    if (el) alert(el.dataset.ayuda || "");
+  });
 
   // Token siempre fresco: el cliente de Supabase renueva la sesión en segundo
   // plano, pero la variable `token` local quedaba congelada del init y se vencía
