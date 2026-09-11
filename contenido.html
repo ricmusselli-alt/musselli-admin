@@ -621,6 +621,7 @@ function renderGuias(){
   const pubs = guias.filter(g => g.estado === "publicada");
   const lms = DATA.recursos_leadmagnets || [];
 
+  const manual = `<a class="btn-ghost btn-mini" href="recursos-manual.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;margin-bottom:14px">📘 Manual de instrucciones</a>`;
   const sub = `<div class="cv-sub">
     <button data-gtab="revisar" class="${guiaTab==="revisar"?"sel":""}">Revisar imágenes · ${enCurso.length}</button>
     <button data-gtab="embudos" class="${guiaTab==="embudos"?"sel":""}">Embudos y secuencias · ${lms.length}</button>
@@ -642,7 +643,7 @@ function renderGuias(){
       : '<div class="vacio">No hay guías en revisión. Creá una desde Portada · Musselli Recursos.</div>');
   }
 
-  $("#revList").innerHTML = sub + cuerpo;
+  $("#revList").innerHTML = manual + sub + cuerpo;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }

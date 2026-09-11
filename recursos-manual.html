@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Manual · Musselli Recursos</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+<style>
+  .man-wrap{max-width:900px;margin:0 auto;padding:clamp(24px,4vw,40px) clamp(18px,5vw,34px) 90px}
+  .man-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+  .man-back{font-size:var(--fs-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--cobre)}
+  h1.man-h1{font-family:var(--serif);font-weight:600;font-size:var(--fs-h1);margin:6px 0 4px}
+  .man-sub{color:var(--texto-mute);font-size:var(--fs-small);margin:0 0 30px}
+  .man-toc{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:16px 20px;margin-bottom:36px}
+  .man-toc__tit{font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--cobre);margin-bottom:10px}
+  .man-toc ol{margin:0;padding-left:20px;columns:2;column-gap:24px}
+  .man-toc li{margin-bottom:6px;font-size:var(--fs-small);break-inside:avoid}
+  .man-toc a{color:var(--texto-2)}
+  .man-toc a:hover{color:var(--cobre)}
+  @media(max-width:640px){.man-toc ol{columns:1}}
+
+  section.man-sec{margin-bottom:44px;scroll-margin-top:20px}
+  section.man-sec h2{font-family:var(--serif);font-weight:600;font-size:var(--fs-h2);
+    border-bottom:1px solid var(--linea-fuerte);padding-bottom:10px;margin:0 0 16px;
+    display:flex;align-items:center;gap:10px}
+  section.man-sec h2 .n{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+    border-radius:50%;background:var(--panel-2);border:1px solid var(--linea-fuerte);color:var(--cobre);
+    font-family:var(--sans);font-size:14px;font-weight:600;flex:0 0 auto}
+  h3.man-h3{font-family:var(--serif);font-weight:600;font-size:var(--fs-h3);margin:22px 0 8px;color:var(--texto)}
+  p{color:var(--texto-2)}
+  ul,ol.man-list{padding-left:22px;color:var(--texto-2)}
+  li{margin-bottom:7px}
+  code{background:rgba(245,240,230,.07);color:var(--dorado);padding:1px 6px;border-radius:5px;font-size:.92em}
+  .man-box{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:16px 18px;margin:14px 0}
+  .man-box.aviso{border-color:rgba(217,164,65,.4);background:rgba(217,164,65,.07)}
+  .man-box.ok{border-color:rgba(63,174,107,.4);background:rgba(63,174,107,.07)}
+  .man-box b{color:var(--texto)}
+  table.man-tbl{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:var(--fs-small)}
+  table.man-tbl th{text-align:left;color:var(--cobre);font-size:var(--fs-micro);letter-spacing:.08em;
+    text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--linea-fuerte)}
+  table.man-tbl td{padding:9px 10px;border-bottom:1px solid var(--linea);color:var(--texto-2);vertical-align:top}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 8px;border-radius:6px;background:rgba(200,155,108,.15);color:var(--cobre)}
+  .paso{display:flex;gap:14px;margin:16px 0;align-items:flex-start}
+  .paso__n{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--cobre);color:var(--negro);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .paso__body{flex:1;padding-top:2px}
+  .paso__body b{color:var(--texto)}
+  .top-link{position:fixed;right:22px;bottom:22px;background:var(--cobre);color:var(--negro);
+    width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:18px;box-shadow:var(--sombra-card);z-index:50}
+</style>
+</head>
+<body>
+<div class="man-wrap">
+
+  <div class="man-top">
+    <a class="man-back" href="familia.html?f=recursos">← Volver a Musselli Recursos</a>
+    <span class="badge">Manual · v1</span>
+  </div>
+  <h1 class="man-h1">Manual de Musselli Recursos</h1>
+  <p class="man-sub">Guía completa, pensada para alguien que nunca usó esto — desde crear una guía nueva hasta que llegue por mail a quien la descargue. El botón "📘 Manual de instrucciones" en Recursos siempre te trae de vuelta acá.</p>
+
+  <div class="man-toc">
+    <div class="man-toc__tit">Índice</div>
+    <ol>
+      <li><a href="#s1">Qué es Musselli Recursos</a></li>
+      <li><a href="#s2">El recorrido completo, de un vistazo</a></li>
+      <li><a href="#s3">Paso 1 — Crear una guía nueva</a></li>
+      <li><a href="#s4">Paso 2 — Revisar y aprobar las imágenes</a></li>
+      <li><a href="#s5">Paso 3 — Publicar la guía</a></li>
+      <li><a href="#s6">Paso 4 — Publicar el embudo (página puente)</a></li>
+      <li><a href="#s7">Paso 5 — Pegar el link en Instagram</a></li>
+      <li><a href="#s8">Paso 6 (opcional) — Secuencia de mail</a></li>
+      <li><a href="#s9">Si algo no funciona</a></li>
+      <li><a href="#s10">Glosario rápido</a></li>
+    </ol>
+  </div>
+
+  <section class="man-sec" id="s1">
+    <h2><span class="n">1</span>Qué es Musselli Recursos</h2>
+    <p>Es el sistema que arma tus <b>lead magnets</b>: guías descargables (tipo documento, con imágenes) que usás para captar gente en Instagram. Cubre todo el camino: escribir la guía, aprobar sus imágenes, publicarla, armar la página donde la gente deja el mail para bajarla (el "embudo"), y — opcional — hacer que quien la baje reciba mails de seguimiento después.</p>
+    <div class="man-box">
+      <b>Las 3 piezas que arma:</b>
+      <ul>
+        <li>La <b>guía</b> en sí: la página con el contenido (texto + imágenes).</li>
+        <li>El <b>embudo</b>: la página puente donde alguien pone su mail antes de recibir el link de la guía.</li>
+        <li>La <b>secuencia de mail</b> (opcional): lo que le llega después a quien descargó.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="man-sec" id="s2">
+    <h2><span class="n">2</span>El recorrido completo, de un vistazo</h2>
+    <div class="paso"><div class="paso__n">1</div><div class="paso__body"><b>Portada</b> → Musselli Recursos → cargás el tema → "Generar".</div></div>
+    <div class="paso"><div class="paso__n">2</div><div class="paso__body"><b>Contenido → Guías</b> → aprobás (o rehacés) cada imagen.</div></div>
+    <div class="paso"><div class="paso__n">3</div><div class="paso__body">Con todas aprobadas, tocás <b>Publicar</b> → la guía queda online.</div></div>
+    <div class="paso"><div class="paso__n">4</div><div class="paso__body">En la misma tarjeta del lead magnet, tocás <b>Publicar embudo</b> → sube la página puente a Hostinger.</div></div>
+    <div class="paso"><div class="paso__n">5</div><div class="paso__body">Copiás el link del embudo y lo pegás donde corresponda en Instagram (bio, un comentario, un DM de ManyRic, etc.).</div></div>
+    <div class="paso"><div class="paso__n">6</div><div class="paso__body"><i>Opcional</i>: armás la secuencia de mail para esa guía puntual.</div></div>
+    <div class="man-box aviso">Los pasos 1 a 5 son <b>siempre</b> los mismos, para toda guía nueva. El paso 6 es aparte y podés saltarlo sin que nada del resto se rompa.</div>
+  </section>
+
+  <section class="man-sec" id="s3">
+    <h2><span class="n">3</span>Paso 1 — Crear una guía nueva</h2>
+    <p>Portada → tarjeta <b>Musselli Recursos</b> → tarjeta "Nueva guía":</p>
+    <table class="man-tbl">
+      <tr><th>Campo</th><th>Para qué sirve</th></tr>
+      <tr><td><b>Tema de la guía</b></td><td>De qué va a tratar. El sistema investiga, redacta el texto completo y arma una imagen candidata por sección.</td></tr>
+      <tr><td><b>Línea</b></td><td>Luthería o Guitar Tech — define de qué cuenta/negocio es este lead magnet.</td></tr>
+      <tr><td><b>Slug (opcional)</b></td><td>El identificador que va en la URL (ej. <code>guia-setup-electrica</code>). Si lo dejás vacío, se genera solo a partir del tema.</td></tr>
+    </table>
+    <p>Tocás <b>"Generar"</b> y el sistema arma la guía y las imágenes candidatas solo. Te lleva (o podés ir manualmente) a Contenido → Guías para el siguiente paso.</p>
+  </section>
+
+  <section class="man-sec" id="s4">
+    <h2><span class="n">4</span>Paso 2 — Revisar y aprobar las imágenes</h2>
+    <p><b>Contenido → Guías · Recursos → pestaña "Revisar imágenes"</b>. Cada guía en curso aparece con una grilla de miniaturas, una por sección.</p>
+    <ul>
+      <li><b>✓ Aprobar</b>: da por buena esa imagen.</li>
+      <li><b>↻ Rehacer</b>: descarta esa imagen y genera otra. Podés escribir un ajuste (ej. "más luz, menos genérica") antes de tocar Rehacer de nuevo.</li>
+      <li>Tocá la miniatura para verla en grande.</li>
+    </ul>
+    <p>Abajo de la grilla ves cuántas de las <code>N</code> imágenes están aprobadas.</p>
+  </section>
+
+  <section class="man-sec" id="s5">
+    <h2><span class="n">5</span>Paso 3 — Publicar la guía</h2>
+    <p>Cuando <b>todas</b> las imágenes están aprobadas, el botón <b>"Publicar"</b> de esa guía se activa. Al tocarlo, la guía queda online (podés verla en la pestaña <b>"Historial"</b>, con su link).</p>
+    <div class="man-box aviso">No se puede deshacer desde acá — revisá bien las imágenes antes de publicar.</div>
+  </section>
+
+  <section class="man-sec" id="s6">
+    <h2><span class="n">6</span>Paso 4 — Publicar el embudo (página puente)</h2>
+    <p><b>Contenido → Guías · Recursos → pestaña "Embudos y secuencias"</b>. Ahí aparece una tarjeta por cada lead magnet, con dos bloques: <b>① Embudo</b> y <b>② Secuencia de mail</b> (este último, opcional — ver sección 8).</p>
+    <p>En el bloque ①, tocás <b>"Publicar embudo"</b>. Esto sube el <code>index.html</code> de la página puente a Hostinger — la página donde alguien pone su mail antes de recibir el link real de la guía. Conviene tener la guía ya publicada (paso 3) antes de este paso, así el botón de descarga apunta a la guía de verdad.</p>
+    <p>Si ya lo publicaste antes y necesitás volver a subirlo (cambiaste algo), el mismo botón dice <b>"Volver a publicar el embudo"</b>.</p>
+  </section>
+
+  <section class="man-sec" id="s7">
+    <h2><span class="n">7</span>Paso 5 — Pegar el link en Instagram</h2>
+    <p>Una vez publicado el embudo, aparece su link (con un ícono para copiarlo). Ese es el link que compartís: en la bio, en un comentario, en un DM automático de ManyRic, donde corresponda. Cuando alguien lo abre, deja su mail, y recibe el link real de la guía.</p>
+  </section>
+
+  <section class="man-sec" id="s8">
+    <h2><span class="n">8</span>Paso 6 (opcional) — Secuencia de mail</h2>
+    <p>Este paso <b>no es necesario</b> para que nada de lo anterior funcione. Sirve para que, además, quien descargue esta guía puntual reciba mails de seguimiento automáticos los días siguientes (en vez de solo el mail con la guía y nada más).</p>
+    <h3 class="man-h3">Cómo se arma</h3>
+    <div class="paso"><div class="paso__n">1</div><div class="paso__body">En el bloque ② de esa tarjeta, tocás <b>"Crear grupo nuevo"</b> (o pegás un ID si ya tenías uno armado). Esto crea un grupo en tu MailerLite, dedicado solo a esta guía.</div></div>
+    <div class="paso"><div class="paso__n">2</div><div class="paso__body">Entrás a <b>MailerLite → Automations → Create automation</b>, elegís el trigger <i>"Subscriber joins a group"</i> y seleccionás ese grupo.</div></div>
+    <div class="paso"><div class="paso__n">3</div><div class="paso__body">Armás los pasos con el tiempo de espera entre cada uno (ej. 2 días, 3 días, 4 días, 5 días) y escribís/pegás los textos de cada mail.</div></div>
+    <div class="paso"><div class="paso__n">4</div><div class="paso__body">Activás la automatización ("Turn on"). Listo — queda funcionando para siempre para esa guía.</div></div>
+    <div class="man-box">
+      <b>Textos sugeridos</b> (adaptalos al tema de cada guía):<br>
+      · Día 2 — "¿Pudiste ver la guía?" (pregunta, invita a responder)<br>
+      · Día 5 — un tip extra que no estaba en la guía<br>
+      · Día 9 — un caso o ejemplo real de un trabajo tuyo relacionado<br>
+      · Día 14 — la invitación concreta a reservar un turno/consulta
+    </div>
+    <div class="man-box aviso"><b>Es por cada guía, no una vez en la vida.</b> Cada guía nueva que hagas, si querés que tenga su propia secuencia con textos relacionados a ESE tema, repetís este paso 6 (2-3 minutos). Alternativa: armar una única secuencia genérica y un solo grupo para todas las guías — menos personalizado, pero se configura una sola vez.</div>
+  </section>
+
+  <section class="man-sec" id="s9">
+    <h2><span class="n">9</span>Si algo no funciona</h2>
+    <ul>
+      <li><b>El botón "Publicar" de la guía está apagado</b>: todavía falta aprobar alguna imagen — fijate el contador "X de Y aprobadas".</li>
+      <li><b>El embudo dice "sin publicar"</b>: todavía no tocaste "Publicar embudo" en esa tarjeta.</li>
+      <li><b>El link de descarga de la guía en el embudo no funciona</b>: probablemente publicaste el embudo ANTES de publicar la guía. Publicá la guía y volvé a tocar "Publicar embudo" para que se actualice.</li>
+      <li><b>Alguien bajó la guía pero no recibió los mails de seguimiento</b>: revisá que esa guía tenga un grupo de MailerLite asignado (bloque ②) y que la Automation esté <b>activada</b> ("Turn on") en MailerLite, no solo creada.</li>
+      <li><b>Nada de esto lo resuelve</b>: guardate el problema con fecha/hora y contactá a quien mantiene el sistema (Claude, en la sesión de siempre).</li>
+    </ul>
+  </section>
+
+  <section class="man-sec" id="s10">
+    <h2><span class="n">10</span>Glosario rápido</h2>
+    <table class="man-tbl">
+      <tr><td><b>Lead magnet</b></td><td>El material gratis (la guía) que ofrecés a cambio del mail de alguien.</td></tr>
+      <tr><td><b>Embudo / página puente</b></td><td>La página donde alguien deja su mail antes de recibir el link real de la guía.</td></tr>
+      <tr><td><b>Slug</b></td><td>El identificador corto que va en la URL de la guía y del embudo.</td></tr>
+      <tr><td><b>Grupo (MailerLite)</b></td><td>Una lista dentro de tu cuenta de MailerLite. Cada guía puede tener el suyo.</td></tr>
+      <tr><td><b>Automation (MailerLite)</b></td><td>La secuencia de mails programada que se dispara sola cuando alguien entra a un grupo.</td></tr>
+    </table>
+  </section>
+
+  <p class="mini-note">Manual escrito el 10 de septiembre de 2026. El link del botón "📘 Manual de instrucciones" es siempre el mismo, aunque se agreguen funciones nuevas.</p>
+</div>
+
+<a class="top-link" href="#" title="Volver arriba" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑</a>
+</body>
+</html>

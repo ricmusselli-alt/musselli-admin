@@ -909,9 +909,10 @@ function render(){
     ? `<span class="dot ${st==='up'?'up':st==='down'?'down':''}"></span> ${st==='up'?'Live':st==='down'?'Caído':'sin datos'}`
     : `<span class="tag">${FAM.status === 'planeado' ? 'planeado' : 'en desarrollo'}</span>`;
   $("#famDesc").textContent = FAM.description || DESC_FAMILIA[FKEY] || "";
+  const MANUALES = { convos: "manyric-manual.html", recursos: "recursos-manual.html" };
   const manualBox = document.getElementById("mrManualBtn");
-  if (manualBox) manualBox.innerHTML = FKEY === "convos"
-    ? `<a class="btn btn-ghost btn-mini" href="manyric-manual.html" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;margin-top:10px">📘 Manual de instrucciones</a>`
+  if (manualBox) manualBox.innerHTML = MANUALES[FKEY]
+    ? `<a class="btn btn-ghost btn-mini" href="${MANUALES[FKEY]}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;margin-top:10px">📘 Manual de instrucciones</a>`
     : "";
 
   const pend = FKEY === "carrusel" ? (DATA.carrusel_drafts||[]).length
