@@ -593,21 +593,38 @@ function leadMagnetsHtml(lms, guias){
   </div>`;
 }
 
+let guiaTab = "revisar";   // revisar | embudos | historial
+
 function renderGuias(){
   $("#hTitle").textContent = "Guías · Recursos";
-  $("#hDesc").textContent = "Revisá las imágenes de cada guía (aprobar / rehacer) y publicá. Abajo, los embudos (páginas puente) de cada lead magnet.";
-  const nueva = `<div class="g-hint" style="margin-bottom:22px">
-    ¿Crear una guía nueva? → <a href="familia.html?f=recursos" style="color:var(--cobre)">Portada · Musselli Recursos</a>
-  </div>`;
+  $("#hDesc").textContent = "Revisá las imágenes de cada guía, publicá los embudos y armá su secuencia de mail.";
   const guias = DATA.guias || [];
   const enCurso = guias.filter(g => g.estado !== "publicada");
   const pubs = guias.filter(g => g.estado === "publicada");
-  const lista = enCurso.length
-    ? enCurso.map(guiaCard).join("")
-    : (pubs.length ? "" : '<div class="vacio">No hay guías en revisión. Creá una desde Portada · Musselli Recursos.</div>');
-  $("#revList").innerHTML = nueva + lista
-    + guiasPublicadasHtml(pubs)
-    + leadMagnetsHtml(DATA.recursos_leadmagnets || [], guias);
+  const lms = DATA.recursos_leadmagnets || [];
+
+  const sub = `<div class="cv-sub">
+    <button data-gtab="revisar" class="${guiaTab==="revisar"?"sel":""}">Revisar imágenes · ${enCurso.length}</button>
+    <button data-gtab="embudos" class="${guiaTab==="embudos"?"sel":""}">Embudos y secuencias · ${lms.length}</button>
+    <button data-gtab="historial" class="${guiaTab==="historial"?"sel":""}">Historial · ${pubs.length}</button>
+  </div>`;
+
+  const nueva = `<div class="g-hint" style="margin-bottom:22px">
+    ¿Crear una guía nueva? → <a href="familia.html?f=recursos" style="color:var(--cobre)">Portada · Musselli Recursos</a>
+  </div>`;
+
+  let cuerpo = "";
+  if (guiaTab === "embudos"){
+    cuerpo = leadMagnetsHtml(lms, guias) || '<div class="vacio">Todavía no hay lead magnets cargados.</div>';
+  } else if (guiaTab === "historial"){
+    cuerpo = guiasPublicadasHtml(pubs) || '<div class="vacio">Todavía no publicaste ninguna guía.</div>';
+  } else {
+    cuerpo = nueva + (enCurso.length
+      ? enCurso.map(guiaCard).join("")
+      : '<div class="vacio">No hay guías en revisión. Creá una desde Portada · Musselli Recursos.</div>');
+  }
+
+  $("#revList").innerHTML = sub + cuerpo;
   $("#viewHub").hidden = true;
   $("#viewTipo").hidden = false;
 }
@@ -799,6 +816,9 @@ $("#revList").addEventListener("click", async (ev) => {
       await reload(); route();
     } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(pub); }
   }
+  const gTab = ev.target.closest("[data-gtab]");
+  if (gTab){ guiaTab = gTab.dataset.gtab; renderGuias(); return; }
+
   const mlGuardar = ev.target.closest("[data-ml-guardar]");
   if (mlGuardar){
     const slug = mlGuardar.dataset.mlGuardar;
