@@ -567,18 +567,27 @@ function leadMagnetsHtml(lms, guias){
     const linkCol = r.publicado
       ? linkCopiable(puenteUrl)
       : `<span class="g-hint">sin publicar</span>`;
+    const secCol = r.ml_grupo
+      ? `<span class="h-est ok">grupo ${esc(r.ml_grupo)}</span>`
+      : `<div class="revitem__acts">
+          <input type="text" class="ml-grupo-in" data-slug="${esc(r.slug)}" placeholder="ID de grupo (si ya lo tenés)" style="width:150px;font-size:12px;padding:5px 8px">
+          <button class="btn-ghost btn-mini" data-ml-guardar="${esc(r.slug)}">Guardar</button>
+          <button class="btn-ghost btn-mini" data-ml-crear="${esc(r.slug)}">Crear grupo nuevo</button>
+        </div>`;
     return `<tr>
       <td>${esc(r.pdf_titulo || r.slug)}<span class="h-linea">${lineaLbl} · <code>${esc(r.slug)}</code></span></td>
       <td>${tieneGuia}</td>
       <td>${linkCol}</td>
+      <td>${secCol}</td>
       <td class="h-acc"><button class="btn-solid btn-mini" data-embudo="${esc(r.slug)}">Publicar embudo</button></td>
     </tr>`;
   }).join("");
   return `<div class="seccion" style="margin-top:38px">
     <div class="seccion__head"><span class="kicker">Embudo</span><h2>Páginas puente</h2><span class="count">· ${lms.length}</span></div>
     <p class="g-hint" style="margin:0 0 12px">Publica el <code>index.html</code> del embudo (video · audio · videollamada · burbuja). Conviene tener la guía publicada primero, así el botón de descarga apunta a la guía real.</p>
+    <p class="g-hint" style="margin:0 0 12px">${ayuda("El grupo de MailerLite conecta este lead magnet con su propia secuencia de mails automática. Tocá \'Crear grupo nuevo\' (lo crea solo en MailerLite) y después armás ahí, en MailerLite → Automations, el envío escalonado disparado por \'entra a este grupo\'.")} La columna Secuencia conecta cada lead magnet con su grupo de MailerLite (para armar el envío escalonado en Automations).</p>
     <div style="overflow-x:auto"><table class="histtable g-hist">
-      <thead><tr><th>Lead magnet</th><th>Guía</th><th>Link del embudo</th><th></th></tr></thead>
+      <thead><tr><th>Lead magnet</th><th>Guía</th><th>Link del embudo</th><th>Secuencia</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
   </div>`;
@@ -789,6 +798,23 @@ $("#revList").addEventListener("click", async (ev) => {
       alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
       await reload(); route();
     } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(pub); }
+  }
+  const mlGuardar = ev.target.closest("[data-ml-guardar]");
+  if (mlGuardar){
+    const slug = mlGuardar.dataset.mlGuardar;
+    const inp = document.querySelector(`.ml-grupo-in[data-slug="${slug}"]`);
+    const grupo = (inp?.value || "").trim();
+    if (!grupo){ alert("Pegá el ID del grupo, o usá 'Crear grupo nuevo'."); return; }
+    busy(mlGuardar, "Guardando");
+    try { await api("POST", { action:"leadmagnet_ml_grupo", slug, ml_grupo: grupo }); await reload(); route(); }
+    catch(e){ alert("No se pudo guardar: " + e.message); unbusy(mlGuardar); }
+  }
+  const mlCrear = ev.target.closest("[data-ml-crear]");
+  if (mlCrear){
+    if (!confirm("¿Crear un grupo nuevo en MailerLite para este lead magnet?")) return;
+    busy(mlCrear, "Creando");
+    try { await api("POST", { action:"leadmagnet_ml_grupo", slug: mlCrear.dataset.mlCrear, crear: true }); await reload(); route(); }
+    catch(e){ alert("No se pudo crear: " + e.message); unbusy(mlCrear); }
   }
   const historia = ev.target.closest("[data-historia]");
   if (historia){
