@@ -407,10 +407,13 @@ function historialTexto(hist, canal){
       : "";
     // botón: si ya salió en ESTE canal → "Republicar"/"Enviar de nuevo"; si no → "Publicar en …"
     const yaEnEsteCanal = canal === "instagram" ? !!d.instagram_at : canal === "tiktok" ? !!d.tiktok_at : false;
+    const btnHistoria = (canal === "instagram" && d.instagram_at)
+      ? `<button class="btn-ghost btn-mini" data-historia="${esc(d.id)}" title="Reusa la primera imagen de este carrusel y la publica como Historia de Instagram">Publicar como Historia</button>`
+      : "";
     const accion = esCarrusel
       ? `<td class="h-acc"><button class="btn-ghost btn-mini" data-${canal === "tiktok" ? "tt" : "pub"}="${esc(d.id)}" title="Publicación manual inmediata de este carrusel">${
           canal === "tiktok" ? (yaEnEsteCanal ? "Enviar de nuevo" : "Enviar a TikTok")
-                             : (yaEnEsteCanal ? "Republicar" : "Publicar en IG")}</button></td>`
+                             : (yaEnEsteCanal ? "Republicar" : "Publicar en IG")}</button> ${btnHistoria}</td>`
       : "";
     return `<tr>
       <td class="h-tit">${esc(d.title || "(sin título)")}<span class="h-linea">${linea}${motivo}</span>${canales}${errLine}</td>
@@ -786,6 +789,16 @@ $("#revList").addEventListener("click", async (ev) => {
       alert("Publicado en Instagram. ID: " + (r.instagram_post_id || "listo"));
       await reload(); route();
     } catch(e){ alert("No se pudo publicar: " + e.message); unbusy(pub); }
+  }
+  const historia = ev.target.closest("[data-historia]");
+  if (historia){
+    if (!confirm("¿Publicar la primera imagen de este carrusel como Historia de Instagram ahora?")) return;
+    busy(historia, "Publicando");
+    try {
+      await api("POST", { action:"carrusel_historia", item_id: historia.dataset.historia });
+      alert("Historia publicada.");
+      unbusy(historia);
+    } catch(e){ alert("No se pudo publicar la historia: " + e.message); unbusy(historia); }
   }
   const tt = ev.target.closest("[data-tt]");
   if (tt){
