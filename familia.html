@@ -419,7 +419,7 @@ function mrConvCard(c){
       <span class="cv-conv__st ${st}">${st}</span>
       <span class="reel-dim">${MR_FECHA(c.ultimo_at)}</span>
     </div>
-    <div class="cv-conv__msg">${esc(c.ultimo_texto||"")}</div>
+    <div class="cv-conv__msg">${c.ultimo_texto ? esc(c.ultimo_texto) : '<i style="color:var(--texto-sec,#8a8580)">(sin texto — imagen, adjunto o reacción)</i>'}</div>
     ${c.borrador_ia ? `<div class="cv-conv__msg" style="border-left:2px solid var(--cobre);padding-left:10px">
       <b style="color:var(--cobre);font-size:11px">SUGERENCIA DE LA IA</b><br>${esc(c.borrador_ia)}
       <div style="margin-top:6px"><button class="btn-ghost btn-mini" data-mr-usardraft="${esc(c.ig_user_id)}">Enviar esta sugerencia</button></div>
