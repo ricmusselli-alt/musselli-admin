@@ -769,7 +769,7 @@ function cardGenSimple(){
     <div class="linea-row" style="margin-top:6px">
       <span class="nom" style="font-size:var(--fs-small);font-family:var(--sans);font-weight:400;color:var(--texto-2)">¿Cuántas por mes? ${ayuda("Tope de publicaciones que genera el sistema por mes. El cron corre semanal pero se frena al llegar a este número. Los rechazados no cuentan.", true)}</span>
       <span class="linea-row__ctrl">
-        <select id="famFreq">${[1,2,4].map(n => `<option value="${n}"${n === (p.frecuencia_mensual ?? (FKEY==='blog'?4:2)) ? ' selected' : ''}>${n} por mes</option>`).join("")}</select>
+        <select id="famFreq">${[1,2,4,6,8,10].map(n => `<option value="${n}"${n === (p.frecuencia_mensual ?? (FKEY==='blog'?4:2)) ? ' selected' : ''}>${n} por mes</option>`).join("")}</select>
       </span>
     </div>
 
