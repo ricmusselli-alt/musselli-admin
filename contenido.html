@@ -554,42 +554,56 @@ function guiasPublicadasHtml(pubs){
   </div>`;
 }
 
-// Lead magnets: cada uno con su botón "Publicar embudo" (página puente index.html).
+// Lead magnets: una tarjeta por cada uno, con sus 2 acciones bien separadas
+// (publicar el embudo / armar la secuencia de mail).
 function leadMagnetsHtml(lms, guias){
   if (!lms.length) return "";
   const guiaPub = new Set(guias.filter(g => g.estado === "publicada").map(g => g.slug));
-  const rows = lms.map(r => {
+  const cards = lms.map(r => {
     const lineaLbl = r.linea === "luthier" ? "Luthería" : r.linea === "guitartech" ? "Guitar Tech" : "—";
     const tieneGuia = guiaPub.has(r.slug)
       ? `<span class="h-est ok">guía publicada</span>`
-      : `<span class="h-est warn">sin guía</span>`;
+      : `<span class="h-est warn">sin guía todavía</span>`;
     const puenteUrl = `https://ricardomusselli.com/recursos/${r.slug}/`;
-    const linkCol = r.publicado
-      ? linkCopiable(puenteUrl)
-      : `<span class="g-hint">sin publicar</span>`;
-    const secCol = r.ml_grupo
-      ? `<span class="h-est ok">grupo ${esc(r.ml_grupo)}</span>`
-      : `<div class="revitem__acts">
-          <input type="text" class="ml-grupo-in" data-slug="${esc(r.slug)}" placeholder="ID de grupo (si ya lo tenés)" style="width:150px;font-size:12px;padding:5px 8px">
-          <button class="btn-ghost btn-mini" data-ml-guardar="${esc(r.slug)}">Guardar</button>
-          <button class="btn-ghost btn-mini" data-ml-crear="${esc(r.slug)}">Crear grupo nuevo</button>
-        </div>`;
-    return `<tr>
-      <td>${esc(r.pdf_titulo || r.slug)}<span class="h-linea">${lineaLbl} · <code>${esc(r.slug)}</code></span></td>
-      <td>${tieneGuia}</td>
-      <td>${linkCol}</td>
-      <td>${secCol}</td>
-      <td class="h-acc"><button class="btn-solid btn-mini" data-embudo="${esc(r.slug)}">Publicar embudo</button></td>
-    </tr>`;
+
+    const embudoBloque = r.publicado
+      ? `<div class="cv-regla__meta">Embudo publicado: ${linkCopiable(puenteUrl)}</div>
+         <div class="revitem__acts" style="margin-top:8px">
+           <button class="btn-ghost btn-mini" data-embudo="${esc(r.slug)}">Volver a publicar el embudo</button>
+         </div>`
+      : `<div class="cv-regla__meta">El embudo (la página que ve la persona antes de descargar) todavía no está subido.</div>
+         <div class="revitem__acts" style="margin-top:8px">
+           <button class="btn-solid btn-mini" data-embudo="${esc(r.slug)}">Publicar embudo</button>
+         </div>`;
+
+    const secuenciaBloque = r.ml_grupo
+      ? `<div class="cv-regla__meta">Grupo de MailerLite asignado: <code>${esc(r.ml_grupo)}</code> — armá o revisá su Automation en MailerLite.</div>`
+      : `<div class="cv-regla__meta">Sin grupo de MailerLite todavía — sin esto, quien descargue esta guía NO entra a ninguna secuencia de mail.</div>
+         <div class="revitem__acts" style="margin-top:8px;flex-wrap:wrap">
+           <input type="text" class="ml-grupo-in" data-slug="${esc(r.slug)}" placeholder="Pegar un ID de grupo existente" style="flex:1;min-width:180px">
+           <button class="btn-ghost btn-mini" data-ml-guardar="${esc(r.slug)}">Guardar ese ID</button>
+           <button class="btn-solid btn-mini" data-ml-crear="${esc(r.slug)}">Crear grupo nuevo</button>
+         </div>`;
+
+    return `<div class="cv-regla">
+      <div class="cv-regla__head">
+        <span class="t">${esc(r.pdf_titulo || r.slug)}</span>
+        <span class="tag">${lineaLbl}</span>
+        ${tieneGuia}
+      </div>
+      <div class="cv-regla__meta" style="margin-bottom:2px"><code>${esc(r.slug)}</code></div>
+
+      <div class="cv-modlbl" style="margin-top:14px">① Embudo (la página puente)</div>
+      ${embudoBloque}
+
+      <div class="cv-modlbl" style="margin-top:16px">② Secuencia de mail ${ayuda("El grupo de MailerLite conecta este lead magnet con su propia secuencia de mails. Creás el grupo acá, y en MailerLite → Automations armás qué se manda y cuándo (trigger: 'entra a este grupo').")}</div>
+      ${secuenciaBloque}
+    </div>`;
   }).join("");
-  return `<div class="seccion" style="margin-top:38px">
-    <div class="seccion__head"><span class="kicker">Embudo</span><h2>Páginas puente</h2><span class="count">· ${lms.length}</span></div>
-    <p class="g-hint" style="margin:0 0 12px">Publica el <code>index.html</code> del embudo (video · audio · videollamada · burbuja). Conviene tener la guía publicada primero, así el botón de descarga apunta a la guía real.</p>
-    <p class="g-hint" style="margin:0 0 12px">${ayuda("El grupo de MailerLite conecta este lead magnet con su propia secuencia de mails automática. Tocá \'Crear grupo nuevo\' (lo crea solo en MailerLite) y después armás ahí, en MailerLite → Automations, el envío escalonado disparado por \'entra a este grupo\'.")} La columna Secuencia conecta cada lead magnet con su grupo de MailerLite (para armar el envío escalonado en Automations).</p>
-    <div style="overflow-x:auto"><table class="histtable g-hist">
-      <thead><tr><th>Lead magnet</th><th>Guía</th><th>Link del embudo</th><th>Secuencia</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
+  return `<div class="seccion" style="margin-top:12px">
+    <div class="seccion__head"><span class="kicker">Embudo</span><h2>Lead magnets</h2><span class="count">· ${lms.length}</span></div>
+    <p class="g-hint" style="margin:0 0 16px">Por cada guía: primero publicás su embudo (①), después armás su secuencia de mail (②) — son dos pasos independientes, podés hacer uno sin el otro.</p>
+    ${cards}
   </div>`;
 }
 
