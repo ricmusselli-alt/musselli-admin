@@ -271,7 +271,7 @@ function mrReglaCard(r){
     <div class="cv-regla__meta">
       Dispara con: ${modo} · Alcance: ${alcance}<br>
       Manda: botón «${esc(r.boton_texto||"Ingresar aquí")}» → ${esc(r.link_embudo||"—")}<br>
-      ${(r.dm_textos||[]).length} texto(s) de DM${r.comment_reply?" · + respuesta pública":""}${r.etiqueta?` · etiqueta «${esc(r.etiqueta)}»`:""}${r.webhook_url?" · + webhook":""}${r.ml_grupo?" · + MailerLite":""}
+      ${(r.dm_textos||[]).length} texto(s) de DM${r.comment_reply?" · + respuesta pública":""}${r.etiqueta?` · etiqueta «${esc(r.etiqueta)}»`:""}${r.followup_horas?` · seguimiento a ${r.followup_horas}h`:""}${r.webhook_url?" · + webhook":""}${r.ml_grupo?" · + MailerLite":""}
     </div>
   </div>`;
 }
@@ -307,6 +307,13 @@ function mrEditor(){
     <input type="text" id="mrReply" value="${esc(r.comment_reply||"")}" placeholder="¡Te lo mandé por DM! 📩">
     <label>Etiqueta a aplicar al contacto (opcional)</label>
     <input type="text" id="mrEtiqueta" value="${esc(r.etiqueta||"")}" maxlength="40" placeholder="Ej: pidió-setup, interesado-compra, curso">
+    <div class="cv-row">
+      <div><label>Seguimiento: horas después, si no respondió (1–23, vacío = no)</label>
+        <input type="number" id="mrFupH" min="1" max="23" value="${r.followup_horas||""}" placeholder="ej. 12"></div>
+      <div><label>Texto del seguimiento</label>
+        <input type="text" id="mrFupT" value="${esc(r.followup_texto||"")}" placeholder="¿Pudiste verla? Cualquier duda me escribís 🙌"></div>
+    </div>
+    <div class="cv-regla__meta">El seguimiento se manda solo si la persona NO respondió y no pasaron 24 h (límite de Instagram). Un solo reintento.</div>
     <div class="cv-row">
       <div><label>Grupo de MailerLite (opcional)</label>
         <input type="text" id="mrMlg" value="${esc(r.ml_grupo||"")}" placeholder="ID numérico del grupo"></div>
@@ -428,6 +435,20 @@ function mrRender(){
       </div>`).join("") : ""}
   </div>`;
 
+  const ibTxt = (cfg.ice_breakers||[]).map(x=>`${x.q} | ${x.payload}`).join("\n");
+  const miTxt = (cfg.menu_items||[]).map(m=>`${m.title} | ${m.kind==="web_url"?m.url:m.payload}`).join("\n");
+  const icePanel = `<div class="reel-panel">
+    <div class="cv-modlbl">Ice Breakers — preguntas que aparecen al abrir el DM (máx 4) · formato: <code>Pregunta | PALABRA_CLAVE</code></div>
+    <textarea id="mrIce" class="cv-modlista" placeholder="¿Hacés setups? | SETUP&#10;Quiero turno para una reparación | REPARACION&#10;Info sobre los cursos | CURSOS">${esc(ibTxt)}</textarea>
+    <div class="cv-modlbl">Menú persistente — el menú fijo del chat (máx 5) · <code>Título | PALABRA_CLAVE</code> o <code>Título | https://…</code></div>
+    <textarea id="mrMenu" class="cv-modlista" placeholder="Reservar turno | https://ricardomusselli.com/turnos&#10;Ver cursos | CURSOS&#10;Hablar con una persona | HUMANO">${esc(miTxt)}</textarea>
+    <div class="revitem__acts" style="margin-top:10px">
+      <button class="btn-ghost btn-mini" id="mrMenuGuardar">Guardar</button>
+      <button class="btn-solid btn-mini" id="mrMenuPublicar">Publicar en Instagram</button>
+    </div>
+    <div class="cv-regla__meta">La PALABRA_CLAVE tiene que coincidir con una regla (modo palabra clave). Al tocar la opción, la persona recibe el DM de esa regla. Con URL, abre el link directo.</div>
+  </div>`;
+
   const sub = `<div class="cv-sub">
     <button data-mrsub="reglas" class="${mrTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
     <button data-mrsub="bandeja" class="${mrTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
@@ -450,7 +471,7 @@ function mrRender(){
   }
 
   const soloConfig = mrTab === "reglas";
-  root.innerHTML = tabs + (soloConfig ? panelCfg + faqPanel + modPanel : "") + sub + cuerpo;
+  root.innerHTML = tabs + (soloConfig ? panelCfg + faqPanel + modPanel + icePanel : "") + sub + cuerpo;
   if (soloConfig && mrEdit) mrPintarChips();
 }
 
@@ -496,6 +517,25 @@ function mrWire(){
     if (mst){ const [eid,cid]=mst.dataset.mrMostrar.split("|");
       try{ await api("POST",{action:"ig_mod_mostrar",category:mrCat,evento_id:Number(eid),comment_id:cid}); await rerun(); }catch(e){ alert("No se pudo: "+e.message); } return; }
 
+    function mrParseMenu(){
+      const ice = (document.getElementById("mrIce").value||"").split("\n").map(l=>l.trim()).filter(Boolean)
+        .map(l=>{ const [q,...r]=l.split("|"); return { q:(q||"").trim(), payload:(r.join("|")||"").trim() }; })
+        .filter(x=>x.q && x.payload).slice(0,4);
+      const menu = (document.getElementById("mrMenu").value||"").split("\n").map(l=>l.trim()).filter(Boolean)
+        .map(l=>{ const [t,...r]=l.split("|"); const v=(r.join("|")||"").trim();
+          return /^https?:\/\//i.test(v) ? { title:(t||"").trim(), kind:"web_url", url:v } : { title:(t||"").trim(), kind:"postback", payload:v }; })
+        .filter(m=>m.title && (m.payload||m.url)).slice(0,5);
+      return { ice, menu };
+    }
+    if (g("#mrMenuGuardar")){ const b=g("#mrMenuGuardar"); mrBusy(b,"Guardando"); const {ice,menu}=mrParseMenu();
+      try{ await api("POST",{action:"set_ig_menu",category:mrCat,ice_breakers:ice,menu_items:menu}); await rerun(); }catch(e){ alert("Error: "+e.message); mrUnbusy(b); } return; }
+    if (g("#mrMenuPublicar")){ const b=g("#mrMenuPublicar"); mrBusy(b,"Publicando"); const {ice,menu}=mrParseMenu();
+      try{ await api("POST",{action:"set_ig_menu",category:mrCat,ice_breakers:ice,menu_items:menu});
+           const r=await api("POST",{action:"ig_menu_publicar",category:mrCat});
+           alert("Publicado en Instagram: "+r.ice_breakers+" ice breakers, "+r.menu_items+" ítems de menú.");
+           await rerun(); }
+      catch(e){ alert("No se pudo publicar: "+e.message); mrUnbusy(b); } return; }
+
     if (g("#mrNueva")){ mrEdit={match_modo:"keyword",boton_texto:"Ingresar aquí",dm_textos:[],activo:true}; mrChips=[]; mrRender(); return; }
     const ed = g("[data-mr-edit]");
     if (ed){ const r=((DATA.ig_reglas||{})[mrCat]||[]).find(x=>String(x.id)===ed.dataset.mrEdit);
@@ -517,6 +557,8 @@ function mrWire(){
         dm_textos:(document.getElementById("mrTextos").value||"").split("\n").map(s=>s.trim()).filter(Boolean),
         comment_reply:(document.getElementById("mrReply").value||"").trim(),
         etiqueta:(document.getElementById("mrEtiqueta").value||"").trim(),
+        followup_horas:(document.getElementById("mrFupH").value||"").trim(),
+        followup_texto:(document.getElementById("mrFupT").value||"").trim(),
         ml_grupo:(document.getElementById("mrMlg").value||"").trim(),
         webhook_url:(document.getElementById("mrHook").value||"").trim(),
         activo: mrEdit&&mrEdit.activo===false ? false : true,
