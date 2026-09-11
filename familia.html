@@ -103,8 +103,13 @@
   .cv-sub button{padding:7px 14px;border:1px solid var(--linea);border-radius:9px;background:rgba(245,240,230,.02);
     color:var(--texto-mute);font-weight:600;font-size:12.5px;cursor:pointer}
   .cv-sub button.sel{color:var(--texto);border-color:var(--cobre);background:var(--panel)}
-  .cv-regla{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:12px}
-  .cv-regla.off{opacity:.55}
+  .cv-regla{background:var(--panel);border:1px solid var(--linea);border-left:4px solid var(--ok);border-radius:12px;padding:14px;margin-bottom:12px}
+  .cv-regla.off{border-left-color:var(--idle);border-left-style:dashed;background:var(--panel-2)}
+  .cv-regla.off .cv-regla__meta{opacity:.6}
+  .cv-regla__estado{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .cv-regla__estado.on{color:var(--ok);background:rgba(63,174,107,.14)}
+  .cv-regla__estado.off{color:var(--idle);background:rgba(124,115,101,.16)}
+  .cv-regla__contador{font-size:12px;color:var(--texto-mute);margin-bottom:10px}
   .cv-regla__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .cv-regla__head .t{font-weight:700;font-size:14px;flex:1;min-width:160px;color:var(--texto)}
   .cv-regla__meta{font-size:12px;color:var(--texto-mute);margin-top:6px;line-height:1.5}
@@ -266,6 +271,7 @@ function mrReglaCard(r){
   const alcance = r.media_id ? `post <code>${esc(r.media_id)}</code>` : "todos los posts";
   return `<div class="cv-regla ${r.activo?"":"off"}">
     <div class="cv-regla__head">
+      <span class="cv-regla__estado ${r.activo?"on":"off"}">${r.activo?"● Activa":"⏸ Pausada"}</span>
       <span class="t">${esc(r.nombre||"Regla")}</span>
       <button class="btn-ghost btn-mini" data-mr-edit="${r.id}">Editar</button>
       <button class="btn-ghost btn-mini" data-mr-toggle="${r.id}" data-on="${r.activo?0:1}">${r.activo?"Pausar":"Activar"}</button>
@@ -353,6 +359,7 @@ function mrFlujoCard(fl){
   const nPasos = (fl.ig_flujo_pasos||[]).length;
   return `<div class="cv-regla ${fl.activo?"":"off"}">
     <div class="cv-regla__head">
+      <span class="cv-regla__estado ${fl.activo?"on":"off"}">${fl.activo?"● Activo":"⏸ Pausado"}</span>
       <span class="t">${esc(fl.nombre||"Flujo")}</span>
       <button class="btn-ghost btn-mini" data-mr-fedit="${fl.id}">Editar</button>
       <button class="btn-ghost btn-mini" data-mr-ftoggle="${fl.id}" data-on="${fl.activo?0:1}">${fl.activo?"Pausar":"Activar"}</button>
@@ -543,12 +550,20 @@ function mrRender(){
 
   let cuerpo = "";
   if (mrTab === "analitica") cuerpo = mrAnalitica();
-  else if (mrTab === "reglas") cuerpo = `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nueva regla</button></div>`
+  else if (mrTab === "reglas") {
+    const nAct = reglas.filter(r=>r.activo).length;
+    cuerpo = `<div class="cv-regla__contador">Reglas totales: <b style="color:var(--texto)">${reglas.length}</b> · Activas: <b style="color:var(--ok)">${nAct}</b> · Pausadas: <b style="color:var(--idle)">${reglas.length-nAct}</b></div>`
+      + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nueva regla</button></div>`
       + mrEditor()
       + (reglas.length ? reglas.map(mrReglaCard).join("") : `<div class="vacio">Todavía no hay reglas para esta cuenta.</div>`);
-  else if (mrTab === "flujos") cuerpo = `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrFNueva">+ Nuevo flujo</button></div>`
+  }
+  else if (mrTab === "flujos") {
+    const nActF = flujos.filter(f=>f.activo).length;
+    cuerpo = (flujos.length ? `<div class="cv-regla__contador">Flujos totales: <b style="color:var(--texto)">${flujos.length}</b> · Activos: <b style="color:var(--ok)">${nActF}</b> · Pausados: <b style="color:var(--idle)">${flujos.length-nActF}</b></div>` : "")
+      + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrFNueva">+ Nuevo flujo</button></div>`
       + mrFlujoEditor()
       + (flujos.length ? flujos.map(mrFlujoCard).join("") : `<div class="vacio">Todavía no hay flujos para esta cuenta.</div>`);
+  }
   else {
     const tagsDisp = [...new Set(convos.flatMap(c => c.tags || []))].sort();
     const filtro = tagsDisp.length ? `<div class="cv-sub" style="flex-wrap:wrap">
