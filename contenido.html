@@ -174,6 +174,8 @@
   .cv-modlista{width:100%;min-height:70px;resize:vertical;background:var(--panel-2,#211d1a);border:1px solid var(--linea);
     border-radius:8px;color:var(--texto);font:inherit;font-size:13px;padding:8px 10px;margin:8px 0}
   .cv-modlbl{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);margin-top:10px}
+  .lm-paso2{margin-top:18px;padding:14px 14px 6px;border-top:1px dashed var(--linea-fuerte);background:rgba(245,240,230,.02);border-radius:0 0 10px 10px}
+  .lm-paso2 i{color:var(--texto-mute);font-style:normal;text-transform:none;letter-spacing:0;font-size:11px}
   .cv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
   .cv-kpi{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:14px}
   .cv-kpi b{display:block;font-size:22px;color:var(--texto);line-height:1.1}
@@ -596,8 +598,10 @@ function leadMagnetsHtml(lms, guias){
       <div class="cv-modlbl" style="margin-top:14px">① Embudo (la página puente)</div>
       ${embudoBloque}
 
-      <div class="cv-modlbl" style="margin-top:16px">② Secuencia de mail ${ayuda("El grupo de MailerLite conecta este lead magnet con su propia secuencia de mails. Creás el grupo acá, y en MailerLite → Automations armás qué se manda y cuándo (trigger: 'entra a este grupo').")}</div>
-      ${secuenciaBloque}
+      <div class="lm-paso2">
+        <div class="cv-modlbl" style="margin-top:0">② Secuencia de mail — <i>opcional, es otro paso aparte</i> ${ayuda("Esto NO es necesario para que el embudo funcione. Sirve para que, además, la gente que descargue esta guía reciba mails de seguimiento automáticos los días siguientes. El grupo de MailerLite conecta este lead magnet con su propia secuencia. Lo creás acá, y en MailerLite → Automations armás qué se manda y cuándo (trigger: 'entra a este grupo').")}</div>
+        ${secuenciaBloque}
+      </div>
     </div>`;
   }).join("");
   return `<div class="seccion" style="margin-top:12px">
