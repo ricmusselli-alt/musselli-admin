@@ -235,8 +235,15 @@ function pendDe(key){
   if (key === "blog")     return (DATA.blog_drafts || []).length;
   if (key === "tendencias")return (DATA.trend_drafts || []).length;
   if (key === "guias")    return (DATA.guias || []).filter(g => g.estado !== "publicada").length;
-  if (key === "reels")    return (DATA.reels || []).filter(r => r.estado === "pending_review").length;
   return 0;
+}
+
+// Reels de prueba corre en automático (auto_publicar) — no tiene sentido mostrar
+// "por aprobar" ahí, porque vos no aprobás nada. En su lugar, cuántos se publicaron
+// solos en las últimas 24 h de verdad.
+function reelsPublicados24h(){
+  const desde = Date.now() - 24 * 3600_000;
+  return (DATA.reels || []).filter(r => r.estado === "published" && r.published_at && new Date(r.published_at).getTime() >= desde).length;
 }
 
 // Luz de estado a partir de los chequeos del centinela (mismo criterio que Portada).
@@ -255,6 +262,9 @@ function renderHub(){
   $("#hDesc").textContent = "Todo lo que Blog, Tendencias y Carruseles generan, esperando tu OK. Elegí qué querés revisar.";
   $("#tipos").innerHTML = TIPOS.map(t => {
     const n = pendDe(t.key);
+    const pieCard = t.key === "reels"
+      ? `<span class="familia__pend"><b>${reelsPublicados24h()}</b> publicados (24 h)</span>`
+      : `<span class="familia__pend">${n ? `<b>${n}</b> por aprobar` : "Sin pendientes"}</span>`;
     const s = !t.listo
       ? { cls:"idle", txt:"EN DESARROLLO", tip:"todavía en preparación" }
       : t.key === "reels"
@@ -273,7 +283,7 @@ function renderHub(){
       <div class="familia__logo-wrap">${icoBody}</div>
       <div class="familia__name">${esc(t.nom)}</div>
       <div class="familia__foot">
-        <span class="familia__pend">${n ? `<b>${n}</b> por aprobar` : "Sin pendientes"}</span>
+        ${pieCard}
         <span class="familia__enter">Entrar →</span>
       </div>
     </a>`;
