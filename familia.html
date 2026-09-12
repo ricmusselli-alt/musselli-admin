@@ -584,25 +584,44 @@ function mrRender(){
       </div>`).join("") : ""}
   </div>`;
 
-  const ibTxt = (cfg.ice_breakers||[]).map(x=>`${x.q} | ${x.payload}`).join("\n");
+  const ibArr = cfg.ice_breakers||[];
+  const iceRow = (i) => {
+    const x = ibArr[i] || {};
+    return `<div class="cv-row" style="margin-bottom:8px">
+      <div><label>Botón ${i+1} · Pregunta</label>
+        <input type="text" id="mrIceQ${i}" value="${esc(x.q||"")}" placeholder="¿Hacés setups?"></div>
+      <div><label>Botón ${i+1} · Palabra clave</label>
+        <input type="text" id="mrIceK${i}" value="${esc(x.payload||"")}" placeholder="SETUP"></div>
+    </div>`;
+  };
   const iceBreakersPanel = `<div class="reel-panel">
     <div class="mr-explica">Como el cartel de "¿en qué te puedo ayudar?" que ves apenas entrás a un local. Son botones que aparecen SOLOS la primera vez que alguien abre el chat, antes de escribir nada — para que no tenga que pensar qué poner.</div>
-    <div class="cv-modlbl">Preguntas sugeridas <span class="mr-tag">máx 4</span> ${ayuda("Preguntas prearmadas que Instagram muestra cuando alguien abre el DM por primera vez. La PALABRA_CLAVE tiene que coincidir con un Keyword para que, al tocarla, la persona reciba ese mensaje.")}</div>
-    <div class="cv-regla__meta" style="margin-bottom:6px">Una por línea, formato <code>Pregunta que ve la persona | PALABRA_CLAVE</code> — esa palabra clave tiene que existir como Keyword.</div>
-    <textarea id="mrIce" class="cv-modlista" placeholder="¿Hacés setups? | SETUP&#10;Quiero turno para una reparación | REPARACION&#10;Info sobre los cursos | CURSOS">${esc(ibTxt)}</textarea>
+    <div class="cv-modlbl">Los 4 botones ${ayuda("Preguntas prearmadas que Instagram muestra cuando alguien abre el DM por primera vez. La PALABRA_CLAVE tiene que coincidir con un Keyword para que, al tocarla, la persona reciba ese mensaje.")}</div>
+    <div class="cv-regla__meta" style="margin-bottom:10px">La palabra clave de cada botón tiene que existir como Keyword. Dejá un botón vacío si no querés usarlo.</div>
+    ${[0,1,2,3].map(iceRow).join("")}
     <div class="revitem__acts" style="margin-top:10px">
-      <button class="btn-ghost btn-mini" id="mrMenuGuardar">Guardar</button>
-      <button class="btn-solid btn-mini" id="mrMenuPublicar">Publicar en Instagram</button>
+      <button class="btn-ghost btn-mini" id="mrIceGuardar">Guardar</button>
+      <button class="btn-solid btn-mini" id="mrIcePublicar">Publicar en Instagram</button>
       ${ayuda("Guardar solo lo deja listo en el panel. Publicar en Instagram lo sube de verdad al perfil de la cuenta — recién ahí la gente lo ve.")}
     </div>
   </div>`;
 
-  const miTxt = (cfg.menu_items||[]).map(m=>`${m.title} | ${m.kind==="web_url"?m.url:m.payload}`).join("\n");
+  const miArr = cfg.menu_items||[];
+  const menuRow = (i) => {
+    const m = miArr[i] || {};
+    const val = m.kind==="web_url" ? (m.url||"") : (m.payload||"");
+    return `<div class="cv-row" style="margin-bottom:8px">
+      <div><label>Opción ${i+1} · Título</label>
+        <input type="text" id="mrMenuT${i}" value="${esc(m.title||"")}" placeholder="Reservar turno"></div>
+      <div><label>Opción ${i+1} · Palabra clave o link</label>
+        <input type="text" id="mrMenuV${i}" value="${esc(val)}" placeholder="CURSOS  o  https://ricardomusselli.com/turnos"></div>
+    </div>`;
+  };
   const menuPanel = `<div class="reel-panel">
     <div class="mr-explica">El botón de opciones que queda SIEMPRE visible en el chat, no solo al principio — como el menú de un cajero automático.</div>
-    <div class="cv-modlbl">Opciones del menú <span class="mr-tag">máx 5</span> ${ayuda("Título | PALABRA_CLAVE dispara un Keyword; Título | https://... abre ese link directo, sin pasar por ningún Keyword.")}</div>
-    <div class="cv-regla__meta" style="margin-bottom:6px">Una por línea, formato <code>Título | PALABRA_CLAVE</code> o <code>Título | https://…</code></div>
-    <textarea id="mrMenu" class="cv-modlista" placeholder="Reservar turno | https://ricardomusselli.com/turnos&#10;Ver cursos | CURSOS&#10;Hablar con una persona | HUMANO">${esc(miTxt)}</textarea>
+    <div class="cv-modlbl">Las 5 opciones ${ayuda("Con una palabra clave dispara un Keyword; con un link (https://...) abre esa página directo, sin pasar por ningún Keyword.")}</div>
+    <div class="cv-regla__meta" style="margin-bottom:10px">Dejá una opción vacía si no querés usarla.</div>
+    ${[0,1,2,3,4].map(menuRow).join("")}
     <div class="revitem__acts" style="margin-top:10px">
       <button class="btn-ghost btn-mini" id="mrMenuGuardar">Guardar</button>
       <button class="btn-solid btn-mini" id="mrMenuPublicar">Publicar en Instagram</button>
@@ -747,20 +766,37 @@ function mrWire(){
     if (mst){ const [eid,cid]=mst.dataset.mrMostrar.split("|");
       try{ await api("POST",{action:"ig_mod_mostrar",category:mrCat,evento_id:Number(eid),comment_id:cid}); await rerun(); }catch(e){ alert("No se pudo: "+e.message); } return; }
 
-    function mrParseMenu(){
-      const ice = (document.getElementById("mrIce").value||"").split("\n").map(l=>l.trim()).filter(Boolean)
-        .map(l=>{ const [q,...r]=l.split("|"); return { q:(q||"").trim(), payload:(r.join("|")||"").trim() }; })
-        .filter(x=>x.q && x.payload).slice(0,4);
-      const menu = (document.getElementById("mrMenu").value||"").split("\n").map(l=>l.trim()).filter(Boolean)
-        .map(l=>{ const [t,...r]=l.split("|"); const v=(r.join("|")||"").trim();
-          return /^https?:\/\//i.test(v) ? { title:(t||"").trim(), kind:"web_url", url:v } : { title:(t||"").trim(), kind:"postback", payload:v }; })
-        .filter(m=>m.title && (m.payload||m.url)).slice(0,5);
-      return { ice, menu };
+    function mrParseIce(){
+      const out = [];
+      for (let i=0;i<4;i++){
+        const q = (document.getElementById("mrIceQ"+i)?.value||"").trim();
+        const k = (document.getElementById("mrIceK"+i)?.value||"").trim();
+        if (q && k) out.push({ q, payload:k });
+      }
+      return out;
     }
-    if (g("#mrMenuGuardar")){ const b=g("#mrMenuGuardar"); mrBusy(b,"Guardando"); const {ice,menu}=mrParseMenu();
-      try{ await api("POST",{action:"set_ig_menu",category:mrCat,ice_breakers:ice,menu_items:menu}); await rerun(); }catch(e){ alert("Error: "+e.message); mrUnbusy(b); } return; }
-    if (g("#mrMenuPublicar")){ const b=g("#mrMenuPublicar"); mrBusy(b,"Publicando"); const {ice,menu}=mrParseMenu();
-      try{ await api("POST",{action:"set_ig_menu",category:mrCat,ice_breakers:ice,menu_items:menu});
+    function mrParseMenuItems(){
+      const out = [];
+      for (let i=0;i<5;i++){
+        const t = (document.getElementById("mrMenuT"+i)?.value||"").trim();
+        const v = (document.getElementById("mrMenuV"+i)?.value||"").trim();
+        if (!t || !v) continue;
+        out.push(/^https?:\/\//i.test(v) ? { title:t, kind:"web_url", url:v } : { title:t, kind:"postback", payload:v });
+      }
+      return out;
+    }
+    if (g("#mrIceGuardar")){ const b=g("#mrIceGuardar"); mrBusy(b,"Guardando");
+      try{ await api("POST",{action:"set_ig_menu",category:mrCat,ice_breakers:mrParseIce()}); await rerun(); }catch(e){ alert("Error: "+e.message); mrUnbusy(b); } return; }
+    if (g("#mrIcePublicar")){ const b=g("#mrIcePublicar"); mrBusy(b,"Publicando");
+      try{ await api("POST",{action:"set_ig_menu",category:mrCat,ice_breakers:mrParseIce()});
+           const r=await api("POST",{action:"ig_menu_publicar",category:mrCat});
+           alert("Publicado en Instagram: "+r.ice_breakers+" ice breakers, "+r.menu_items+" ítems de menú.");
+           await rerun(); }
+      catch(e){ alert("No se pudo publicar: "+e.message); mrUnbusy(b); } return; }
+    if (g("#mrMenuGuardar")){ const b=g("#mrMenuGuardar"); mrBusy(b,"Guardando");
+      try{ await api("POST",{action:"set_ig_menu",category:mrCat,menu_items:mrParseMenuItems()}); await rerun(); }catch(e){ alert("Error: "+e.message); mrUnbusy(b); } return; }
+    if (g("#mrMenuPublicar")){ const b=g("#mrMenuPublicar"); mrBusy(b,"Publicando");
+      try{ await api("POST",{action:"set_ig_menu",category:mrCat,menu_items:mrParseMenuItems()});
            const r=await api("POST",{action:"ig_menu_publicar",category:mrCat});
            alert("Publicado en Instagram: "+r.ice_breakers+" ice breakers, "+r.menu_items+" ítems de menú.");
            await rerun(); }
