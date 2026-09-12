@@ -99,10 +99,16 @@
   @media(max-width:520px){.reel-item{flex-direction:column}.reel-vid{width:130px}}
 
   /* ---- Conversaciones IG ---- */
-  .cv-sub{display:flex;gap:6px;margin:14px 0}
+  .cv-sub{display:flex;gap:6px;margin:14px 0;flex-wrap:wrap}
   .cv-sub button{padding:7px 14px;border:1px solid var(--linea);border-radius:9px;background:rgba(245,240,230,.02);
     color:var(--texto-mute);font-weight:600;font-size:12.5px;cursor:pointer}
   .cv-sub button.sel{color:var(--texto);border-color:var(--cobre);background:var(--panel)}
+  .mr-master{background:var(--panel-3);border:1px solid var(--linea-fuerte);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .mr-master__txt b{font-size:15px;color:var(--texto)}
+  .mr-master__txt p{font-size:12.5px;color:var(--texto-mute);line-height:1.55;margin-top:6px;max-width:640px}
+  .mr-explica{background:rgba(200,155,108,.08);border:1px solid var(--linea);border-left:3px solid var(--cobre);
+    border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--texto-mute);line-height:1.55;margin-bottom:16px}
+  .mr-tag{font-size:10px;font-weight:700;color:var(--texto-mute);background:rgba(245,240,230,.06);padding:1px 7px;border-radius:6px;margin-left:6px;text-transform:none;letter-spacing:0}
   .cv-regla{background:var(--panel);border:1px solid var(--linea);border-left:4px solid var(--ok);border-radius:12px;padding:14px;margin-bottom:12px}
   .cv-regla.off{border-left-color:var(--idle);border-left-style:dashed;background:var(--panel-2)}
   .cv-regla.off .cv-regla__meta{opacity:.6}
@@ -258,7 +264,7 @@ function mrSwitch(on,label,hint,attr){
 function mrMediaId(u){ const m=String(u||"").match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/); return m?m[1]:""; }
 
 let mrCat = "luthier";
-let mrTab = "reglas";      // reglas | bandeja | analitica
+let mrTab = "auto";        // auto | guiadas | faq | chat | mod | bandeja | analitica
 let mrEdit = null;
 let mrChips = [];
 let mrTagFilter = "";      // filtro de la bandeja por etiqueta
@@ -496,25 +502,39 @@ function mrRender(){
     return `<button class="reel-tab ${on?"sel":""}" data-mrcat="${c.key}"><span class="reel-tab__dot ${st?"on":"off"}"></span>${c.nom}</button>`;
   }).join("")}</div>`;
 
-  const panelCfg = `<div class="reel-panel"><div class="reel-switches">
-    ${mrSwitch(cfg.auto_dm===true,"Auto-DM","ON: los comentarios que matchean una regla reciben el DM solos. OFF: quedan en la bandeja.","mr-autodm")}
-    ${mrSwitch(cfg.auto_reply===true,"Respuesta pública","ON: además del DM, deja el comentario público de la regla.","mr-autoreply")}
-  </div></div>`;
-
-  const faqPanel = `<div class="reel-panel"><div class="reel-switches">
-    ${mrSwitch(cfg.faq_auto===true,"FAQ automática (Gemini)","ON: los DMs con preguntas comunes se responden solos. OFF: Gemini deja un borrador en la bandeja.","mr-faqauto")}
-  </div>
-    <label class="cv-modlbl">Información para responder ${ayuda("Todo lo que Gemini puede usar para contestar preguntas por DM: precios, turnos, envíos, qué hacés y qué no, horarios, ubicación. Escribilo como notas sueltas, no hace falta redactar bonito. Cuanto más completo, mejor responde.")} — precios, turnos, envíos, qué hacés y qué no, horarios, ubicación…</label>
-    <textarea id="mrFaqTexto" class="cv-modlista" style="min-height:120px">${esc(cfg.faq_texto||"")}</textarea>
-    <button class="btn-ghost btn-mini" id="mrFaqGuardar">Guardar información</button>
-    <div class="cv-regla__meta" style="margin-top:8px">Gemini responde SOLO con esto. Si piden presupuesto o turno concreto, lo deja para vos.</div>
+  // Interruptor general: SIEMPRE visible arriba de todo, sin importar en qué
+  // pestaña estés — es el dato más importante ("¿está atendiendo sola o no?").
+  const maestro = `<div class="mr-master">
+    <div class="mr-master__txt">
+      <b>¿Está atendiendo sola?</b>
+      <p>Pensalo como un empleado de mostrador que contesta cuando vos no estás. Con esto en ON, cuando alguien comenta o escribe una palabra que reconoce, le manda el mensaje solo. En OFF, junta todo en "Mensajes para vos" y no le escribe a nadie hasta que lo hagas vos.</p>
+    </div>
+    <div class="reel-switches" style="margin-top:10px">
+      ${mrSwitch(cfg.auto_dm===true,"Contestar sola","ON: manda el mensaje directo apenas reconoce algo. OFF: junta todo en Mensajes para vos, sin escribirle a nadie.","mr-autodm")}
+      ${mrSwitch(cfg.auto_reply===true,"Avisar en público","ON: además del mensaje privado, deja un comentario visible debajo (ej: '¡Te escribí por privado! 📩'). Como cuando un mozo dice en voz alta 'ya te traigo eso' antes de traértelo.","mr-autoreply")}
+    </div>
   </div>`;
 
-  const modPanel = `<div class="reel-panel"><div class="reel-switches">
-    ${mrSwitch(cfg.mod_activa===true,"Moderación de comentarios","Oculta los comentarios que caen en la lista negra. No borra: se pueden volver a mostrar.","mr-modact")}
-    ${mrSwitch(cfg.mod_ocultar_links===true,"Ocultar links de terceros","Oculta comentarios con URLs que no sean de ricardomusselli.com.","mr-modlinks")}
-  </div>
-    <label class="cv-modlbl">Lista negra ${ayuda("Una palabra o frase por línea. Cualquier comentario que contenga alguna se oculta solo (no se borra: podés volver a mostrarlo). Ej: vendo, sigueme, curso gratis.")} — una palabra o frase por línea</label>
+  const faqPanel = `<div class="reel-panel">
+    <div class="mr-explica">Es como dejarle un cuaderno de respuestas a un empleado nuevo: precios, horarios, qué hacés y qué no. Cuando alguien te escribe una pregunta común por privado, la IA busca la respuesta ahí adentro — y si no la encuentra, no inventa nada: te lo deja a vos en "Mensajes para vos".</div>
+    <div class="reel-switches">
+      ${mrSwitch(cfg.faq_auto===true,"Responder sola","ON: contesta las preguntas comunes por privado, sin que vos hagas nada. OFF: te deja una respuesta ya redactada, lista para que solo la apruebes.","mr-faqauto")}
+    </div>
+    <label class="cv-modlbl" style="margin-top:14px">El cuaderno de respuestas ${ayuda("Todo lo que la IA puede usar para contestar: precios, turnos, envíos, qué hacés y qué no, horarios, ubicación. Escribilo como notas sueltas, no hace falta redactar bonito. Cuanto más completo, mejor responde.")}</label>
+    <div class="cv-regla__meta" style="margin-bottom:8px">Ej: "Setup completo $40.000. Entrega en 5 a 7 días hábiles. No hago guitarras eléctricas, solo criollas y clásicas."</div>
+    <textarea id="mrFaqTexto" class="cv-modlista" style="min-height:120px">${esc(cfg.faq_texto||"")}</textarea>
+    <button class="btn-ghost btn-mini" id="mrFaqGuardar">Guardar información</button>
+    <div class="cv-regla__meta" style="margin-top:8px">Si piden un presupuesto puntual o un turno concreto, la IA nunca inventa: te lo deja a vos.</div>
+  </div>`;
+
+  const modPanel = `<div class="reel-panel">
+    <div class="mr-explica">Es el portero del local: no deja pasar (no muestra) comentarios problemáticos. No borra nada — si te arrepentís, podés volver a mostrarlo con un clic.</div>
+    <div class="reel-switches">
+      ${mrSwitch(cfg.mod_activa===true,"Ocultar comentarios de la lista negra","ON: si un comentario contiene alguna palabra de tu lista, lo oculta solo (reversible).","mr-modact")}
+      ${mrSwitch(cfg.mod_ocultar_links===true,"Ocultar comentarios con links ajenos","ON: oculta comentarios que traen una URL que no sea la tuya (evita spam publicitario).","mr-modlinks")}
+    </div>
+    <label class="cv-modlbl" style="margin-top:14px">Tu lista negra ${ayuda("Una palabra o frase por línea. Cualquier comentario que contenga alguna se oculta solo (no se borra: podés volver a mostrarlo).")}</label>
+    <div class="cv-regla__meta" style="margin-bottom:8px">Ej: vendo, sigueme, curso gratis, promo — una por línea.</div>
     <textarea id="mrModLista" class="cv-modlista">${esc((cfg.mod_lista||[]).join("\n"))}</textarea>
     <button class="btn-ghost btn-mini" id="mrModGuardar">Guardar lista</button>
     ${ocultos.length ? `<div class="cv-modlbl" style="margin-top:14px">Ocultados recientes · ${ocultos.length}</div>` +
@@ -528,56 +548,66 @@ function mrRender(){
   const ibTxt = (cfg.ice_breakers||[]).map(x=>`${x.q} | ${x.payload}`).join("\n");
   const miTxt = (cfg.menu_items||[]).map(m=>`${m.title} | ${m.kind==="web_url"?m.url:m.payload}`).join("\n");
   const icePanel = `<div class="reel-panel">
-    <div class="cv-modlbl">Ice Breakers ${ayuda("Preguntas prearmadas que Instagram muestra cuando alguien abre el DM por primera vez, antes de escribir nada. Máximo 4. Formato: Pregunta | PALABRA_CLAVE — esa palabra clave tiene que coincidir con una regla en modo 'palabra clave' para que, al tocarla, la persona reciba el DM de esa regla.")} — preguntas que aparecen al abrir el DM (máx 4) · formato: <code>Pregunta | PALABRA_CLAVE</code></div>
+    <div class="mr-explica">Como el cartel de "¿en qué te puedo ayudar?" que ves apenas entrás a un local. Son botones que aparecen SOLOS la primera vez que alguien abre el chat, antes de escribir nada — para que no tenga que pensar qué poner.</div>
+    <div class="cv-modlbl">Primeras preguntas sugeridas <span class="mr-tag">máx 4</span> ${ayuda("Preguntas prearmadas que Instagram muestra cuando alguien abre el DM por primera vez. La PALABRA_CLAVE tiene que coincidir con una regla en 'Respuestas automáticas' para que, al tocarla, la persona reciba ese mensaje.")}</div>
+    <div class="cv-regla__meta" style="margin-bottom:6px">Una por línea, formato <code>Pregunta que ve la persona | PALABRA_CLAVE</code> — esa palabra clave tiene que existir como regla en "Respuestas automáticas".</div>
     <textarea id="mrIce" class="cv-modlista" placeholder="¿Hacés setups? | SETUP&#10;Quiero turno para una reparación | REPARACION&#10;Info sobre los cursos | CURSOS">${esc(ibTxt)}</textarea>
-    <div class="cv-modlbl">Menú persistente ${ayuda("El menú fijo que aparece siempre en el chat (ícono de opciones). Máximo 5 ítems. Formato: Título | PALABRA_CLAVE (dispara una regla) o Título | https://... (abre el link directo, sin pasar por ninguna regla).")} — el menú fijo del chat (máx 5) · <code>Título | PALABRA_CLAVE</code> o <code>Título | https://…</code></div>
+    <div class="cv-modlbl" style="margin-top:16px">Menú fijo del chat <span class="mr-tag">máx 5</span> ${ayuda("El menú de opciones que queda siempre visible en la conversación (como el menú de un cajero automático, siempre ahí). Título | PALABRA_CLAVE dispara una regla; Título | https://... abre ese link directo.")}</div>
+    <div class="cv-regla__meta" style="margin-bottom:6px">El botón de opciones que queda SIEMPRE visible en el chat, no solo al principio — como el menú de un cajero automático.</div>
     <textarea id="mrMenu" class="cv-modlista" placeholder="Reservar turno | https://ricardomusselli.com/turnos&#10;Ver cursos | CURSOS&#10;Hablar con una persona | HUMANO">${esc(miTxt)}</textarea>
     <div class="revitem__acts" style="margin-top:10px">
       <button class="btn-ghost btn-mini" id="mrMenuGuardar">Guardar</button>
       <button class="btn-solid btn-mini" id="mrMenuPublicar">Publicar en Instagram</button>
       ${ayuda("Guardar solo lo deja listo en el panel. Publicar en Instagram lo sube de verdad al perfil de la cuenta — recién ahí la gente lo ve.")}
     </div>
-    <div class="cv-regla__meta">La PALABRA_CLAVE tiene que coincidir con una regla (modo palabra clave). Al tocar la opción, la persona recibe el DM de esa regla. Con URL, abre el link directo.</div>
   </div>`;
 
   const flujos = (DATA.ig_flujos || {})[mrCat] || [];
   const sub = `<div class="cv-sub">
-    <button data-mrsub="reglas" class="${mrTab==="reglas"?"sel":""}">Reglas · ${reglas.length}</button>
-    <button data-mrsub="flujos" class="${mrTab==="flujos"?"sel":""}">Flujos · ${flujos.length}</button>
-    <button data-mrsub="bandeja" class="${mrTab==="bandeja"?"sel":""}">Bandeja · ${convos.length}</button>
-    <button data-mrsub="analitica" class="${mrTab==="analitica"?"sel":""}">Analítica</button>
+    <button data-mrsub="auto" class="${mrTab==="auto"?"sel":""}">💬 Respuestas automáticas · ${reglas.length}</button>
+    <button data-mrsub="guiadas" class="${mrTab==="guiadas"?"sel":""}">🧭 Conversaciones guiadas · ${flujos.length}</button>
+    <button data-mrsub="faq" class="${mrTab==="faq"?"sel":""}">🤖 Preguntas frecuentes</button>
+    <button data-mrsub="chat" class="${mrTab==="chat"?"sel":""}">👋 Primer contacto y menú</button>
+    <button data-mrsub="mod" class="${mrTab==="mod"?"sel":""}">🛑 Moderación</button>
+    <button data-mrsub="bandeja" class="${mrTab==="bandeja"?"sel":""}">📥 Mensajes para vos · ${convos.length}</button>
+    <button data-mrsub="analitica" class="${mrTab==="analitica"?"sel":""}">📊 Estadísticas</button>
   </div>`;
 
   let cuerpo = "";
   if (mrTab === "analitica") cuerpo = mrAnalitica();
-  else if (mrTab === "reglas") {
-    const nAct = reglas.filter(r=>r.activo).length;
-    cuerpo = `<div class="cv-regla__contador">Reglas totales: <b style="color:var(--texto)">${reglas.length}</b> · Activas: <b style="color:var(--ok)">${nAct}</b> · Pausadas: <b style="color:var(--idle)">${reglas.length-nAct}</b></div>`
-      + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nueva regla</button></div>`
-      + mrEditor()
-      + (reglas.length ? reglas.map(mrReglaCard).join("") : `<div class="vacio">Todavía no hay reglas para esta cuenta.</div>`);
-  }
-  else if (mrTab === "flujos") {
+  else if (mrTab === "faq") cuerpo = faqPanel;
+  else if (mrTab === "chat") cuerpo = icePanel;
+  else if (mrTab === "mod") cuerpo = modPanel;
+  else if (mrTab === "guiadas") {
     const nActF = flujos.filter(f=>f.activo).length;
-    cuerpo = (flujos.length ? `<div class="cv-regla__contador">Flujos totales: <b style="color:var(--texto)">${flujos.length}</b> · Activos: <b style="color:var(--ok)">${nActF}</b> · Pausados: <b style="color:var(--idle)">${flujos.length-nActF}</b></div>` : "")
-      + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrFNueva">+ Nuevo flujo</button></div>`
+    cuerpo = `<div class="mr-explica">Usalo cuando UN solo mensaje no alcanza y hace falta ir preguntando de a un paso — como pedir un turno: primero preguntás "¿eléctrica o criolla?", según lo que responda seguís por un camino distinto. Si con un solo mensaje ya resolvés todo, no hace falta esto: alcanza con "Respuestas automáticas".</div>`
+      + (flujos.length ? `<div class="cv-regla__contador">Conversaciones totales: <b style="color:var(--texto)">${flujos.length}</b> · Activas: <b style="color:var(--ok)">${nActF}</b> · Pausadas: <b style="color:var(--idle)">${flujos.length-nActF}</b></div>` : "")
+      + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrFNueva">+ Nueva conversación guiada</button></div>`
       + mrFlujoEditor()
-      + (flujos.length ? flujos.map(mrFlujoCard).join("") : `<div class="vacio">Todavía no hay flujos para esta cuenta.</div>`);
+      + (flujos.length ? flujos.map(mrFlujoCard).join("") : `<div class="vacio">Todavía no hay ninguna para esta cuenta.</div>`);
   }
-  else {
+  else if (mrTab === "bandeja") {
     const tagsDisp = [...new Set(convos.flatMap(c => c.tags || []))].sort();
     const filtro = tagsDisp.length ? `<div class="cv-sub" style="flex-wrap:wrap">
       <button data-mr-tagfilter="" class="${mrTagFilter?"":"sel"}">Todas</button>
       ${tagsDisp.map(t=>`<button data-mr-tagfilter="${esc(t)}" class="${mrTagFilter===t?"sel":""}">${esc(t)}</button>`).join("")}
     </div>` : "";
     const lista = mrTagFilter ? convos.filter(c => (c.tags||[]).includes(mrTagFilter)) : convos;
-    cuerpo = filtro + (lista.length ? lista.map(mrConvCard).join("") : `<div class="vacio">Nada para mostrar${mrTagFilter?` con la etiqueta «${esc(mrTagFilter)}»`:""}.</div>`);
+    cuerpo = `<div class="mr-explica">Acá caen los mensajes que el sistema no pudo (o no debía) responder solo: porque "Contestar sola" está en OFF, porque nadie tenía una regla que coincidiera, o porque la pregunta necesitaba a una persona de verdad. Es tu bandeja de entrada, como el WhatsApp del local.</div>`
+      + filtro + (lista.length ? lista.map(mrConvCard).join("") : `<div class="vacio">Nada para mostrar${mrTagFilter?` con la etiqueta «${esc(mrTagFilter)}»`:""}.</div>`);
+  }
+  else { // "auto" (Respuestas automáticas) — pestaña por defecto
+    const nAct = reglas.filter(r=>r.activo).length;
+    cuerpo = `<div class="mr-explica">La base de todo: "si alguien dice tal palabra, mandale tal mensaje". Como el cartelito de un mostrador: "¿preguntás por el precio? tomá este folleto". Usalo para todo lo que se resuelve con UN solo mensaje.</div>`
+      + `<div class="cv-regla__contador">Reglas totales: <b style="color:var(--texto)">${reglas.length}</b> · Activas: <b style="color:var(--ok)">${nAct}</b> · Pausadas: <b style="color:var(--idle)">${reglas.length-nAct}</b></div>`
+      + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nueva regla</button></div>`
+      + mrEditor()
+      + (reglas.length ? reglas.map(mrReglaCard).join("") : `<div class="vacio">Todavía no hay reglas para esta cuenta.</div>`);
   }
 
-  const soloConfig = mrTab === "reglas";
-  root.innerHTML = tabs + (soloConfig ? panelCfg + faqPanel + modPanel + icePanel : "") + sub + cuerpo;
-  if (soloConfig && mrEdit) mrPintarChips();
-  if (mrTab === "flujos" && mrFlujoEdit) mrPintarFChips();
+  root.innerHTML = tabs + maestro + sub + cuerpo;
+  if (mrTab === "auto" && mrEdit) mrPintarChips();
+  if (mrTab === "guiadas" && mrFlujoEdit) mrPintarFChips();
 }
 
 let mrWired = false;
