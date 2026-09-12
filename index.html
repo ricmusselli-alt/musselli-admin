@@ -200,9 +200,12 @@ function render(DATA){
 
   $("#resumen").innerHTML = `
     <div class="resumen__item">
-      <span class="resumen__label">Gasto del mes ${ayuda("Suma de todos los proveedores con costo, convertido a dólares. El detalle está en la sección Costos.", true)}</span>
+      <span class="resumen__label">Gasto del mes ${ayuda("Promedio prorrateado: los pagos anuales se dividen en 12 para dar un costo mensual parejo. El detalle está en la sección Costos.", true)}</span>
       <span class="resumen__value">USD $${totalUsd.toFixed(2)}</span>
       <span class="resumen__sub">${nProv} proveedor${nProv===1?"":"es"} con costo</span>
+      <div class="resumen__divisor" style="margin:8px 0"></div>
+      <span class="resumen__label">Gasto real próx. mes ${ayuda("Lo que vas a tener que pagar de verdad el mes que viene: los proveedores mensuales completos, más los anuales que te toque renovar justo ese mes (con el monto entero, sin prorratear).", true)}</span>
+      <span class="resumen__valorchico">USD $${(typeof DATA.total_usd_proximo_mes === "number" ? DATA.total_usd_proximo_mes : 0).toFixed(2)}</span>
     </div>
     <div class="resumen__item resumen__item--combo">
       <div class="resumen__fila2 ${pendTotal ? "alerta" : ""}">
