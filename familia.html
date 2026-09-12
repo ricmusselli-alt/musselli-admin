@@ -349,7 +349,8 @@ function mrEditor(){
     <textarea id="mrTextos" placeholder="¡Gracias por tu interés! Acá tenés la guía 👇">${esc((r.dm_textos||[]).join("\n"))}</textarea>
     <label>Respuesta pública bajo el comentario (opcional) ${ayuda("Si lo completás Y el switch 'Respuesta pública' de la cuenta está en ON, el sistema deja este comentario público debajo del de la persona (ej. '¡Te lo mandé por DM! 📩'). Si lo dejás vacío, no comenta nada aunque el switch esté prendido.")}</label>
     <input type="text" id="mrReply" value="${esc(r.comment_reply||"")}" placeholder="¡Te lo mandé por DM! 📩">
-    <label>Etiqueta a aplicar al contacto (opcional) ${ayuda("Cuando esta regla dispara, le pega esta etiqueta a la persona en la Bandeja (ej. 'pidió-setup'). Sirve para filtrar la bandeja y ver en Analítica cuánta gente pidió cada cosa.")}</label>
+    <label>TAGS · Etiqueta a aplicar al contacto (opcional) ${ayuda("Cuando esta regla dispara, le pega esta etiqueta a la persona en Live Chat (ej. 'pidió-setup'). Sirve para filtrar Live Chat y ver en Analytics cuánta gente pidió cada cosa.")}</label>
+    <div class="cv-regla__meta" style="margin-bottom:4px">Podés configurarlo acá o en la tarjeta TAGS | ETIQUETAS DE CONTACTOS.</div>
     <input type="text" id="mrEtiqueta" value="${esc(r.etiqueta||"")}" maxlength="40" placeholder="Ej: pidió-setup, interesado-compra, curso">
     <div class="cv-row">
       <div><label>Seguimiento: horas (opcional) ${ayuda("Si la persona NO responde después de este DM, a las X horas le llega automáticamente el texto de seguimiento (un solo reintento). Tiene que ser entre 1 y 23 — Instagram no deja mandar mensajes libres pasadas las 24 h sin que la persona escriba de nuevo. Dejalo vacío si no querés seguimiento.")}</label>
@@ -618,7 +619,7 @@ function mrRender(){
         return `<span class="cv-chip">${esc(t)} · <b style="cursor:default">${n}</b></span>`;
       }).join("")}</div>`
       : `<div class="vacio">Todavía no hay contactos etiquetados en esta cuenta.</div>`}
-    <div class="cv-regla__meta" style="margin-top:14px">Para agregar una etiqueta nueva: entrá a un Keyword (pestaña Keywords) y completá el campo "Etiqueta a aplicar al contacto".</div>
+    <div class="cv-regla__meta" style="margin-top:14px">Para agregar una etiqueta nueva: entrá a un Keyword y completá el campo "TAGS · Etiqueta a aplicar al contacto".</div>
   </div>`;
 
 
@@ -690,7 +691,7 @@ function mrRender(){
   }
   else { // "keywords" — pestaña por defecto
     const nAct = reglas.filter(r=>r.activo).length;
-    cuerpo = `<div class="mr-explica">La base de todo: "si alguien dice tal palabra, mandale tal mensaje". Como el cartelito de un mostrador: "¿preguntás por el precio? tomá este folleto". Usalo para todo lo que se resuelve con UN solo mensaje.</div>`
+    cuerpo = `<div class="mr-explica">el típico caso: escribí GUÍA y te envío la info. <b>Ejemplo:</b> alguien comenta "GUÍA" → recibe por privado el link de tu guía de setup, sin que hagas nada.</div>`
       + `<div class="cv-regla__contador">Keywords totales: <b style="color:var(--texto)">${reglas.length}</b> · Activos: <b style="color:var(--ok)">${nAct}</b> · Pausados: <b style="color:var(--idle)">${reglas.length-nAct}</b></div>`
       + `<div class="revitem__acts" style="margin-bottom:12px"><button class="btn-solid btn-mini" id="mrNueva">+ Nuevo Keyword</button></div>`
       + mrEditor()
