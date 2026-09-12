@@ -121,59 +121,61 @@ function pendientesResumen(DATA){
 }
 
 let SEG_DATA = {};
+const SEG_CUENTAS = [ { key:'luthier', nom:'Luthería' }, { key:'guitar-tech', nom:'Guitar Tech' } ];
+const SEG_REDES = [ { key:'instagram', nom:'Instagram' }, { key:'facebook', nom:'Facebook' }, { key:'tiktok', nom:'TikTok' } ];
 
 function seguidoresHtml(seg){
   SEG_DATA = seg || {};
-  const col = (cat, label) => {
-    const s = seg[cat] || {};
-    const total = typeof s.total === "number" ? s.total.toLocaleString("es-AR") : "—";
-    return `<div class="seg-col">
-      <div class="seg-col__nom">${label}</div>
-      <button class="seg-col__total" data-seg-open="1" title="Ver evolución">${total}</button>
-    </div>`;
+  const celda = (cat, red) => {
+    const s = (seg[cat]||{})[red];
+    if (s && typeof s.total === 'number') return `<td>${s.total.toLocaleString('es-AR')}</td>`;
+    return `<td class="seg-pend">pendiente</td>`;
   };
-  return `<div class="seg-split">${col('luthier','Luthería')}<div class="seg-linea"></div>${col('guitar-tech','Guitar Tech')}</div>`;
+  return `<table class="seg-tabla">
+    <tr><th></th>${SEG_CUENTAS.map(c=>`<th><button class="seg-th" data-seg-open="${c.key}">${c.nom}</button></th>`).join('')}</tr>
+    ${SEG_REDES.map(r=>`<tr><td class="seg-tabla__red">${r.nom}</td>${SEG_CUENTAS.map(c=>celda(c.key,r.key)).join('')}</tr>`).join('')}
+  </table>`;
 }
 
 function segFila(n){
-  return n === null || n === undefined ? '<span class="seg-modal__nd">sin datos todavía</span>'
+  return n === null || n === undefined ? '<span class="seg-modal__nd">sin datos</span>'
     : n > 0 ? `<span class="seg-modal__pos">+${n}</span>`
     : n < 0 ? `<span class="seg-modal__neg">${n}</span>`
     : `<span class="seg-modal__nd">0</span>`;
 }
 
-function segAbrirModal(){
-  const l = SEG_DATA['luthier'] || {};
-  const g = SEG_DATA['guitar-tech'] || {};
+function segAbrirModal(cat){
+  const nom = (SEG_CUENTAS.find(c=>c.key===cat)||{}).nom || cat;
+  const datos = SEG_DATA[cat] || {};
   let modal = document.getElementById('segModal');
   if (!modal){
     modal = document.createElement('div');
     modal.id = 'segModal';
     modal.className = 'seg-modal-ov';
     modal.hidden = true;
-    modal.innerHTML = `<div class="seg-modal" role="dialog">
-      <div class="seg-modal__head"><b>Evolución de seguidores</b><button class="seg-modal__x" data-seg-close="1">✕</button></div>
-      <table class="seg-modal__tbl">
-        <tr><th></th><th>Luthería</th><th>Guitar Tech</th></tr>
-        <tr><td>Últimas 24 h</td><td id="segD1L"></td><td id="segD1G"></td></tr>
-        <tr><td>Última semana</td><td id="segD7L"></td><td id="segD7G"></td></tr>
-        <tr><td>Último mes</td><td id="segD30L"></td><td id="segD30G"></td></tr>
-      </table>
-      <p class="seg-modal__nota">Se calcula con el conteo diario, así que hacen falta unos días de historial para que aparezcan todos los datos.</p>
-    </div>`;
     document.body.appendChild(modal);
   }
-  document.getElementById('segD1L').innerHTML = segFila(l.d1);
-  document.getElementById('segD1G').innerHTML = segFila(g.d1);
-  document.getElementById('segD7L').innerHTML = segFila(l.d7);
-  document.getElementById('segD7G').innerHTML = segFila(g.d7);
-  document.getElementById('segD30L').innerHTML = segFila(l.d30);
-  document.getElementById('segD30G').innerHTML = segFila(g.d30);
+  const fila = (redKey, redNom) => {
+    const s = datos[redKey];
+    if (!s || typeof s.total !== 'number') return `<tr><td>${redNom}</td><td colspan="4" class="seg-modal__nd">página / cuenta no conectada todavía</td></tr>`;
+    return `<tr><td>${redNom}</td><td>${s.total.toLocaleString('es-AR')}</td><td>${segFila(s.d1)}</td><td>${segFila(s.semana)}</td><td>${segFila(s.mes)}</td></tr>`;
+  };
+  modal.innerHTML = `<div class="seg-modal" role="dialog">
+    <div class="seg-modal__head"><b>${esc(nom)} · evolución de seguidores</b><button class="seg-modal__x" data-seg-close="1">✕</button></div>
+    <table class="seg-modal__tbl">
+      <tr><th></th><th>Total</th><th>24 h</th><th>Semana</th><th>Mes</th></tr>
+      ${fila('instagram','Instagram')}
+      ${fila('facebook','Facebook')}
+      ${fila('tiktok','TikTok')}
+    </table>
+    <p class="seg-modal__nota">Semana = de lunes a hoy. Mes = del día 1 a hoy. Facebook y TikTok quedan pendientes de conexión/aprobación.</p>
+  </div>`;
   modal.hidden = false;
 }
 
 document.addEventListener('click', (ev) => {
-  if (ev.target.closest('[data-seg-open]')) { segAbrirModal(); return; }
+  const op = ev.target.closest('[data-seg-open]');
+  if (op) { segAbrirModal(op.dataset.segOpen); return; }
   if (ev.target.closest('[data-seg-close]') || ev.target.id === 'segModal') {
     const m = document.getElementById('segModal'); if (m) m.hidden = true;
   }
@@ -202,18 +204,20 @@ function render(DATA){
       <span class="resumen__value">USD $${totalUsd.toFixed(2)}</span>
       <span class="resumen__sub">${nProv} proveedor${nProv===1?"":"es"} con costo</span>
     </div>
-    <div class="resumen__item ${pendTotal ? "alerta" : ""}">
-      <span class="resumen__label">Por aprobar ${ayuda("Publicaciones generadas por el sistema que están esperando tu OK. Entrá a Contenido para revisarlas.", true)}</span>
-      <span class="resumen__value">${pendTotal}</span>
-      <span class="resumen__sub">${esc(pendDet)}</span>
+    <div class="resumen__item resumen__item--combo">
+      <div class="resumen__fila2 ${pendTotal ? "alerta" : ""}">
+        <span class="resumen__label">Por aprobar ${ayuda("Publicaciones generadas por el sistema que están esperando tu OK. Entrá a Contenido para revisarlas.", true)}</span>
+        <span class="resumen__valorchico">${pendTotal}</span>
+      </div>
+      <div class="resumen__divisor"></div>
+      <div class="resumen__fila2 ${salud.cls}">
+        <span class="resumen__label">Estado del sistema ${ayuda("El centinela revisa cada 30 min que los motores funcionen: sitios online, permisos de GitHub, tokens vigentes, render andando. Si algo falla te llega un WhatsApp.", true)}</span>
+        <span class="resumen__valorchico">${hcFalla.length + hcAviso.length}</span>
+      </div>
+      <span class="resumen__sub">${pendTotal ? esc(pendDet) : "nada esperando"} · ${esc(salud.sub)}</span>
     </div>
-    <div class="resumen__item ${salud.cls}">
-      <span class="resumen__label">Estado del sistema ${ayuda("El centinela revisa cada 30 min que los motores funcionen: sitios online, permisos de GitHub, tokens vigentes, render andando. Si algo falla te llega un WhatsApp.", true)}</span>
-      <span class="resumen__value">${esc(salud.v)}</span>
-      <span class="resumen__sub">${esc(salud.sub)}</span>
-    </div>
-    <div class="resumen__item">
-      <span class="resumen__label">Análisis de seguidores ${ayuda("Cuántos seguidores tiene cada cuenta de Instagram. Tocá el número para ver cuánto ganó o perdió en las últimas 24 h, la última semana y el último mes. Se actualiza una vez por día. Cuando Meta apruebe el permiso de estadísticas, vamos a poder sumar de dónde vienen (qué reel, qué carrusel).", true)}</span>
+    <div class="resumen__item resumen__item--ancho">
+      <span class="resumen__label">Análisis de seguidores ${ayuda("Cuántos seguidores tiene cada cuenta en cada red. Tocá Luthería o Guitar Tech para ver cuánto ganó o perdió en las últimas 24 h, esta semana (desde el lunes) y este mes (desde el día 1). Facebook y TikTok quedan pendientes hasta conectar la página / que TikTok apruebe la app.", true)}</span>
       ${seguidoresHtml(DATA.ig_seguidores || {})}
     </div>`;
 
