@@ -120,6 +120,20 @@ function pendientesResumen(DATA){
   return { total, detalle };
 }
 
+function seguidoresHtml(seg){
+  const col = (cat, label) => {
+    const s = seg[cat] || {};
+    const total = typeof s.total === "number" ? s.total.toLocaleString("es-AR") : "—";
+    return `<div class="seg-col">
+      <div class="seg-col__nom">${label}</div>
+      <div class="seg-col__total">${total}</div>
+      <div class="seg-col__fila"><span class="seg-dot on"></span>+${s.ganados_hoy||0} hoy</div>
+      <div class="seg-col__fila"><span class="seg-dot off"></span>-${s.perdidos_hoy||0} hoy</div>
+    </div>`;
+  };
+  return `<div class="seg-split">${col('luthier','Luthería')}<div class="seg-linea"></div>${col('guitartech','Guitar Tech')}</div>`;
+}
+
 function render(DATA){
   const props = DATA.properties || [];
   const totalUsd = typeof DATA.total_usd === "number" ? DATA.total_usd
@@ -154,9 +168,8 @@ function render(DATA){
       <span class="resumen__sub">${esc(salud.sub)}</span>
     </div>
     <div class="resumen__item">
-      <span class="resumen__label">Generando solas ${ayuda("Familias con la generación automática encendida. El resto solo genera cuando apretás el botón.", true)}</span>
-      <span class="resumen__value">${genOn.length}</span>
-      <span class="resumen__sub">${genOn.length ? esc(genOn.join(", ")) : "ninguna ahora"}</span>
+      <span class="resumen__label">Análisis de seguidores ${ayuda("Cuántos seguidores tiene cada cuenta de Instagram, cuántos ganó y cuántos perdió en las últimas 24 h. Se actualiza una vez por día. Cuando Meta apruebe el permiso de estadísticas, vamos a poder sumar de dónde vienen (qué reel, qué carrusel).", true)}</span>
+      ${seguidoresHtml(DATA.ig_seguidores || {})}
     </div>`;
 
   const orden = { activo:0, en_desarrollo:1, planeado:2 };

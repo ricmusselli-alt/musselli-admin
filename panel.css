@@ -125,6 +125,16 @@ button:disabled,.btn:disabled{opacity:.5;cursor:default}
 .resumen__item.alerta{border-color:rgba(217,164,65,.5)}
 .resumen__item.alerta .resumen__value{color:var(--aviso)}
 
+.seg-split{display:flex;align-items:stretch;gap:14px;margin-top:2px}
+.seg-col{flex:1;min-width:0}
+.seg-col__nom{font-size:var(--fs-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--texto-mute)}
+.seg-col__total{font-family:var(--serif);font-weight:600;font-size:var(--fs-value-lg);color:var(--texto);line-height:1.2;margin-top:2px}
+.seg-col__fila{font-size:var(--fs-micro);color:var(--texto-mute);margin-top:3px;display:flex;align-items:center;gap:6px}
+.seg-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.seg-dot.on{background:var(--ok)}
+.seg-dot.off{background:var(--down)}
+.seg-linea{width:1px;background:var(--linea);flex:0 0 auto}
+
 /* ---------- grilla de tarjetas de familia: PANEL DE ÍCONOS ---------- */
 .familias{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:20px;align-items:stretch}
 .familia{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;text-align:center;
