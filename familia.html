@@ -121,6 +121,8 @@
   .mr-card__txt{font-size:11px;color:var(--texto-mute);line-height:1.4;margin-top:2px}
   @media(max-width:860px){.mr-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:520px){.mr-grid{grid-template-columns:1fr}}
+  .mr-sec-head{display:flex;align-items:center;gap:14px;margin:16px 0 6px;flex-wrap:wrap}
+  .mr-sec-tit{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--texto);margin:0}
   .mr-explica{background:rgba(200,155,108,.08);border:1px solid var(--linea);border-left:3px solid var(--cobre);
     border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--texto-mute);line-height:1.55;margin-bottom:16px}
   .mr-tag{font-size:10px;font-weight:700;color:var(--texto-mute);background:rgba(245,240,230,.06);padding:1px 7px;border-radius:6px;margin-left:6px;text-transform:none;letter-spacing:0}
@@ -279,6 +281,17 @@ function mrSwitch(on,label,hint,attr){
 function mrMediaId(u){ const m=String(u||"").match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/); return m?m[1]:""; }
 
 let mrCat = "luthier";
+const MR_TITULOS = {
+  keywords: "KEYWORDS | ENVÍO CON PALABRA CLAVE",
+  flow: "FLOW | CONVERSACIÓN CON PREGUNTAS",
+  defaultreply: "DEFAULT REPLY | RESPUESTA CON IA",
+  moderation: "COMMENT MODERATION | FILTRO DE COMENTARIOS",
+  icebreakers: "ICE BREAKERS | PRIMERAS PREGUNTAS",
+  menu: "PERSISTENT MENU | MENÚ FIJO DEL CHAT",
+  livechat: "LIVE CHAT | MENSAJES PARA VOS",
+  tags: "TAGS | ETIQUETAS DE CONTACTOS",
+  analytics: "ANALYTICS",
+};
 let mrView = "landing";    // landing (9 tarjetas) | section (adentro de una)
 let mrTab = "keywords";    // keywords | flow | defaultreply | moderation | icebreakers | menu | livechat | tags | analytics
 let mrEdit = null;
@@ -608,17 +621,6 @@ function mrRender(){
     <div class="cv-regla__meta" style="margin-top:14px">Para agregar una etiqueta nueva: entrá a un Keyword (pestaña Keywords) y completá el campo "Etiqueta a aplicar al contacto".</div>
   </div>`;
 
-  const sub = `<div class="cv-sub">
-    <button data-mrsub="keywords" class="${mrTab==="keywords"?"sel":""}">🔑 Keywords · ${reglas.length}</button>
-    <button data-mrsub="flow" class="${mrTab==="flow"?"sel":""}">🔀 Flow · ${flujos.length}</button>
-    <button data-mrsub="defaultreply" class="${mrTab==="defaultreply"?"sel":""}">💡 Default Reply</button>
-    <button data-mrsub="moderation" class="${mrTab==="moderation"?"sel":""}">🛡️ Comment Moderation</button>
-    <button data-mrsub="icebreakers" class="${mrTab==="icebreakers"?"sel":""}">👋 Ice Breakers</button>
-    <button data-mrsub="menu" class="${mrTab==="menu"?"sel":""}">📋 Persistent Menu</button>
-    <button data-mrsub="livechat" class="${mrTab==="livechat"?"sel":""}">💬 Live Chat · ${convos.length}</button>
-    <button data-mrsub="tags" class="${mrTab==="tags"?"sel":""}">🏷️ Tags</button>
-    <button data-mrsub="analytics" class="${mrTab==="analytics"?"sel":""}">📊 Analytics</button>
-  </div>`;
 
   // ---------- Vista de aterrizaje: 9 tarjetas, una por función ----------
   if (mrView === "landing") {
@@ -656,7 +658,10 @@ function mrRender(){
   }
 
   // ---------- Vista de una sección puntual ----------
-  const volver = `<button class="btn-ghost btn-mini" id="mrVolver" style="margin:14px 0 4px">🏠 Ver las 9 tarjetas</button>`;
+  const volver = `<div class="mr-sec-head">
+    <button class="btn-ghost btn-mini" id="mrVolver">🏠 Ver las 9 tarjetas</button>
+    <h3 class="mr-sec-tit">${esc(MR_TITULOS[mrTab] || "")}</h3>
+  </div>`;
 
   let cuerpo = "";
   if (mrTab === "analytics") cuerpo = mrAnalitica();
@@ -692,7 +697,7 @@ function mrRender(){
       + (reglas.length ? reglas.map(mrReglaCard).join("") : `<div class="vacio">Todavía no hay ninguno para esta cuenta.</div>`);
   }
 
-  root.innerHTML = tabs + maestro + volver + sub + cuerpo;
+  root.innerHTML = tabs + maestro + volver + cuerpo;
   if (mrTab === "keywords" && mrEdit) mrPintarChips();
   if (mrTab === "flow" && mrFlujoEdit) mrPintarFChips();
 }
