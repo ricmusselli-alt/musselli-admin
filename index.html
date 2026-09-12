@@ -120,19 +120,64 @@ function pendientesResumen(DATA){
   return { total, detalle };
 }
 
+let SEG_DATA = {};
+
 function seguidoresHtml(seg){
+  SEG_DATA = seg || {};
   const col = (cat, label) => {
     const s = seg[cat] || {};
     const total = typeof s.total === "number" ? s.total.toLocaleString("es-AR") : "—";
     return `<div class="seg-col">
       <div class="seg-col__nom">${label}</div>
-      <div class="seg-col__total">${total}</div>
-      <div class="seg-col__fila"><span class="seg-dot on"></span>+${s.ganados_hoy||0} hoy</div>
-      <div class="seg-col__fila"><span class="seg-dot off"></span>-${s.perdidos_hoy||0} hoy</div>
+      <button class="seg-col__total" data-seg-open="1" title="Ver evolución">${total}</button>
     </div>`;
   };
-  return `<div class="seg-split">${col('luthier','Luthería')}<div class="seg-linea"></div>${col('guitartech','Guitar Tech')}</div>`;
+  return `<div class="seg-split">${col('luthier','Luthería')}<div class="seg-linea"></div>${col('guitar-tech','Guitar Tech')}</div>`;
 }
+
+function segFila(n){
+  return n === null || n === undefined ? '<span class="seg-modal__nd">sin datos todavía</span>'
+    : n > 0 ? `<span class="seg-modal__pos">+${n}</span>`
+    : n < 0 ? `<span class="seg-modal__neg">${n}</span>`
+    : `<span class="seg-modal__nd">0</span>`;
+}
+
+function segAbrirModal(){
+  const l = SEG_DATA['luthier'] || {};
+  const g = SEG_DATA['guitar-tech'] || {};
+  let modal = document.getElementById('segModal');
+  if (!modal){
+    modal = document.createElement('div');
+    modal.id = 'segModal';
+    modal.className = 'seg-modal-ov';
+    modal.hidden = true;
+    modal.innerHTML = `<div class="seg-modal" role="dialog">
+      <div class="seg-modal__head"><b>Evolución de seguidores</b><button class="seg-modal__x" data-seg-close="1">✕</button></div>
+      <table class="seg-modal__tbl">
+        <tr><th></th><th>Luthería</th><th>Guitar Tech</th></tr>
+        <tr><td>Últimas 24 h</td><td id="segD1L"></td><td id="segD1G"></td></tr>
+        <tr><td>Última semana</td><td id="segD7L"></td><td id="segD7G"></td></tr>
+        <tr><td>Último mes</td><td id="segD30L"></td><td id="segD30G"></td></tr>
+      </table>
+      <p class="seg-modal__nota">Se calcula con el conteo diario, así que hacen falta unos días de historial para que aparezcan todos los datos.</p>
+    </div>`;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('segD1L').innerHTML = segFila(l.d1);
+  document.getElementById('segD1G').innerHTML = segFila(g.d1);
+  document.getElementById('segD7L').innerHTML = segFila(l.d7);
+  document.getElementById('segD7G').innerHTML = segFila(g.d7);
+  document.getElementById('segD30L').innerHTML = segFila(l.d30);
+  document.getElementById('segD30G').innerHTML = segFila(g.d30);
+  modal.hidden = false;
+}
+
+document.addEventListener('click', (ev) => {
+  if (ev.target.closest('[data-seg-open]')) { segAbrirModal(); return; }
+  if (ev.target.closest('[data-seg-close]') || ev.target.id === 'segModal') {
+    const m = document.getElementById('segModal'); if (m) m.hidden = true;
+  }
+});
 
 function render(DATA){
   const props = DATA.properties || [];
@@ -168,7 +213,7 @@ function render(DATA){
       <span class="resumen__sub">${esc(salud.sub)}</span>
     </div>
     <div class="resumen__item">
-      <span class="resumen__label">Análisis de seguidores ${ayuda("Cuántos seguidores tiene cada cuenta de Instagram, cuántos ganó y cuántos perdió en las últimas 24 h. Se actualiza una vez por día. Cuando Meta apruebe el permiso de estadísticas, vamos a poder sumar de dónde vienen (qué reel, qué carrusel).", true)}</span>
+      <span class="resumen__label">Análisis de seguidores ${ayuda("Cuántos seguidores tiene cada cuenta de Instagram. Tocá el número para ver cuánto ganó o perdió en las últimas 24 h, la última semana y el último mes. Se actualiza una vez por día. Cuando Meta apruebe el permiso de estadísticas, vamos a poder sumar de dónde vienen (qué reel, qué carrusel).", true)}</span>
       ${seguidoresHtml(DATA.ig_seguidores || {})}
     </div>`;
 
